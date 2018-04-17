@@ -1,0 +1,348 @@
+<!-- Save this to /usr/lib/lua/luci/view/myapp_mymodule/traffic_generator.htm -->
+<%+header%>
+
+
+
+<div class="page-header">
+<h1>
+Traffic Generator
+<small>
+<i class="ace-icon fa fa-angle-double-right"></i>
+Select the packet to send packet
+</small>
+</h1>
+</div><!-- /.page-header -->
+
+<div class="row">
+<div class="col-xs-12">
+<!-- PAGE CONTENT BEGINS -->
+<div class="row">
+<div class="col-xs-12 col-sm-4">
+<div class="widget-box">
+<div class="widget-header">
+<h4 class="widget-title">Stream</h4>
+
+<div class="widget-toolbar">
+<a href="#" data-action="collapse">
+<i class="ace-icon fa fa-chevron-up"></i>
+</a>
+
+</div>
+</div>
+
+<div class="widget-body">
+<div class="widget-main">
+<div>
+<label for="form-field-1">Packet ID</label>
+<input type="text" id="packet" placeholder="Packet id" class="form-control" />
+</div>
+<hr />
+
+<div>
+<label for="form-field-2">Description</label>
+<textarea id="description" class="autosize-transition form-control"></textarea>
+</div>
+<hr />
+
+<div>
+<div class="radio">
+<label>
+<input name="form-field-radio" type="radio" class="ace" value="untag"/>
+<span class="lbl"> Untag</span>
+</label>
+</div>
+<div class="radio">
+<label>
+<input name="form-field-radio" type="radio" class="ace" value="8021Q" checked />
+<span class="lbl"> 8021Q</span>
+</label>
+</div>
+<div class="radio">
+<label>
+<input name="form-field-radio" type="radio" class="ace" value="8021QinQ" />
+<span class="lbl"> 8021QinQ</span>
+</label>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><!-- /.span -->
+
+<div class="col-xs-12 col-sm-4">
+<div class="widget-box">
+<div class="widget-header">
+<h4 class="widget-title">MAC Header</h4>
+
+<div class="widget-toolbar">
+<a href="#" data-action="collapse">
+<i class="ace-icon fa fa-chevron-up"></i>
+</a>
+
+</div>
+</div>
+
+<div class="widget-body">
+<div class="widget-main">
+<div>
+<label for="form-field-1">Destination</label>
+<input type="text" placeholder="00:01:00:00:00:01" class="form-control" value="00:01:00:00:00:01" id="mac_dst"/>
+</div>
+<hr />
+
+<div>
+<label for="form-field-2">Source</label>
+<input type="text" placeholder="00:10:94:00:00:02" class="form-control" value="00:10:94:00:00:02" id="mac_src"/>
+</div>
+
+<hr />
+<div>
+<label for="form-field-select-1">Ethernet Type</label>
+
+<select class="form-control" id="eth_type">
+<option value="IP">IP</option>
+<option value="ARP">ARP</option>
+<option value="GRE">GRE</option>
+<option value="IPV6">IPV6</option>
+<option value="PPP">PPP</option>
+<option value="PPPOED">PPPOED</option>
+<option value="CFM">CFM</option>
+</select>
+</div>
+</div>
+</div>
+</div>
+</div><!-- /.span -->
+
+<div class="col-xs-12 col-sm-4" id="V8021Q" >
+<div class="widget-box">
+<div class="widget-header">
+<h4 class="widget-title">Vlan Header</h4>
+
+<div class="widget-toolbar">
+<a href="#" data-action="collapse">
+<i class="ace-icon fa fa-chevron-up"></i>
+</a>
+
+</div>
+</div>
+
+<div class="widget-body">
+<div class="widget-main">
+<div>
+<label for="form-field-4">Vlan Id</label>
+<br />
+<input type="text" id="spinner0" class="form-control" />
+<div class="space-6"></div>
+</div>
+
+<div>
+<label for="form-field-4">Priority</label>
+<br />
+<div class="knob-container inline">
+<input type="text" class="input-small knob" value="0" data-min="0" data-max="7" data-step="1" data-width="80" data-height="80" data-thickness=".2" id="vlan_priority" />
+</div>
+</div>
+<div>
+<label for="form-field-4">CFI</label>
+<br />
+<input type="text" id="spinner2" class="form-control" />
+<div class="space-6"></div>
+</div>
+</div>
+</div>
+</div>
+</div><!-- /.span -->
+
+<div class="col-xs-12 col-sm-4" id="V8021QinQ" style="display: none" >
+<div class="widget-box">
+<div class="widget-header">
+<h4 class="widget-title">Vlan Header</h4>
+
+<div class="widget-toolbar">
+<a href="#" data-action="collapse">
+<i class="ace-icon fa fa-chevron-up"></i>
+</a>
+
+</div>
+</div>
+
+<div class="widget-body">
+<div class="widget-main">
+<div>
+<label for="form-field-4">Vlan Id</label>
+<br />
+<input type="text" id="spinner3" class="form-control" />
+<div class="space-6"></div>
+</div>
+
+<div>
+<label for="form-field-4">Priority</label>
+<br />
+<input type="text" id="spinner4" class="form-control" />
+<div class="space-6"></div>
+</div>
+<div>
+<label for="form-field-4">CFI</label>
+<br />
+<input type="text" id="spinner5" class="form-control" />
+<div class="space-6"></div>
+</div>
+<div>
+<label for="form-field-4">Vlan Id</label>
+<br />
+<input type="text" id="spinner6" class="form-control" />
+<div class="space-6"></div>
+</div>
+
+<div>
+<label for="form-field-4">Priority</label>
+<br />
+<input type="text" id="spinner7" class="form-control" />
+<div class="space-6"></div>
+</div>
+<div>
+<label for="form-field-4">CFI</label>
+<br />
+<input type="text" id="spinner8" class="form-control" />
+<div class="space-6"></div>
+</div>
+</div>
+</div>
+</div>
+</div><!-- /.span -->
+</div>
+<div class="row">
+<div class="col-xs-12 col-sm-4">
+<div class="widget-box">
+<div class="widget-header">
+<h4 class="widget-title">IP Header</h4>
+
+<div class="widget-toolbar">
+<a href="#" data-action="collapse">
+<i class="ace-icon fa fa-chevron-up"></i>
+</a>
+
+</div>
+</div>
+
+<div class="widget-body">
+<div class="widget-main">
+<div>
+<label for="form-field-select-1">IP Type</label>
+
+<select class="form-control" id="ip_type">
+<option value="IP">IP</option>
+<option value="IPV4">IPV4</option>
+<option value="UDP">UDP</option>
+<option value="TCP">TCP</option>
+<option value="ICMP">ICMP</option>
+<option value="IPV6">IPV6</option>
+<option value="GRE">GRE</option>
+<option value="VRRP">VRRP</option>
+</select>
+</div>
+<hr />
+<div>
+<label for="form-field-1">Source IP</label>
+<input type="text" placeholder="192.85.1.1" class="form-control" value="192.185.85.1" id="ip_src"/>
+</div>
+<hr />
+
+<div>
+<label for="form-field-2">Destination IP</label>
+<input type="text" placeholder="192.85.1.2" class="form-control" value="192.168.85.2" id="ip_dst"/>
+</div>
+
+<hr />
+</div>
+</div>
+</div>
+</div><!-- /.span -->
+<div class="col-xs-12 col-sm-4" id="udp_header" style="display: none">
+<div class="widget-box">
+<div class="widget-header">
+<h4 class="widget-title">UDP Header</h4>
+
+<div class="widget-toolbar">
+<a href="#" data-action="collapse">
+<i class="ace-icon fa fa-chevron-up"></i>
+</a>
+
+</div>
+</div>
+
+<div class="widget-body">
+<div class="widget-main">
+<div>
+<label for="form-field-1">Source Port</label>
+<br />
+<input type="text" id="spinner9" class="form-control" />
+<div class="space-6"></div>
+</div>
+<hr />
+
+<div>
+<label for="form-field-2">Destination Port</label>
+<br />
+<input type="text" id="spinner10" class="form-control" />
+<div class="space-6"></div>
+</div>
+
+<hr />
+</div>
+</div>
+</div>
+</div><!-- /.span -->
+<div class="col-xs-12 col-sm-4" >
+<div class="widget-box">
+<div class="widget-header">
+<h4 class="widget-title">Data</h4>
+
+<div class="widget-toolbar">
+<a href="#" data-action="collapse">
+<i class="ace-icon fa fa-chevron-up"></i>
+</a>
+
+</div>
+</div>
+
+<div class="widget-body">
+<div class="widget-main">
+<div>
+<textarea id="data" class="autosize-transition form-control"></textarea>
+</div>
+
+</div>
+</div>
+</div>
+</div><!-- /.span -->
+</div><!-- /.row -->
+<div class="clearfix form-actions" align="center">
+
+<button class="btn btn-info" type="button" id="submit">
+<i class="ace-icon fa fa-check bigger-110"></i>
+Submit
+</button>
+
+&nbsp; &nbsp; &nbsp;
+<button class="btn" type="reset">
+<i class="ace-icon fa fa-undo bigger-110"></i>
+Reset
+</button>
+<span id="status">
+</span>
+
+</div>
+</div><!-- /.col -->
+</div>
+
+
+
+
+
+
+
+<%+footer%>
+
+

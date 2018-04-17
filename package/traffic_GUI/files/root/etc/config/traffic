@@ -1,0 +1,11 @@
+
+config core 'main'
+	option type 'UDP'
+	option srcMAC '00:11:22:33:44:55'
+	option desMAC '00:11:22:33:44:56'
+	option desIP '3.3.3.3'
+	option vlan '111'
+	option srcIP '192.168.32.166'
+	option pbit '1'
+	option package_num '100'
+
