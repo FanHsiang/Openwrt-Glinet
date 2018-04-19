@@ -27,7 +27,7 @@ endef
 define Build/Compile
 endef
 
-define Package/luci-app-traffic_GUI/install
+define Package/dhcp_test/install
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/model/cbi/myapp
 	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/controller/
