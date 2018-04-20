@@ -28,9 +28,9 @@ define Build/Compile
 endef
 
 define Package/dhcp_test/install
-	$(INSTALL_DIR) $(1)/opt/dhcp_test
+	$(INSTALL_DIR) $(1)
 	
-	$(INSTALL_DATA) ./dhcp_test/ $(1)/opt/dhcp_test/
+	$(INSTALL_DATA) ./dhcp_test/* $(1)
 endef
 
 $(eval $(call BuildPackage,dhcp_test))
