@@ -1,0 +1,101 @@
+lease {
+  interface "eth0";
+  fixed-address 192.168.1.221;
+  option subnet-mask 255.255.255.0;
+  option routers 192.168.1.1;
+  option dhcp-lease-time 604800;
+  option dhcp-message-type 5;
+  option domain-name-servers 192.168.1.1;
+  option dhcp-server-identifier 192.168.1.1;
+  option broadcast-address 192.168.1.255;
+  renew 4 2017/12/28 04:50:32;
+  rebind 0 2017/12/31 12:32:11;
+  expire 1 2018/01/01 09:32:11;
+}
+lease {
+  interface "eth1";
+  fixed-address 192.168.1.102;
+  option subnet-mask 255.255.255.0;
+  option routers 192.168.1.1;
+  option dhcp-lease-time 604800;
+  option dhcp-message-type 5;
+  option domain-name-servers 192.168.1.1;
+  option dhcp-server-identifier 192.168.1.1;
+  option broadcast-address 192.168.1.255;
+  renew 5 2018/04/20 14:13:46;
+  rebind 1 2018/04/23 06:12:40;
+  expire 2 2018/04/24 03:12:40;
+}
+lease {
+  interface "eth1";
+  fixed-address 192.168.1.101;
+  option subnet-mask 255.255.255.0;
+  option routers 192.168.1.1;
+  option dhcp-lease-time 604800;
+  option dhcp-message-type 5;
+  option domain-name-servers 192.168.1.1;
+  option dhcp-server-identifier 192.168.1.1;
+  option broadcast-address 192.168.1.255;
+  renew 5 2018/04/20 06:11:06;
+  rebind 1 2018/04/23 06:08:13;
+  expire 2 2018/04/24 03:08:13;
+}
+lease {
+  interface "eth1";
+  fixed-address 192.168.9.112;
+  option subnet-mask 255.255.255.0;
+  option routers 192.168.9.1;
+  option dhcp-lease-time 43200;
+  option dhcp-message-type 5;
+  option domain-name-servers 192.168.9.1;
+  option dhcp-server-identifier 192.168.9.1;
+  option dhcp-renewal-time 21600;
+  option broadcast-address 192.168.9.255;
+  option dhcp-rebinding-time 37800;
+  option domain-name "lan";
+  renew 2 2018/04/17 08:21:32;
+  rebind 2 2018/04/17 13:37:50;
+  expire 2 2018/04/17 15:07:50;
+}
+lease {
+  interface "eth1";
+  fixed-address 192.168.1.252;
+  option subnet-mask 255.255.255.0;
+  option dhcp-lease-time 604800;
+  option routers 192.168.1.1;
+  option dhcp-message-type 5;
+  option dhcp-server-identifier 192.168.1.1;
+  option domain-name-servers 192.168.1.1;
+  option broadcast-address 192.168.1.255;
+  renew 5 2018/04/20 12:06:06;
+  rebind 1 2018/04/23 06:12:25;
+  expire 2 2018/04/24 03:12:25;
+}
+lease {
+  interface "eth1";
+  fixed-address 192.168.1.251;
+  option subnet-mask 255.255.255.0;
+  option dhcp-lease-time 604800;
+  option routers 192.168.1.1;
+  option dhcp-message-type 5;
+  option dhcp-server-identifier 192.168.1.1;
+  option domain-name-servers 192.168.1.1;
+  option broadcast-address 192.168.1.255;
+  renew 4 2018/04/19 23:47:17;
+  rebind 1 2018/04/23 06:12:51;
+  expire 2 2018/04/24 03:12:51;
+}
+lease {
+  interface "eth1";
+  fixed-address 192.168.1.252;
+  option subnet-mask 255.255.255.0;
+  option routers 192.168.1.1;
+  option dhcp-lease-time 604800;
+  option dhcp-message-type 5;
+  option domain-name-servers 192.168.1.1;
+  option dhcp-server-identifier 192.168.1.1;
+  option broadcast-address 192.168.1.255;
+  renew 5 2018/04/20 10:22:18;
+  rebind 1 2018/04/23 06:12:57;
+  expire 2 2018/04/24 03:12:57;
+}
