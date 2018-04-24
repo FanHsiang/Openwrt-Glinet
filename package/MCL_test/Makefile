@@ -30,7 +30,8 @@ endef
 define Package/MCL_test/install
 	$(INSTALL_DIR) $(1)
 	
-	$(INSTALL_DATA) ./MCL_test/* $(1)
+	$(INSTALL_DATA) ./MCL_test/snmp/* $(1)
+	$(INSTALL_DATA) ./MCL_test/tftp/* $(1)
 endef
 
 $(eval $(call BuildPackage,MCL_test))
