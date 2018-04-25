@@ -1,0 +1,238 @@
+--- a/mini_httpd.c
++++ b/mini_httpd.c
+@@ -491,7 +491,7 @@ main( int argc, char** argv )
+ 	logfp = fopen( logfile, "a" );
+ 	if ( logfp == (FILE*) 0 )
+ 	    {
+-	    syslog( LOG_CRIT, "%s - %m", logfile );
++	    syslog( LOG_CRIT, "%s - %s", logfile, strerror(errno) );
+ 	    perror( logfile );
+ 	    exit( 1 );
+ 	    }
+@@ -507,7 +507,7 @@ main( int argc, char** argv )
+ 	    */
+ 	    if ( fchown( fileno( logfp ), uid, gid ) < 0 )
+ 		{
+-		syslog( LOG_WARNING, "fchown logfile - %m" );
++		syslog( LOG_WARNING, "fchown logfile - %s", strerror(errno) );
+ 		perror( "fchown logfile" );
+ 		}
+ 	    }
+@@ -592,7 +592,7 @@ main( int argc, char** argv )
+ #ifdef HAVE_DAEMON
+ 	if ( daemon( 1, 1 ) < 0 )
+ 	    {
+-	    syslog( LOG_CRIT, "daemon - %m" );
++	    syslog( LOG_CRIT, "daemon - %s", strerror(errno) );
+ 	    perror( "daemon" );
+ 	    exit( 1 );
+ 	    }
+@@ -602,7 +602,7 @@ main( int argc, char** argv )
+ 	    case 0:
+ 	    break;
+ 	    case -1:
+-	    syslog( LOG_CRIT, "fork - %m" );
++	    syslog( LOG_CRIT, "fork - %s", strerror(errno) );
+ 	    perror( "fork" );
+ 	    exit( 1 );
+ 	    default:
+@@ -629,7 +629,7 @@ main( int argc, char** argv )
+ 	FILE* pidfp = fopen( pidfile, "w" );
+         if ( pidfp == (FILE*) 0 )
+             {
+-	    syslog( LOG_CRIT, "%s - %m", pidfile );
++	    syslog( LOG_CRIT, "%s - %s", pidfile, strerror(errno) );
+ 	    perror( pidfile );
+             exit( 1 );
+             }
+@@ -646,21 +646,21 @@ main( int argc, char** argv )
+ 	/* Set aux groups to null. */
+ 	if ( setgroups( 0, (gid_t*) 0 ) < 0 )
+ 	    {
+-	    syslog( LOG_CRIT, "setgroups - %m" );
++	    syslog( LOG_CRIT, "setgroups - %s", strerror(errno) );
+ 	    perror( "setgroups" );
+ 	    exit( 1 );
+ 	    }
+ 	/* Set primary group. */
+ 	if ( setgid( gid ) < 0 )
+ 	    {
+-	    syslog( LOG_CRIT, "setgid - %m" );
++	    syslog( LOG_CRIT, "setgid - %s", strerror(errno) );
+ 	    perror( "setgid" );
+ 	    exit( 1 );
+ 	    }
+ 	/* Try setting aux groups correctly - not critical if this fails. */
+ 	if ( initgroups( user, gid ) < 0 )
+ 	    {
+-	    syslog( LOG_ERR, "initgroups - %m" );
++	    syslog( LOG_ERR, "initgroups - %s", strerror(errno) );
+ 	    perror( "initgroups" );
+ 	    }
+ #ifdef HAVE_SETLOGIN
+@@ -674,7 +674,7 @@ main( int argc, char** argv )
+ 	{
+ 	if ( chdir( dir ) < 0 )
+ 	    {
+-	    syslog( LOG_CRIT, "chdir - %m" );
++	    syslog( LOG_CRIT, "chdir - %s", strerror(errno) );
+ 	    perror( "chdir" );
+ 	    exit( 1 );
+ 	    }
+@@ -690,7 +690,7 @@ main( int argc, char** argv )
+ 	{
+ 	if ( chroot( cwd ) < 0 )
+ 	    {
+-	    syslog( LOG_CRIT, "chroot - %m" );
++	    syslog( LOG_CRIT, "chroot - %s", strerror(errno) );
+ 	    perror( "chroot" );
+ 	    exit( 1 );
+ 	    }
+@@ -717,7 +717,7 @@ main( int argc, char** argv )
+ 	/* Always chdir to / after a chroot. */
+ 	if ( chdir( cwd ) < 0 )
+ 	    {
+-	    syslog( LOG_CRIT, "chroot chdir - %m" );
++	    syslog( LOG_CRIT, "chroot chdir - %s", strerror(errno) );
+ 	    perror( "chroot chdir" );
+ 	    exit( 1 );
+ 	    }
+@@ -729,7 +729,7 @@ main( int argc, char** argv )
+ 	{
+ 	if ( chdir( data_dir ) < 0 )
+ 	    {
+-	    syslog( LOG_CRIT, "data_dir chdir - %m" );
++	    syslog( LOG_CRIT, "data_dir chdir - %s", strerror(errno) );
+ 	    perror( "data_dir chdir" );
+ 	    exit( 1 );
+ 	    }
+@@ -741,7 +741,7 @@ main( int argc, char** argv )
+ 	/* Set uid. */
+ 	if ( setuid( uid ) < 0 )
+ 	    {
+-	    syslog( LOG_CRIT, "setuid - %m" );
++	    syslog( LOG_CRIT, "setuid - %s", strerror(errno) );
+ 	    perror( "setuid" );
+ 	    exit( 1 );
+ 	    }
+@@ -821,7 +821,7 @@ main( int argc, char** argv )
+ 	    {
+ 	    if ( errno == EINTR || errno == EAGAIN )
+ 		continue;	/* try again */
+-	    syslog( LOG_CRIT, "select - %m" );
++	    syslog( LOG_CRIT, "select - %s", strerror(errno) );
+ 	    perror( "select" );
+ 	    exit( 1 );
+ 	    }
+@@ -846,7 +846,7 @@ main( int argc, char** argv )
+ 	    if ( errno == EPROTO )
+ 		continue;	/* try again */
+ #endif /* EPROTO */
+-	    syslog( LOG_CRIT, "accept - %m" );
++	    syslog( LOG_CRIT, "accept - %s", strerror(errno) );
+ 	    perror( "accept" );
+ 	    exit( 1 );
+ 	    }
+@@ -855,7 +855,7 @@ main( int argc, char** argv )
+ 	r = fork();
+ 	if ( r < 0 )
+ 	    {
+-	    syslog( LOG_CRIT, "fork - %m" );
++	    syslog( LOG_CRIT, "fork - %s", strerror(errno) );
+ 	    perror( "fork" );
+ 	    exit( 1 );
+ 	    }
+@@ -900,7 +900,7 @@ read_config( char* filename )
+     fp = fopen( filename, "r" );
+     if ( fp == (FILE*) 0 )
+ 	{
+-	syslog( LOG_CRIT, "%s - %m", filename );
++	syslog( LOG_CRIT, "%s - %s", filename, strerror(errno) );
+ 	perror( filename );
+ 	exit( 1 );
+ 	}
+@@ -1099,7 +1099,7 @@ initialize_listen_socket( usockaddr* usa
+     listen_fd = socket( usaP->sa.sa_family, SOCK_STREAM, 0 );
+     if ( listen_fd < 0 )
+ 	{
+-	syslog( LOG_CRIT, "socket %.80s - %m", ntoa( usaP ) );
++	syslog( LOG_CRIT, "socket %.80s - %s", ntoa( usaP ), strerror(errno) );
+ 	perror( "socket" );
+ 	return -1;
+ 	}
+@@ -1109,21 +1109,21 @@ initialize_listen_socket( usockaddr* usa
+     i = 1;
+     if ( setsockopt( listen_fd, SOL_SOCKET, SO_REUSEADDR, (void*) &i, sizeof(i) ) < 0 )
+ 	{
+-	syslog( LOG_CRIT, "setsockopt SO_REUSEADDR - %m" );
++	syslog( LOG_CRIT, "setsockopt SO_REUSEADDR - %s", strerror(errno) );
+ 	perror( "setsockopt SO_REUSEADDR" );
+ 	return -1;
+ 	}
+ 
+     if ( bind( listen_fd, &usaP->sa, sockaddr_len( usaP ) ) < 0 )
+ 	{
+-	syslog( LOG_CRIT, "bind %.80s - %m", ntoa( usaP ) );
++	syslog( LOG_CRIT, "bind %.80s - %s", ntoa( usaP ), strerror(errno) );
+ 	perror( "bind" );
+ 	return -1;
+ 	}
+ 
+     if ( listen( listen_fd, 1024 ) < 0 )
+ 	{
+-	syslog( LOG_CRIT, "listen - %m" );
++	syslog( LOG_CRIT, "listen - %s", strerror(errno) );
+ 	perror( "listen" );
+ 	return -1;
+ 	}
+@@ -1560,8 +1560,8 @@ do_file( void )
+ #	warning CONFIG_BROKEN_SENDFILE: reverting to write() if sendfile() fails
+ 	int retval = my_sendfile(fd, conn_fd, 0, sb.st_size);
+ 	if (retval < 0) {
+-		//syslog(LOG_WARNING, "sendfile() failed (errno:%d - %m) - reverting to ordinary write()", errno);
+-		(void) fprintf(stderr, "Note: sendfile() failed (errno:%d - %m) - reverting to ordinary write()\n", errno);
++		//syslog(LOG_WARNING, "sendfile() failed (errno:%d - %s) - reverting to ordinary write()", errno, strerror(errno));
++		(void) fprintf(stderr, "Note: sendfile() failed (errno:%d - %s) - reverting to ordinary write()\n", errno, strerror(errno));
+ 		send_via_write(fd, sb.st_size); //: added
+ 	}
+ #   endif
+@@ -1576,8 +1576,8 @@ do_file( void )
+ 	{
+ 	    int retval = my_sendfile(fd, conn_fd, 0, sb.st_size);
+ 	    if (retval < 0) {
+-		//syslog(LOG_WARNING, "sendfile() failed (errno:%d - %m) - reverting to ordinary write()", errno);
+-		(void) fprintf(stderr, "Note: sendfile() failed (errno:%d - %m) - reverting to ordinary write()\n", errno);
++		//syslog(LOG_WARNING, "sendfile() failed (errno:%d - %s) - reverting to ordinary write()", errno, strerror(errno));
++		(void) fprintf(stderr, "Note: sendfile() failed (errno:%d - %s) - reverting to ordinary write()\n", errno, strerror(errno));
+ 		send_via_write(fd, sb.st_size); //: added
+ 	    }
+ 	}
+@@ -2311,8 +2311,8 @@ auth_check( char* dirname )
+ 	{
+ 	/* The file exists but we can't open it?  Disallow access. */
+ 	syslog(
+-	    LOG_ERR, "%.80s auth file %.80s could not be opened - %m",
+-	    ntoa( &client_addr ), authpath );
++	    LOG_ERR, "%.80s auth file %.80s could not be opened - %s",
++	    ntoa( &client_addr ), authpath, strerror(errno) );
+ 	send_error( 403, "Forbidden", "", "File is protected." );
+ 	}
+ 
+@@ -3148,7 +3148,7 @@ handle_sigchld( int sig )
+ 	    */
+ 	    if ( errno != ECHILD )
+ 		{
+-		syslog( LOG_ERR, "child wait - %m" );
++		syslog( LOG_ERR, "child wait - %s", strerror(errno) );
+ 		perror( "child wait" );
+ 		}
+ 	    break;
+@@ -3174,7 +3174,7 @@ re_open_logfile( void )
+ 	logfp = fopen( logfile, "a" );
+ 	if ( logfp == (FILE*) 0 )
+ 	    {
+-	    syslog( LOG_CRIT, "%s - %m", logfile );
++	    syslog( LOG_CRIT, "%s - %s", logfile, strerror(errno) );
+ 	    perror( logfile );
+ 	    exit( 1 );
+ 	    }

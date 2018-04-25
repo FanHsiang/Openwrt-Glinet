@@ -1,0 +1,59 @@
+diff --git a/mini_httpd.c b/mini_httpd.c
+--- a/mini_httpd.c
++++ b/mini_httpd.c
+@@ -1824,13 +1824,23 @@ do_cgi( void )
+ #endif /* USE_SSL */
+ 	{
+ 	int p[2];
+-	int r;
++	int r, cnt;
+ 
+ 	if ( pipe( p ) < 0 )
+ 	    send_error( 500, "Internal Error", "", "Something unexpected went wrong making a pipe." );
+-	r = fork();
+-	if ( r < 0 )
+-	    send_error( 500, "Internal Error", "", "Something unexpected went wrong forking an interposer." );
++
++	for(cnt=0; cnt < 10; cnt++) {
++		if((r = fork()) >= 0)
++			break;
++		usleep(500000);
++	}
++
++	if ( r < 0 ) {
++		char error_str[128]={0};
++		snprintf(error_str, 127, "Something unexpected went wrong forking an interposer.(errno=%d, %s)", errno,strerror(errno));
++	    send_error( 500, "Internal Error", "", error_str);
++	}
++
+ 	if ( r == 0 )
+ 	    {
+ 	    /* Interposer process. */
+@@ -1866,13 +1876,23 @@ do_cgi( void )
+ #endif /* USE_SSL */
+ 	{
+ 	int p[2];
+-	int r;
++	int r, cnt;
+ 
+ 	if ( pipe( p ) < 0 )
+ 	    send_error( 500, "Internal Error", "", "Something unexpected went wrong making a pipe." );
+-	r = fork();
+-	if ( r < 0 )
+-	    send_error( 500, "Internal Error", "", "Something unexpected went wrong forking an interposer." );
++
++	for(cnt=0; cnt < 10; cnt++) {
++		if((r = fork()) >= 0)
++			break;
++		usleep(500000);
++	}
++
++	if ( r < 0 ) {
++		char error_str[128]={0};
++		snprintf(error_str, 127, "Something unexpected went wrong forking an interposer.(errno=%d, %s)", errno,strerror(errno));
++	    send_error( 500, "Internal Error", "", error_str);
++	}
++
+ 	if ( r == 0 )
+ 	    {
+ 	    /* Interposer process. */

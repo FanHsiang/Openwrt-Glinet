@@ -1,0 +1,135 @@
+diff -ruN a/mini_httpd.c b/mini_httpd.c
+--- a/mini_httpd.c	2014-07-08 15:09:13.000000000 +0800
++++ b/mini_httpd.c	2014-07-08 15:09:19.000000000 +0800
+@@ -193,6 +193,8 @@
+ static char* charset;
+ static char* p3p;
+ static int max_age;
++static int max_child;
++static int child_total;
+ static FILE* logfp;
+ static int listen4_fd, listen6_fd;
+ #ifdef USE_SSL
+@@ -312,7 +314,7 @@
+ #ifdef NO_SNPRINTF
+ static int snprintf( char* str, size_t size, const char* format, ... );
+ #endif /* NO_SNPRINTF */
+-
++int get_child_total_by_proc(int parent_pid);
+ 
+ int
+ main( int argc, char** argv )
+@@ -345,6 +347,9 @@
+     charset = DEFAULT_CHARSET;
+     p3p = (char*) 0;
+     max_age = -1;
++    max_child = 2;
++    child_total = 0;
++
+     user = DEFAULT_USER;
+     hostname = (char*) 0;
+     logfile = (char*) 0;
+@@ -443,6 +448,11 @@
+ 	    ++argn;
+ 	    max_age = atoi( argv[argn] );
+ 	    }
++	else if ( strcmp( argv[argn], "-X" ) == 0 && argn + 1 < argc )
++	    {
++	    ++argn;
++	    max_child = atoi( argv[argn] );
++	    }
+ 	else
+ 	    usage();
+ 	++argn;
+@@ -787,6 +797,23 @@
+     /* Main loop. */
+     for (;;)
+ 	{
++	
++	if (max_child && child_total >= max_child || child_total<0) {
++	    // the child_total maintained by fork/sigchld may be not accurate in some case, 
++	    // and we correct its value by scanning /proc, since reading /proc is time consuming,
++	    // we only do this when child_total is over the threshold max_child
++            int n = get_child_total_by_proc(getpid());
++            if ( n>=0 && child_total != n ) {
++                //syslog( LOG_NOTICE, "correct child_total from %d to %d\n", child_total, n);
++                child_total = n;
++            }
++            if (child_total >= max_child) {
++                //syslog( LOG_NOTICE, "child_total=%d, sleep\n", child_total);
++                usleep(100000);	// wait 0.1 sec
++                continue;
++            }
++        }
++	
+ 	/* Do we need to re-open the log file? */
+ 	if ( got_hup )
+ 	    {
+@@ -877,6 +904,8 @@
+ 	    handle_request();
+ 	    exit( 0 );
+ 	    }
++        child_total ++;
++        //syslog( LOG_NOTICE, "child_total=%d, (+pid=%d)\n", child_total, r);
+ 	(void) close( conn_fd );
+ 	}
+     }
+@@ -1026,6 +1055,11 @@
+ 		value_required( name, value );
+ 		max_age = atoi( value );
+ 		}
++	    else if ( strcasecmp( name, "max_child" ) == 0 )
++		{
++		value_required( name, value );
++		max_child = atoi( value );
++		}
+ #ifdef USE_SSL
+ 	    else if ( strcasecmp( name, "ssl" ) == 0 )
+ 		{
+@@ -3162,6 +3196,9 @@
+ 	    }
+ 	}
+ 
++	child_total--;
++        //syslog( LOG_NOTICE, "child_total=%d, (-pid=%d)\n", child_total, pid);
++
+     /* Restore previous errno. */
+     errno = oerrno;
+     }
+@@ -3617,3 +3654,36 @@
+     return r;
+     }
+ #endif /* NO_SNPRINTF */
++
++int 
++get_child_total_by_proc(int parent_pid)
++{
++	struct dirent **namelist;
++	int n, total = 0;
++
++	n = scandir("/proc", &namelist, 0, NULL);
++	if (n < 0)
++		return -1;
++	else {
++		while (n--) {
++			if (namelist[n]->d_name[0] >= '0' && namelist[n]->d_name[0] <= '9') {
++				FILE *fp;
++				char buff[256];
++				unsigned int pid, ppid;
++				unsigned char procname[64], procstate[8];
++			
++				snprintf(buff, 255, "/proc/%s/stat", namelist[n]->d_name);
++				if ((fp=fopen(buff, "r"))!= NULL) {
++					fscanf(fp, "%u %s %s %u", &pid, procname, procstate, &ppid);
++					fclose(fp);
++					if (ppid == parent_pid)
++						total++;
++					//printf("%s, pid=%u, ppid=%u, %s, %s\n", buff, pid, ppid, procname, procstate);
++				}
++			}
++			free(namelist[n]);
++		}
++		free(namelist);
++	}
++	return total;
++}

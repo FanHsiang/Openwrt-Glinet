@@ -1,0 +1,39 @@
+diff --git a/mini_httpd.c b/mini_httpd.c
+index b34446b..9209f31 100644
+--- a/mini_httpd.c
++++ b/mini_httpd.c
+@@ -1554,12 +1554,34 @@ do_file( void )
+ #ifdef HAVE_SENDFILE
+ 
+ #ifndef USE_SSL
++#   ifndef CONFIG_BROKEN_SENDFILE
+ 	(void) my_sendfile( fd, conn_fd, 0, sb.st_size );
++#   else
++#	warning CONFIG_BROKEN_SENDFILE: reverting to write() if sendfile() fails
++	int retval = my_sendfile(fd, conn_fd, 0, sb.st_size);
++	if (retval < 0) {
++		//syslog(LOG_WARNING, "sendfile() failed (errno:%d - %m) - reverting to ordinary write()", errno);
++		(void) fprintf(stderr, "Note: sendfile() failed (errno:%d - %m) - reverting to ordinary write()\n", errno);
++		send_via_write(fd, sb.st_size); //: added
++	}
++#   endif
+ #else /* USE_SSL */
+ 	if ( do_ssl )
+ 	    send_via_write( fd, sb.st_size );
+ 	else
++#   ifndef CONFIG_BROKEN_SENDFILE
+ 	    (void) my_sendfile( fd, conn_fd, 0, sb.st_size );
++#   else
++#	warning CONFIG_BROKEN_SENDFILE: reverting to write() if sendfile() fails
++	{
++	    int retval = my_sendfile(fd, conn_fd, 0, sb.st_size);
++	    if (retval < 0) {
++		//syslog(LOG_WARNING, "sendfile() failed (errno:%d - %m) - reverting to ordinary write()", errno);
++		(void) fprintf(stderr, "Note: sendfile() failed (errno:%d - %m) - reverting to ordinary write()\n", errno);
++		send_via_write(fd, sb.st_size); //: added
++	    }
++	}
++#   endif
+ #endif /* USE_SSL */
+ 
+ #else /* HAVE_SENDFILE */

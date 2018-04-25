@@ -1,0 +1,27 @@
+--- a/mini_httpd.c
++++ b/mini_httpd.c
+@@ -852,13 +852,20 @@ main( int argc, char** argv )
+ 	    }
+ 
+ 	/* Fork a sub-process to handle the connection. */
+-	r = fork();
+-	if ( r < 0 )
++	/* Try 10 times if fork failed. */
++	int i;
++	for(i=0;i<10;i++)
+ 	    {
+-	    syslog( LOG_CRIT, "fork - %s", strerror(errno) );
++		r = fork();
++		if(r>=0)
++			break;
++	    syslog( LOG_CRIT, "fork %d: error %d - %s", i, errno, strerror(errno) );
+ 	    perror( "fork" );
+-	    exit( 1 );
++		usleep(10000);
+ 	    }
++	if(r<0) 
++		exit(1);
++
+ 	if ( r == 0 )
+ 	    {
+ 	    /* Child process. */
