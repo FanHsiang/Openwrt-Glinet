@@ -177,6 +177,34 @@ void send_frame(unsigned char *frame,const char *interface, ip_hdr *ip ,int leng
     pcap_close(pcap);
 
 }
+
+/**
+void send_frame(unsigned char *frame,const char *interface, ip_hdr *ip ,int length, int packet_num){
+    int i;
+    pcap_t *pcap = NULL;
+    
+    //init pcap
+    init_pcap(&pcap, interface);
+
+    for(i = 0; i < packet_num; i++){
+
+        //ip identification 0, 1, 2, 3 ....
+        ip->id = htons(i);
+            
+        //checksum
+        ip->checksum = 0;
+        ip->checksum = checksum ((uint16_t *) ip, IP_HDRLEN);
+    
+        // Write the Ethernet frame to the interface.
+        send_packet(pcap, frame, length);
+    }
+
+    // Close the PCAP descriptor.
+    pcap_close(pcap);
+
+}
+**/
+
 void init_pcap(pcap_t **pcap, const char *interface){
     char pcap_errbuf[PCAP_ERRBUF_SIZE] = "";
     *pcap = pcap_open_live(interface, 96, 0, 0, pcap_errbuf);
