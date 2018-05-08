@@ -1,0 +1,205 @@
+﻿<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link rel="StyleSheet" href="../css/dtree.css" type="text/css" />
+	<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+	<script language="javascript" type="text/javascript" src="../js/dtree.js"></script>
+</head>
+
+<script type="text/javascript">
+var cfm_on=1;
+var quicksetup_on=1;
+var Fvt251x_on=0;
+
+var NavLang=GetNavLang();
+
+if (NavLang == "ZH")
+{
+var vRtBrMode = "\(Bridge模式\)";
+var vQuickSetup = "快速設定";
+var vSysStatus = "系統狀態";
+var vSysinfo = "系統資訊";
+var vPONLinkS = "PON 連線狀態";
+var vIntfS = "介面狀態";
+var vStatistics = "封包統計";
+var vWifiClient = "Wi-Fi 客戶端資訊";
+var vDHCPLease = "DHCP 租借時間";
+var vAlarm = "告警狀態";
+
+var vAdvSetup = "進階設定";
+var vRegID = "註冊 ID\(SLID\)";
+var vWanConnect = "WAN 連線設定";
+var vLanSet = "LAN 設定";
+var vDNSSet = "DNS 設定";
+var vRouteSet = "路由設定";
+var vDynDNS = "動態 DNS";
+var vDNSRoute = "DNS 路由";
+var vSNMPSet = "SNMP 設定";
+var vWifiSetup = "Wi-Fi 設定";
+
+var vWifiSet_n = "Wi-Fi 11n 基本設定";
+var vWifiSecurity_n = "Wi-Fi 11n 加密設定";
+var vWifiAccess_n = "Wi-Fi 11n 過濾名單設定";
+var vWifiSet_ac = "Wi-Fi 11ac 基本設定";
+var vWifiSecurity_ac = "Wi-Fi 11ac 加密設定";
+var vWifiAccess_ac = "Wi-Fi 11ac 過濾名單設定";
+var vMaintenance = "維護功能";
+var vFwUpgrade = "韌體更新";
+var vUtilities = "Utilities";
+var vBackupConf = "設定檔備份";
+
+var vRestoreConf = "設定檔回復";
+var vReset2Default = "回復出廠預設值";
+var vReboot = "重新啟動";
+var vSysSetting = "系統設定";
+var vConnTest = "連接測試";
+var vONTMode = "供裝模式設定";
+var vIGMPSet = "IGMP設定";
+var vTLSMode = "TLS設定";
+var vLanPConf = "Lan Port Config";
+
+}
+else
+{
+var vRtBrMode = "\(Bridge Mode\)";
+var vQuickSetup = "Quick Setup";
+var vSysStatus = "System Status";
+var vSysinfo = "System Information";
+var vPONLinkS = "PON Link Status";
+var vIntfS = "Interface Status";
+var vStatistics = "WAN\/\(W\)LAN Statistics";
+var vWifiClient = "Wi-Fi Clients";
+var vDHCPLease = "DHCP Lease";
+var vAlarm = "Alarm Status";
+
+var vAdvSetup = "Advanced Setup";
+var vRegID = "Registration ID\(SLID\)";
+var vWanConnect = "WAN Connections";
+var vLanSet = "LAN Settings";
+var vDNSSet = "DNS Settings";
+var vRouteSet = "Route Settings";
+var vDynDNS = "Dynamic DNS";
+var vDNSRoute = "DNS Routings";
+var vSNMPSet = "SNMP Settings";
+var vWifiSetup = "Wi-Fi Setup";
+
+var vWifiSet_n = "Wi-Fi 11n Settings";
+var vWifiSecurity_n = "Wi-Fi 11n Security";
+var vWifiAccess_n = "Wi-Fi 11n Access";
+var vWifiSet_ac = "Wi-Fi 11ac Settings";
+var vWifiSecurity_ac = "Wi-Fi 11ac Security";
+var vWifiAccess_ac = "Wi-Fi 11ac Access";
+var vMaintenance = "Maintenance";
+var vFwUpgrade = "Firmware Upgrade";
+var vUtilities = "Utilities";
+var vBackupConf = "Backup Configuration";
+
+var vRestoreConf = "Restore Configuration";
+var vReset2Default = "Reset To Factory Default";
+var vReboot = "Reboot";
+var vSysSetting = "System Setting";
+var vConnTest = "Connection Test";
+var vONTMode = "ONT Mode";
+var vIGMPSet = "IGMP Settings";
+var vTLSMode = "TLS Mode";
+var vLanPConf = "Lan Port Config";
+}
+
+var LocString = String(window.document.location.href);
+function getQueryStr(str) {
+	var rs = new RegExp("(^|)" + str + "=([^&]*)(&|$)", "gi").exec(LocString), tmp;
+	if (tmp = rs) {
+	return tmp[2];
+	}
+	return "";
+}
+</script>
+<body bgcolor="#D4E6F8">
+<table>
+	<tr>
+		<td valign="top" width="400">
+
+			<script type="text/javascript">
+				<!--
+				var sec_flag=getQueryStr("_sec");
+				d = new dTree('d');
+
+				//var t_model_name = fvt_meta_config('version');
+				//var model_name = t_model_name.substr(0,1)+"-"+t_model_name.substr(1,5);
+				var model_name = fvt_meta_config('system_modelname');
+				if (Fvt251x_on==0)
+					d.add(0,-1,model_name+vRtBrMode);
+				else
+					d.add(0,-1,'5VT251x(Router Mode)');
+
+				if (quicksetup_on==1)
+					d.add(1,0,vQuickSetup,'/cgi-bin/wwwctrl.cgi?action=quick_setup');
+
+				d.add(27,0,vSysStatus);
+				d.add(4,27,vSysinfo,'/cgi-bin/wwwctrl.cgi?action=sysinfo');
+				d.add(37,27,vPONLinkS,'/cgi-bin/wwwctrl.cgi?action=pon_link');
+				d.add(66,27,vIntfS,'/cgi-bin/wwwctrl.cgi?action=interface_status');
+				d.add(55,27,vAlarm,'/cgi-bin/wwwctrl.cgi?action=alarm_status');
+				//d.add(45,27,'WAN/LAN Statistics','/cgi-bin/wwwctrl.cgi?action=statistics');
+				//d.add(2,0,'Device');
+
+				d.add(32,0,vAdvSetup);
+				d.add(5,32,vRegID,'/cgi-bin/wwwctrl.cgi?action=slid');
+				dhcp_start=fvt_meta_config('dhcp0_number_start');
+				if( dhcp_start.length > 4)
+					d.add(22,32,vLanSet,'/cgi-bin/wwwctrl.cgi?action=lan_new');
+				else
+					d.add(22,32,vLanSet,'/cgi-bin/wwwctrl.cgi?action=lan');
+
+				d.add(3,0,vMaintenance);
+
+				d.add(8,3,vUtilities);
+				d.add(17,8,vFwUpgrade,'/cgi-bin/wwwctrl.cgi?action=firmware_upgrade');
+				d.add(18,8,vBackupConf,'/cgi-bin/wwwctrl.cgi?action=config_backup');
+				d.add(53,8,vRestoreConf,'/cgi-bin/wwwctrl.cgi?action=config_restore');
+				d.add(19,8,vReset2Default,'/cgi-bin/wwwctrl.cgi?action=factory_default');
+				d.add(39,8,vReboot,'/cgi-bin/wwwctrl.cgi?action=reboot');
+				d.add(41,8,vSysSetting,'/cgi-bin/wwwctrl.cgi?action=system_setting');
+				//d.add(25,8,vConnTest,'/cgi-bin/wwwctrl.cgi?action=connection_test');
+				//d.add(26,8,'TR069 Management','/cgi-bin/wwwctrl.cgi?action=cwmp');
+				d.add(59,8,vONTMode,'/cgi-bin/wwwctrl.cgi?action=ont_mode');
+				d.add(65,8,vLanPConf,'/cgi-bin/wwwctrl.cgi?action=lanport_config');
+				//d.add(66,8,vIGMPSet,'/cgi-bin/wwwctrl.cgi?action=igmp_snooping');
+				var tls_mode=fvt_meta_config('tls_mode');
+				if (tls_mode != "")
+					d.add(69,8,vTLSMode,'/cgi-bin/wwwctrl.cgi?action=tls_mode');
+
+				d.add(7,3,'Log');
+				d.add(15,7,'System Log','/cgi-bin/wwwctrl.cgi?action=systemlog');
+				if ( sec_flag == '1' ){d.add(16,7,'Security Log','/cgi-bin/wwwctrl.cgi?action=securitylog');}
+
+				if (cfm_on==1)
+					{
+					d.add(62,0,'CFM');
+					d.add(63,62,'CFM Action', '/cgi-bin/wwwctrl.cgi?action=cfm_action');
+					d.add(64,62,'CFM Status', '/cgi-bin/wwwctrl.cgi?action=cfm_status');
+					}
+
+				document.write(d);
+
+				//-->
+			</script>
+
+		</td>
+		<td valign="top">
+
+			<table id="user" style="display:none">
+				<tr>
+					<td>User Name</td><td><input id="myName" type="text"></td>
+				</tr>
+				<tr><td>Account</td><td><input type="text"></td></tr>
+				<tr><td>Password</td><td><input type="text">password must be at least 4 characters long</td></tr>
+				<tr><td>Phone</td><td><input type="text"></td></tr>
+				<tr><td>Email</td><td><input type="text"></td></tr>
+				<tr><td>Department</td><td><input type="text"></td></tr>
+				<Tr><td><button>Save </button></tD><tD><button>Cancel</button></tD></tr>
+			</table>
+
+		</td>
+	</tr>
+</table>
+</body>

@@ -1,0 +1,375 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+
+
+<script language="javascript" type="text/javascript">
+
+/*
+var log_level_name = new Array("EMERG", "ALERT", "CRIT", "ERR", "WARNING", "NOTICE", "INFO", "DEBUG");
+
+function Init()
+{
+	var i;
+	var log_level=fvt_meta_config('syslogd_klogd_level');//"EMERG;ALERT;CRIT;ERR;WARNING;NOTICE;INFO;DEBUG;";
+
+	for(i=0; i<log_level_name.length; i++)
+    	{
+		if(log_level.indexOf(log_level_name[i]) != -1)
+			document.getElementById("id_"+log_level_name[i]).checked = true;
+		else
+			document.getElementById("id_"+log_level_name[i]).checked = false;
+	}
+}
+*/
+
+function check_process()
+{
+	var process="Success";
+	if (process=="Existed")
+		warn_wait();
+		//alert("Please wait!!Another client is upgading firmware.");
+}
+
+function SetLogLevel()
+{
+	//var log_level="EMERG;ALERT;CRIT;ERR;WARNING;NOTICE;INFO;DEBUG;";
+	document.syslog_tab_form.SyslogDisplayLevels.value="";
+
+	for(i=0; i<log_level_name.length; i++)
+	{
+		if(document.getElementById("id_"+log_level_name[i]).checked == true)
+		{
+		    document.syslog_tab_form.SyslogDisplayLevels.value += log_level_name[i];
+		    document.syslog_tab_form.SyslogDisplayLevels.value += ";";
+		}
+	}
+}
+
+function toggle_visibility(id) {
+       var e = document.getElementById(id);
+       if(e.style.display == 'none')
+          e.style.display = 'block';
+       else
+          e.style.display = 'none';
+}
+
+function CheckPassword(Password){
+	if (Password.toLowerCase() == fvt_meta_config('kv_chtmac')){
+	window.location.href="wwwctrl.cgi?action=securitylog";
+	}
+	else{
+	window.location.href="wwwctrl.cgi?action=systemlog";
+	}
+}
+
+function usershow()
+{
+	//SetLogLevel();
+
+	if (document.syslog_tab_form.RemoteLogEnable.selectedIndex!=0)
+	{
+		merge_ip("id_RemoteLogServer","id_RemoteLogServer_item1","id_RemoteLogServer_item2","id_RemoteLogServer_item3","id_RemoteLogServer_item4");
+		if((document.getElementById("id_RemoteLogServer").value == "")     ||
+	        	(!check_ip(document.getElementById("id_RemoteLogServer").value)))
+		{
+			var item="Remote Server";
+			warn_invalid(item);
+			//alert("The "  + item + " is invalid!");
+			return false;
+		}
+	}
+	fvt_form_submit('syslog_tab_form',0);
+	document.syslog_tab_form.submit();
+}
+
+function changeMode()
+{
+	var val;
+	if (document.syslog_tab_form.RemoteLogEnable.selectedIndex==0)
+		val=true;
+	else
+		val=false;
+	document.getElementById("id_RemoteLogServer_item1").disabled = val;
+	document.getElementById("id_RemoteLogServer_item2").disabled = val;
+	document.getElementById("id_RemoteLogServer_item3").disabled = val;
+	document.getElementById("id_RemoteLogServer_item4").disabled = val;
+	document.getElementById("id_RemoteLogServer").disabled = val;
+}
+
+function Syslog()
+{
+	/*SetLogLevel();
+	if (document.syslog_tab_form.RemoteLogEnable.selectedIndex!=0)
+	{
+	        merge_ip("id_RemoteLogServer","id_RemoteLogServer_item1","id_RemoteLogServer_item2","id_RemoteLogServer_item3","id_RemoteLogServer_item4");
+	        if((document.getElementById("id_RemoteLogServer").value == "")     ||
+	                (!check_ip(document.getElementById("id_RemoteLogServer").value)))
+	        {
+	                var item="Remote Server";
+					warn_invalid(item);
+					//alert("The "  + item + " is invalid!");
+	                return false;
+	        }
+	}*/
+//	document.syslog_tab_form.ClearLog.value = "1";
+	fvt_form_submit('syslog_tab_form',1);
+	document.syslog_tab_form.submit();
+}
+function list_syslog()
+{
+	var log_line = fvt_meta_config('kv_syslog_lines');
+	for (var i=0; i < log_line; i++)
+	{
+		var time = load_syslog_item(i, "time");
+		var module = load_syslog_item(i, "module");
+		var level = load_syslog_item(i, "level");
+		var msg = load_syslog_item(i, "msg");
+
+		//console.log("[%d]%s %s %s %s\n",i, time, module, level, msg);
+
+		if(!time || !module || !level || !msg)
+		{
+			break;
+		}
+
+		if(i%2 == 0)
+			document.write("<tr class='color_rowh'>");
+		else
+			document.write("<tr class='color_rown'>");
+
+		document.write("<td>"+time+"</td>");
+		document.write("<td>"+module+"</td>");
+		document.write("<td>"+level+"</td>");
+        document.write("<td>"+msg+"</td>");
+		document.write("</tr>");
+	}
+	//reSizeParentIframe(560);
+}
+function fvt_form_init(form_name)
+{
+	if (form_name=='syslog_tab_form' || form_name=='*') {
+		fvt_form_obj_set("syslog_tab_form", "UserShow", fvt_meta_config('kv_syslog_lines'));		//select-one
+		fvt_form_obj_set("syslog_tab_form", "debugLevel", fvt_meta_config('kv_syslog_priority'));		//hidden
+	}
+}
+
+function fvt_form_submit(form_name, flag) 	{
+	fvt_paramlist_clear();
+	if (form_name=='syslog_tab_form' || form_name=='*') {
+		if(flag =="1")
+			fvt_paramlist_cat_str('kv_syslog_clear', "1");		//hidden
+		else
+		{
+			fvt_paramlist_cat_str('kv_syslog_lines', fvt_form_obj_get("syslog_tab_form", "UserShow"));		//select-one
+			fvt_paramlist_cat_str('kv_syslog_priority', fvt_form_obj_get("syslog_tab_form", "debugLevel"));		//hidden
+		}
+	}
+	fvt_paramlist_presubmit(form_name);
+}
+
+</script>
+</head>
+
+<body align="left" onload="fvt_form_init('syslog_tab_form'); check_process(); changeMode();">
+<script language="javascript" type="text/javascript">
+</script>
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top" width="50%">
+
+<div class="div1_indent">
+	<fieldset>
+		<div class="lv1_title">
+		&nbsp;&nbsp;&nbsp;Maintenance&nbsp;&gt;&nbsp;Log&nbsp;&gt;&nbsp;<a href="#" onclick="toggle_visibility('shid'); toggle_visibility('shid1');" style="text-decoration: none; color: #4B0082;">System Log</a>
+	</td>
+
+    <form id="secchk_form" name="secchk_form" method="post">
+	<td valign="top" width="20%">
+		<input type="text" name="Passw1" value="Security" id="shid" style="display:none">
+	</td>
+	<td valign="top" width="20%">
+		<input ctrlflip="etc" name=chkpasswd type="button" onclick="CheckPassword(secchk_form.Passw1.value)" value="Submit" id="shid1" style="display:none">
+		</div>
+	</td>
+	</form>
+	</fieldset>
+</div>
+</tr>
+<form id="syslog_tab_form" name="syslog_tab_form" method="post">
+<tr><td valign="top" COLSPAN="3">
+<div class="div1_indent">
+	<div><hr class="hr2"></div>
+	<div class="lv3_new">
+		<div>
+			<table><tbody>
+				<tr><td class="width_log1">
+						<table><tr>
+							<td><div class="lv2_new" ctrlflip="etc" ctrlid="25">Log&nbsp;Size</div></td>
+							<td><div class="lv2_new">(</div></td>
+							<td><div class="lv2_new" ctrlflip="etc" ctrlid="26">Lines</div></td>
+							<td><div class="lv2_new">)</div></td>
+							<td><div class="lv2_new size_colon">:</div></td>
+						</tr></table>
+					</td>
+					<td ctrlflip="etc"><select name="UserShow" class="width_select80">
+							<option value="50">50</option>
+							<option value="100">100</option>
+							<option value="500">500</option>
+						</select>
+					</td>
+				</tr>
+				<tr style="display:none"><td><table><tr>
+						<td><div class="lv2_new" ctrlflip="etc" ctrlid="265">Remote&nbsp;Logging</div></td>
+						<td><div class="lv2_new size_colon">:</div></td>
+					</tr></table></td>
+					<td ctrlflip="etc"><select ar='1' name="RemoteLogEnable" onchange="changeMode();" class="width_select80">
+							<option value="0">Disable</option>
+							<option value="1">LAN</option>
+							<option value="2">WAN</option>
+						</select>
+					</td>
+				</tr>
+				<tr style="display:none"><td><table><tr>
+						<td><div class="lv2_new" ctrlflip="etc" ctrlid="266">Remote&nbsp;Server</div></td>
+						<td><div class="lv2_new size_colon">:</div></td>
+					</tr></table></td>
+					<td ctrlflip="right" dir='ltr'>
+						<input ctrlflip="etc" name="RemoteLogServer" id="id_RemoteLogServer" size="15" maxlength="15" value="" disabled="disabled" type="hidden">
+						<script language="javascript" type="text/javascript">
+							var syslog_server = fvt_meta_config('syslogd_remote_server');
+							if (syslog_server != '')
+								var syslog_server_Split = syslog_server.split(".");
+							else
+							{
+								var syslog_server_Split = new Array();
+								syslog_server_Split[0] = '';
+								syslog_server_Split[1] = '';
+								syslog_server_Split[2] = '';
+								syslog_server_Split[3] = '';
+							}
+							document.write("<input type='text' id='id_RemoteLogServer_item1' class=\"width_ip\" size='3' maxlength='3' value='"+syslog_server_Split[0]+"'> . ");
+							document.write("<input type='text' id='id_RemoteLogServer_item2' class=\"width_ip\" size='3' maxlength='3' value='"+syslog_server_Split[1]+"'> . ");
+							document.write("<input type='text' id='id_RemoteLogServer_item3' class=\"width_ip\" size='3' maxlength='3' value='"+syslog_server_Split[2]+"'> . ");
+							document.write("<input type='text' id='id_RemoteLogServer_item4' class=\"width_ip\" size='3' maxlength='3' value='"+syslog_server_Split[3]+"'>");
+						</script>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<table>
+							<tr>
+								<td><div class="lv2_new" ctrlflip="etc" ctrlid="267">System&nbsp;Log&nbsp;Levels</div></td>
+								<td><div class="lv2_new size_colon">:</div></td>
+							</tr>
+						</table>
+					</td>
+					<td>
+						<select ctrlflip="etc" class="width_Nwanpon_select" name="debugLevel" id='debugLevel'>
+		 					<option value="emerg">EMERG</option>
+						 	<option value="alert">ALERT</option>
+						 	<option value="crit">CRIT</option>
+						 	<option value="err">ERR</option>
+						 	<option value="warn">WARNING</option>
+						 	<option value="notice">NOTICE</option>
+						 	<option value="info">INFO</option>
+						 	<option value="debug">DEBUG</option>
+						 	<option value="all">ALL</option>
+						</select>
+					</td>
+					<!--
+					<td>
+					  <table><tr>
+						<td><input ctrlflip="etc" type="checkbox" value="Levels_EMERG" id="id_EMERG" class="checkbox" ></td>
+						<td class="width_log_emerg"><div ctrlflip="right" ctrlid="268">EMERG</div></td>
+						<td><input ctrlflip="etc" type="checkbox" value="Levels_ALERT" id="id_ALERT" class="checkbox"></td>
+						<td class="width_log_alert"><div ctrlflip="right" ctrlid="269">ALERT</div></td>
+						<td><input ctrlflip="etc" type="checkbox" value="Levels_CRIT" id="id_CRIT" class="checkbox"></td>
+						<td class="width_log_crit"><div ctrlflip="right" ctrlid="270">CRIT</div></td>
+						<td><input ctrlflip="etc" type="checkbox" value="Levels_ERR" id="id_ERR" class="checkbox"></td>
+						<td class="width_log_err"><div ctrlflip="right" ctrlid="271">ERR</div></td>
+						<td><input ctrlflip="etc" type="checkbox" value="Levels_WARNING" id="id_WARNING" class="checkbox"></td>
+						<td class="width_log_warning"><div ctrlflip="right" ctrlid="272">WARNING</div></td>
+					  </tr></table>
+					</td>
+					-->
+				</tr>
+				<!--
+				<tr>
+					<td></td>
+					<td>
+
+						<table><tr>
+							<td><input ctrlflip="etc" type="checkbox" value="Levels_NOTICE" id="id_NOTICE" class="checkbox"></td>
+							<td class="width_log_notice"><div ctrlflip="right" ctrlid="273">NOTICE</div></td>
+							<td><input ctrlflip="etc" type="checkbox" value="Levels_INFO" id="id_INFO" class="checkbox"></td>
+							<td class="width_log_info"><div ctrlflip="right" ctrlid="274">INFO</div></td>
+							<td><input ctrlflip="etc" type="checkbox" value="Levels_DEBUG" id="id_DEBUG" class="checkbox"></td>
+							<td class="width_log_bug"><div ctrlflip="right" ctrlid="275">DEBUG</div></td>
+							<td><input ctrlflip="etc" name="SyslogDisplayLevels" value="" type="hidden"></td>
+							<td align="right" ctrlflip="left">
+								<input type="button" name="applybtn" value="Apply Changes" onclick="usershow()" class="width_button">
+							</td>
+						</tr></table>
+
+					</td>
+				</tr>
+				-->
+				<tr class=" button_center">
+					<td></td>
+					<td >
+						<!--<input type="button" name="applybtn"  value="Apply Changes" onclick="usershow()" class="width_button">-->
+						<input type="button" name="applybtn"  value="Apply Changes" onclick="usershow()" class="width_button">
+					</td>
+				</tr>
+			</tbody></table>
+		</div>
+		<div><hr class="hr2"></div>
+		<div class="lv3_new">
+			<table><tbody>
+				<tr>
+					<th class="width_log_time"><div class="lv2_new" ctrlflip="right" ctrlid="276">Time</div></th>
+					<th class="width_log_module"><div class="lv2_new" ctrlflip="right" ctrlid="277">Module</div></th>
+					<th class="width_log_level"><div class="lv2_new" ctrlflip="right" ctrlid="278">Level</div></th>
+					<th class="width_log_msg"><div class="lv2_new" ctrlflip="right" ctrlid="279">Message</div></th>
+				</tr>
+				<tr>
+					<td colspan="5">
+						<div><hr class="hr2"></div>
+					</td>
+				</tr>
+				<script language="javascript" type="text/javascript">
+					list_syslog();
+				</script>
+			</tbody></table>
+		</div>
+		<div  class="top_cwmp2">
+			<table><tbody>
+				<tr>
+					<td  class="button_center">
+						<input name="ClearLog" value="0" type="hidden">
+						<input ctrlflip="etc" name="applybtn" value="Clear" onclick="Syslog()" type="button" class="width_clear">
+					</td>
+				</tr>
+			</tbody></table>
+		</div>
+	</div>
+</div>
+</form>
+</td></tr>
+</tbody></table>
+</div>
+
+<br>
+</body>
+</html>
+
+
+
+

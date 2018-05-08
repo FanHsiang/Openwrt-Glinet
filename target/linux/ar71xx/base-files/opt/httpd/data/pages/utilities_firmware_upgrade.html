@@ -1,0 +1,195 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+
+<script language="javascript" type="text/javascript">
+var NavLang=GetNavLang();
+
+if (NavLang == "ZH")
+{
+var vMaintenance = "裝置維護";
+var vUtilities = "管理工具";
+var vFWUpgrade = "韌體更新";
+var vNotice1 = "請選擇檔案後，再按\"更新韌體\"";
+var vNotice2 = "請注意：此動作約需數分鐘，請勿在升級中關閉電腦和數據機電源，或拔除相關網路線，將可能導致系統損毀";
+var vCFWVersion = "目前韌體版本";
+var vNewFirmware = "新韌體";
+var vUpgradeFW = "更新韌體";
+var vFileError = "檔案格式錯誤";
+}
+else
+{
+var vMaintenance = "Maintenance";
+var vUtilities = "Utilities";
+var vFWUpgrade = "Firmware Upgrade";
+var vNotice1 = "Please choose firmware then press \"Firmware Upgrade\"";
+var vNotice2 = "Notice: This action takes few minuites, please don't shutdown computer or device during the upgrade process, or removetwork cable, it may crash device.";
+var vCFWVersion = "Current Firmware Version";
+var vNewFirmware = "New Firmware";
+var vUpgradeFW = "Firmware Upgrade";
+var vFileError = "File format error";
+}
+
+function upgade_error()
+{
+	var test="Success";
+	if (test=="Fail")
+	{
+		alert("Firmware update error!!");
+	}
+	else if (test=="Existed")
+	{
+		alert("Please wait!!Another client is upgading firmware.");
+	}
+	//window.parent.topfrm.location="/cgi-bin/wwwctrl.cgi?action=utilities_firmware_upgrade";
+}
+
+function fvt_form_submit(form_name) {
+	fvt_paramlist_clear();
+
+	if (form_name=='upgrade_form' || form_name=='*') {
+		fvt_paramlist_cat_str('firmware_upload', "1");		//file
+	}
+	fvt_paramlist_presubmit(form_name);
+}
+
+function webcheck()
+{
+
+	if(document.upgrade_form.firmware_upload.value.length == 0)
+	{
+		alert("Please specify upgrade file's location.Either type the file's path and file name or click browse to the file's location.");
+		return false;
+	}
+	else
+	{
+		var f = document.upgrade_form;
+		var re = /\.(oneimage)$/i;
+		var ext = f.firmware_upload.value.split(".");
+		if (typeof ext[1] !== 'undefined') // not null file extension
+		{
+			//alert ("have ext - "+ext[1]);
+			if ( !re.test(f.firmware_upload.value)) // file extension=oneimage
+			{
+				alert(vFileError);
+				return false;
+			}
+		}
+
+		if (confirm("Are you sure you want to continue with upgrading?"))
+		{
+			alert("At the end of upgrading, the Gateway may not respond to commands for as long as 150 seconds.This is normal. Do not power down the base station during this time.");
+			fvt_form_submit('upgrade_form');
+			fvt_paramlist_cat_str('firmware_upload', "1");
+			document.getElementById("loading_pic").style.display="inline";
+			document.getElementById("control_div").style.display="none";
+			document.upgrade_form.submit();
+			return true;
+		}
+	}
+	return false;
+}
+
+function isHex(s)
+{
+	var j,x = 0;
+
+	for(var i = 0; i < s.length; i++)
+	{
+		var c = s.charAt(i);
+		j = parseInt(c,16);
+
+		if( (j == 0) || (j == 1)|| (j == 2)|| (j == 3)|| (j == 4)|| (j == 5)|| (j == 6) ||
+			(j == 7) || (j == 8)|| (j == 9)|| (j == 10)|| (j == 11)|| (j == 12)|| (j == 13)|| (j == 14)|| (j == 15) )
+		{
+			if(x==1)	return false;
+			x=1;
+		}
+	}
+	return true;
+}
+
+function isNValid(s)
+{
+	if( isBlank(s) || isHex(s))
+		return true;
+	else
+		return false;
+}
+</script>
+</head>
+
+<body align="left" onload="upgade_error();">
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<!-- <form method="post"	enctype="multipart/form-data" name="upgrade_form" action="wwwctrl.cgi?action=upgrading" target="contentfrm"> -->
+<form method="post"	enctype="multipart/form-data" name="upgrade_form" action="wwwctrl.cgi?action=upgrading" target="_top">
+	<fieldset>
+		<div class="lv1_title">
+		<script language="javascript" type="text/javascript">
+			document.write(vMaintenance+"&nbsp;&gt;&nbsp;"+vUtilities+"&nbsp;&gt;&nbsp;"+vFWUpgrade);
+		</script>
+		</div>
+	</fieldset>
+	<div id="loading_pic"  name="loading" style="display:none;">
+		<img src="../images/loading.gif" width="50%" height="50%">
+	</div>
+
+<div class="div1_indent" id="control_div">
+	<div class="lv5_new" ctrlflip="etc" ctrltxt="upgrade">
+		<script language="javascript" type="text/javascript">
+			document.write(vNotice1);
+		</script>
+	</div>
+	<div class="lv5_new">
+		<script language="javascript" type="text/javascript">
+			document.write(vNotice2);
+		</script>
+	</div>
+	<div class="lv3_new top_rstore" id="main_div">
+		<table>
+			<tr>
+				<td class="width_restore"><div class="lv2_new" ctrlflip="right" ctrlid="284">
+				<script language="javascript" type="text/javascript">
+					document.write(vCFWVersion);
+				</script>
+				</div></td>
+				<script language="javascript" type="text/javascript">
+					document.write("<td>"+fvt_meta_config('fw_version')+"</td>");
+				</script>
+			</tr>
+			<tr>
+				<td><div class="lv2_new" ctrlflip="right" ctrlid="285">
+				<script language="javascript" type="text/javascript">
+					document.write(vNewFirmware);
+				</script>
+				</div></td>
+				<td><input ctrlflip="etc" size="30" name="firmware_upload" type="file"></td>
+			</tr>
+			<tr class="height_rstore"><td></td>
+				<td>
+				<script language="javascript" type="text/javascript">
+					document.write("<input ctrflip='etc' type='button' onclick='webcheck();' ");
+					document.write("class='width_firmupdate' value='"+vUpgradeFW+"' >");
+				</script>
+					<!--<input ctrlflip="etc" type="button"	 class="width_firmupdate bt1" value="Upgrade Firmware" >-->
+				</td>
+			</tr>
+		</table>
+	</div>
+</div>
+</form>
+</td></tr>
+</tbody></table>
+</div>
+
+<br>
+</body>
+</html>

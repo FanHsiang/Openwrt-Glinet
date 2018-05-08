@@ -1,0 +1,98 @@
+﻿<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>.:: Welcome to the Web-Based Configurator::.</title>
+<link href="../css/zycss.css" rel="stylesheet" type="text/css">
+<script type="text/JavaScript" src="../js/common.js" ></script>
+<script type="text/JavaScript">
+
+function disabledFrame()
+{
+	var links = parent.menufrm.document.links;
+	for (var i=0; i<links.length; i++)
+	{
+		links[i].onclick = function() { return false }
+	}
+
+	var imgs = parent.topfrm.document.getElementsByTagName('img');
+	for (var i=0; i<imgs.length; i++)
+	{
+		imgs[i].onclick =  function() { return false }
+	}
+}
+
+function doLoad()
+{
+	//disabledFrame();
+	setTimeout("redirectPage();", 160*1000);
+	return true;
+}
+
+function redirectPage()
+{
+	   window.top.location='http://'+fvt_meta_config('lan0_ip')+'/';
+}
+</script>
+<style type="text/css">
+
+body {
+	background-attachment: fixed;
+	background-image: url(../images/config_bg.gif);
+}
+.style1 {
+	color: #990000;
+	font-size: 16px;
+	font-weight: bold;
+}
+
+</style>
+</head>
+<body onLoad="doLoad();">
+<!-- <body onload="window.open('/cgi-bin/wwwctrl.cgi?action=upgrading','_top');doLoad();"> -->
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<table width="540"	border="2" align="center" cellpadding="0" cellspacing="0" bordercolor="#BFC4CA" background="../images/config_bg.gif">
+  <tr>
+	<td><table width="100%"	 border="0" align="center" cellpadding="0" cellspacing="0">
+		<td colspan="3"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+		  <tr>
+			<td bgcolor="#ffffff"><img src="../images/logo.jpg" width="169" height="50"></td>
+		  </tr>
+		  <tr>
+			<td height="4" bgcolor="#AA1931"><img src="../images/dotspacer.gif" width="1" height="1"></td>
+		  </tr>
+		</table></td>
+		<tr>
+		  <td height="28">&nbsp;</td>
+		  <td>&nbsp;</td>
+		  <td>&nbsp;</td>
+		</tr>
+		<tr>
+		  <td width="8%">&nbsp;</td>
+		  <td width="86%" valign="top"><table width="75%"  border="0" align="center">
+			  <tr>
+				<td width="30%" align="center"><img src="../images/waiting.gif" width="48" height="67" align="absmiddle"></td>
+				<td class="style1">Upgrading <br>
+				Please wait ... </td>
+			  </tr>
+			  <tr>
+				<td colspan="2">&nbsp;</td>
+			  </tr>
+			  <tr align="center">
+				<td colspan="2"><p>System will reboot<BR>
+				  please re-login later</p>
+				</td>
+			  </tr>
+			  <tr>
+				<td height="35" colspan="2">&nbsp;</td>
+			  </tr>
+		  </table></td>
+		  <td width="6%">&nbsp;</td>
+		</tr>
+	</table></td>
+  </tr>
+</table>
+<p>&nbsp;</p>
+</body>
+</html>

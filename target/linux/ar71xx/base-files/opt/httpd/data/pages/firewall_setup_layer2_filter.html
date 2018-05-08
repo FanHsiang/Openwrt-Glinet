@@ -1,0 +1,957 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+<style type="text/css">
+input.width_dns_endisable{width:80px}
+td.warning{color:red; font-weight: bold;}
+</style>
+</style>
+<script language="javascript" type="text/javascript">
+
+var Src_mac_list = "";
+var Des_mac_list = "";
+var mac_filter_max = 10;
+var edit_num=99;
+var ruleNum=0;
+var isFull=0;
+var mac_filter_max_dest = 10;
+var edit_num_dest=99;
+var ruleNum_dest=0;
+var isFull_dest=0;
+
+function check_process()
+{
+	var process="Success";
+	if (process=="Existed")
+		alert("Please wait!!Another client is upgading firmware.");
+}
+
+function check_Ethernet_Type(data, item)
+{
+	if (isBlank(data)||(!check_0Tof(data))||(data.length != 2))
+	{
+		alert(item + " is invalid!! please input value 00 ~ FF.");
+		return false;
+	}
+	return true;
+}
+
+function get_elements_disabled(name,no,disable) //name+no : tagname, disable:0(enable) 1(disable)
+{
+
+	var i;
+	var item;
+
+	for(i=0;i<no;i++)
+	{
+		item=get_elements(name,i);
+		item.disabled=disable;
+		changeElementEnable(name,i,disable);
+	}
+}
+
+function changeElementEnable(name,no,disable)
+{
+	var index=0;
+	for (index=1;index<=6;index++)
+	{
+		var obj=document.getElementById("id_" + name + no + "_item" + index);
+		obj.disabled=disable;
+	}
+}
+
+function get_elements(name,i) //name+i : tagname
+{
+	var i;
+	var tagname,item;
+	tagname=name+i;
+	item=document.getElementsByName(tagname);
+	return (item[0]);
+}
+
+function alg_init()
+{
+
+	for (i=0; i< document.BridgeFilter_form.elements.length; i++)
+	{
+		document.BridgeFilter_form.elements[i].disabled = true;
+	}
+
+	document.BridgeFilter_form.applybtn.disabled = false;
+	document.getElementById("id_BrFilterAlg1").disabled = false;
+	document.getElementById("id_BrFilterAlg2").disabled = false;
+	document.getElementById("id_BrFilterAlg3").disabled = false;
+
+	document.BridgeFilter_form.BrFilterPolicy.disabled = false;
+
+	if (document.getElementById("id_BrFilterAlg1").checked)//0:Ethenet Type
+	{
+		document.BridgeFilter_form.BrEthType1stValue.disabled = false;
+		document.BridgeFilter_form.BrEthType2ndValue.disabled = false;
+	}
+	else if (document.getElementById("id_BrFilterAlg2").checked) //1:Src MAC
+	{
+		get_elements_disabled("Src_mac",mac_filter_max,false);
+	}
+	else if (document.getElementById("id_BrFilterAlg3").checked) //2:Dest MAC
+	{
+		get_elements_disabled("Des_mac",mac_filter_max,false);
+	}
+
+}
+
+function checkSameMac()
+{
+	var i=0;
+	var srcmac_now = document.getElementById("id_srcMAC").value;
+
+	for(i=0;i<mac_filter_max;i++)
+	{
+		if( edit_num == i)
+			continue;
+		if(fvt_meta_config('fw_macfilter'+i+'_mac')!="")
+		{
+			if(srcmac_now==fvt_meta_config('fw_macfilter'+i+'_mac'))
+			{
+				alert("MAC Address is the same with rule "+(i+1)+"!!");
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+function checkSameDestMac()
+{
+	var i=0;
+	var destmac_now = document.getElementById("id_destMAC").value;
+
+	for(i=0;i<mac_filter_max_dest;i++)
+	{
+		if( edit_num_dest == i)
+			continue;
+		if(fvt_meta_config('fw_macfilter'+i+'_dest_mac')!="")
+		{
+			if(destmac_now==fvt_meta_config('fw_macfilter'+i+'_dest_mac'))
+			{
+				alert("MAC Address is the same with rule "+(i+1)+"!!");
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+//BrFilterPolicy: 0:Disable, 1:Deny, 2:Allow
+function BridgeSetting()
+{
+	var item,i;
+	var src_flag=0;
+	var dest_flag=0;
+
+	merge_mac("id_srcMAC","id_Src_mac_item1","id_Src_mac_item2","id_Src_mac_item3","id_Src_mac_item4","id_Src_mac_item5","id_Src_mac_item6");
+	merge_mac("id_destMAC","id_Dest_mac_item1","id_Dest_mac_item2","id_Dest_mac_item3","id_Dest_mac_item4","id_Dest_mac_item5","id_Dest_mac_item6");
+
+	if(document.getElementById("id_srcMAC").value!="")
+	{
+		document.getElementById("id_srcMAC").value = document.getElementById("id_srcMAC").value.toUpperCase();
+
+		if (!check_mac_plus(document.getElementById("id_srcMAC").value))
+		{
+			alert("Source MAC Address is invalid!!");
+			return false;
+		}
+		if (document.getElementById("id_srcMAC").value.length!=0)
+		{
+			src_flag = 1;
+		}
+
+		if ((src_flag==0)&&(document.BridgeFilter_form.BrFilterPolicy.selectedIndex!=0))
+		{
+			var item="Source MAC Address";
+			alert(item + " is invalid!");
+			return false;
+		}
+		if (!checkSameMac())
+			return;
+	}
+
+	if(document.getElementById("id_destMAC").value!="")
+	{
+		document.getElementById("id_destMAC").value = document.getElementById("id_destMAC").value.toUpperCase();
+
+		if (!check_mac_plus(document.getElementById("id_destMAC").value))
+		{
+			alert("Destination MAC Address is invalid!!");
+			return false;
+		}
+		if (document.getElementById("id_destMAC").value.length!=0)
+		{
+			dest_flag = 1;
+		}
+
+		if ((dest_flag==0)&&(document.BridgeFilter_form.BrFilterPolicy.selectedIndex!=0))
+		{
+			var item="Destination MAC Address";
+			alert(item + " is invalid!");
+			return false;
+		}
+		if (!checkSameDestMac())
+			return;
+	}
+
+
+	if(fvt_form_obj_get("BridgeFilter_form", "BrFilterPolicy")==2)
+	{
+		var mac_flag=0;
+		var mac_dest_flag=0;
+		for(var i=0; i < mac_filter_max; i++)
+		{
+			var srcmac = fvt_meta_config("fw_macfilter"+i+"_mac");
+			if (srcmac != '')
+			{
+				 mac_flag=1;
+				 break;
+			}
+		}
+
+		for(var i=0; i < mac_filter_max_dest; i++)
+		{
+			var destmac = fvt_meta_config("fw_macfilter"+i+"_dest_mac");
+			if (destmac != '')
+			{
+				 mac_dest_flag=1;
+				 break;
+			}
+		}
+
+		if ((mac_flag==0 && document.getElementById("id_srcMAC").value=="") &&
+			(mac_dest_flag==0 && document.getElementById("id_destMAC").value==""))
+		{
+			alert("Error! You didn't setup any rules.");
+			return false;
+		}
+		else
+		{
+			if (confirm("Remember to set your own MAC address to the rules, otherwise you will unable to login!"))
+			{
+				fvt_form_submit("BridgeFilter_form");
+				document.getElementById('id_apply_tr').style.display="none";
+				document.getElementById('id_wait_progress').style.display="";
+				document.BridgeFilter_form.submit();
+				return true;
+			}
+		}
+	}
+	else
+	{
+		fvt_form_submit("BridgeFilter_form");
+		document.getElementById('id_apply_tr').style.display="none";
+		document.getElementById('id_wait_progress').style.display="";
+		document.BridgeFilter_form.submit();
+		return true;
+	}
+}
+
+function valueMatch(s1, s2, match_return)
+{
+	if(s1 == s2)
+		return match_return;
+	else
+		return "";
+}
+
+var confirm_message_a="Note: Please be careful not to REMOVE your own MAC address from the rule list in [MAC Allow mode],\n" +
+					"otherwise you will unable to login!\n"+
+					"Are you sure you want to delete MAC Address ";
+var confirm_message_e="";
+function deleteRuleSrc(val)
+{
+	document.getElementById("id_delete_src_item").value=val;
+	document.getElementById("id_show_srcmac_tb").checked = true;
+	isFull=0;
+	var Src_mac_1 = document.getElementById("id_hidden_srcmac_item1_" + val).value;
+	var Src_mac_2 = document.getElementById("id_hidden_srcmac_item2_" + val).value;
+	var Src_mac_3 = document.getElementById("id_hidden_srcmac_item3_" + val).value;
+	var Src_mac_4 = document.getElementById("id_hidden_srcmac_item4_" + val).value;
+	var Src_mac_5 = document.getElementById("id_hidden_srcmac_item5_" + val).value;
+	var Src_mac_6 = document.getElementById("id_hidden_srcmac_item6_" + val).value;
+	var confirm_message=confirm_message_a+"["+Src_mac_1+":"+Src_mac_2+":"+Src_mac_3+":"+
+						Src_mac_4+":"+Src_mac_5+":"+Src_mac_6+"]?"+confirm_message_e
+	//if( !confirm(confirm_message)) return false;
+	if (document.BridgeFilter_form.BrFilterPolicy.selectedIndex==2)
+		{
+		if( !confirm(confirm_message)) return false;
+		}
+	fvt_form_submit('BridgeFilter_table_form');
+	document.getElementById('id_apply_tr').style.display="none";
+	document.getElementById('id_wait_progress').style.display="";
+	document.getElementById("id_BridgeFilter_table_form").submit();
+}
+function deleteRuleDest(val)
+{
+	document.getElementById("id_delete_dest_item").value=val;
+	document.getElementById("id_show_destmac_tb").checked = true;
+	isFull_dest=0;
+	var Dest_mac_1 = document.getElementById("id_hidden_destmac_item1_" + val).value;
+	var Dest_mac_2 = document.getElementById("id_hidden_destmac_item2_" + val).value;
+	var Dest_mac_3 = document.getElementById("id_hidden_destmac_item3_" + val).value;
+	var Dest_mac_4 = document.getElementById("id_hidden_destmac_item4_" + val).value;
+	var Dest_mac_5 = document.getElementById("id_hidden_destmac_item5_" + val).value;
+	var Dest_mac_6 = document.getElementById("id_hidden_destmac_item6_" + val).value;
+	var confirm_message=confirm_message_a+"["+Dest_mac_1+":"+Dest_mac_2+":"+Dest_mac_3+":"+
+						Dest_mac_4+":"+Dest_mac_5+":"+Dest_mac_6+"]?"+confirm_message_e
+	//if( !confirm(confirm_message)) return false;
+	if (document.BridgeFilter_form.BrFilterPolicy.selectedIndex==2)
+		{
+		if( !confirm(confirm_message)) return false;
+		}
+	fvt_form_submit('BridgeFilter_table_form');
+	document.getElementById('id_apply_tr').style.display="none";
+	document.getElementById('id_wait_progress').style.display="";
+	document.getElementById("id_BridgeFilter_table_form").submit();
+}
+
+function editRuleSrc(val)
+{
+	edit_num=val;
+	document.getElementById("id_show_srcmac_tb").checked = true;
+	document.getElementById("id_show_destmac_tb").disabled = true;
+	document.getElementById("Src_MAC_tb").style.display="inline";
+	document.getElementById("Dest_MAC_tb").style.display="none";
+	document.getElementById("id_edit_item").value=val;
+
+	document.getElementById("id_Src_mac_item1").value = document.getElementById("id_hidden_srcmac_item1_" + val).value;
+	document.getElementById("id_Src_mac_item2").value = document.getElementById("id_hidden_srcmac_item2_" + val).value;
+	document.getElementById("id_Src_mac_item3").value = document.getElementById("id_hidden_srcmac_item3_" + val).value;
+	document.getElementById("id_Src_mac_item4").value = document.getElementById("id_hidden_srcmac_item4_" + val).value;
+	document.getElementById("id_Src_mac_item5").value = document.getElementById("id_hidden_srcmac_item5_" + val).value;
+	document.getElementById("id_Src_mac_item6").value = document.getElementById("id_hidden_srcmac_item6_" + val).value;
+
+	document.getElementById("id_Src_mac_item1").disabled=false;
+	document.getElementById("id_Src_mac_item2").disabled=false;
+	document.getElementById("id_Src_mac_item3").disabled=false;
+	document.getElementById("id_Src_mac_item4").disabled=false;
+	document.getElementById("id_Src_mac_item5").disabled=false;
+	document.getElementById("id_Src_mac_item6").disabled=false;
+
+	isFull=0;
+}
+
+function editRuleDest(val)
+{
+	edit_num=val;
+	document.getElementById("id_show_destmac_tb").checked = true;
+	document.getElementById("id_show_srcmac_tb").disabled = true;
+	document.getElementById("Src_MAC_tb").style.display="none";
+	document.getElementById("Dest_MAC_tb").style.display="inline";
+	document.getElementById("id_edit_item").value=val;
+	document.getElementById("id_Dest_mac_item1").value = document.getElementById("id_hidden_destmac_item1_" + val).value;
+	document.getElementById("id_Dest_mac_item2").value = document.getElementById("id_hidden_destmac_item2_" + val).value;
+	document.getElementById("id_Dest_mac_item3").value = document.getElementById("id_hidden_destmac_item3_" + val).value;
+	document.getElementById("id_Dest_mac_item4").value = document.getElementById("id_hidden_destmac_item4_" + val).value;
+	document.getElementById("id_Dest_mac_item5").value = document.getElementById("id_hidden_destmac_item5_" + val).value;
+	document.getElementById("id_Dest_mac_item6").value = document.getElementById("id_hidden_destmac_item6_" + val).value;
+
+	document.getElementById("id_Dest_mac_item1").disabled=false;
+	document.getElementById("id_Dest_mac_item2").disabled=false;
+	document.getElementById("id_Dest_mac_item3").disabled=false;
+	document.getElementById("id_Dest_mac_item4").disabled=false;
+	document.getElementById("id_Dest_mac_item5").disabled=false;
+	document.getElementById("id_Dest_mac_item6").disabled=false;
+	isFull_dest=0;
+}
+
+function enableRule(index,SD)
+{
+	fvt_paramlist_clear();
+
+	if(document.getElementById("id_macfilter_en_"+index).value=="Enable")
+	{
+		fvt_paramlist_cat_str("fw_macfilter"+index+"_en",1);
+	}
+	else
+	{
+		 fvt_paramlist_cat_str("fw_macfilter"+index+"_en",0);
+	}
+
+	fvt_paramlist_presubmit("BridgeFilter_table_form");
+	document.getElementById('id_apply_tr').style.display="none";
+	document.getElementById('id_wait_progress').style.display="";
+	document.getElementById("id_BridgeFilter_table_form").submit();
+}
+
+function enableRuleDest(index)
+{
+	fvt_paramlist_clear();
+
+	if(document.getElementById("id_macfilter_dest_en_"+index).value=="Enable")
+	{
+		fvt_paramlist_cat_str("fw_macfilter"+index+"_dest_en",1);
+	}
+	else
+	{
+		 fvt_paramlist_cat_str("fw_macfilter"+index+"_dest_en",0);
+	}
+
+	fvt_paramlist_presubmit("BridgeFilter_table_form");
+	document.getElementById('id_apply_tr').style.display="none";
+	document.getElementById('id_wait_progress').style.display="";
+	//alert(index);
+	document.getElementById("id_BridgeFilter_table_form").submit();
+}
+
+function init()
+{
+	document.getElementById("id_show_srcmac_tb").checked = true;
+	document.getElementById("id_show_srcmac_tb").disabled = false;
+	document.getElementById("id_show_destmac_tb").disabled = false;
+	document.getElementById("Src_MAC_tb").style.display="inline";
+
+	if (ruleNum>=mac_filter_max)
+	{
+		document.getElementById("id_Src_mac_item1").disabled=true;
+		document.getElementById("id_Src_mac_item2").disabled=true;
+		document.getElementById("id_Src_mac_item3").disabled=true;
+		document.getElementById("id_Src_mac_item4").disabled=true;
+		document.getElementById("id_Src_mac_item5").disabled=true;
+		document.getElementById("id_Src_mac_item6").disabled=true;
+		isFull=1;
+	}
+	if (ruleNum_dest>=mac_filter_max_dest)
+	{
+		document.getElementById("id_Dest_mac_item1").disabled=true;
+		document.getElementById("id_Dest_mac_item2").disabled=true;
+		document.getElementById("id_Dest_mac_item3").disabled=true;
+		document.getElementById("id_Dest_mac_item4").disabled=true;
+		document.getElementById("id_Dest_mac_item5").disabled=true;
+		document.getElementById("id_Dest_mac_item6").disabled=true;
+		isFull_Dest=1;
+	}
+}
+
+function fvt_form_init(form_name)
+{
+	var policy;
+	policy = parseInt(fvt_meta_config('fw_macfilter_enable'),10);
+	if( policy )
+	{
+		fvt_form_obj_set("BridgeFilter_form", "BrFilterPolicy", (parseInt(fvt_meta_config('fw_macfilter_type'),10)+1));
+	}
+	else
+	{
+		fvt_form_obj_set("BridgeFilter_form", "BrFilterPolicy", '0');
+	}
+
+	if (form_name=='BridgeFilter_form' || form_name=='*')
+	{
+	}
+	else if (form_name=='BridgeFilter_table_form' || form_name=='*')
+	{
+		for(ruleNum=0; ruleNum < mac_filter_max; ruleNum++)
+		{
+			var srcmac = fvt_meta_config("fw_macfilter"+ruleNum+"_mac");
+			if (srcmac == '')
+			{
+				break;
+			}
+		}
+		for(ruleNum_dest=0; ruleNum_dest < mac_filter_max_dest; ruleNum_dest++)
+		{
+			var destmac = fvt_meta_config("fw_macfilter"+ruleNum_dest+"_dest_mac");
+			if (destmac == '')
+			{
+				break;
+			}
+		}
+		return;
+	}
+}
+
+function fvt_form_submit(form_name) {
+	var i;
+	var src_mac_id;
+	var src_mac_key;
+	var src_mac_val;
+	var fw_macfilter_en_key;
+	var policy;
+
+	fvt_paramlist_clear();
+	policy = fvt_form_obj_get("BridgeFilter_form", "BrFilterPolicy");
+	if( policy == 0 )
+	{
+		fvt_paramlist_cat_str('fw_macfilter_enable', '0');
+	}
+	else
+	{
+		fvt_paramlist_cat_str('fw_macfilter_enable', '1');
+		fvt_paramlist_cat_str('fw_macfilter_type', (parseInt(policy,10)-1));
+	}
+
+	if(isFull && document.getElementById("id_show_srcmac_tb").checked) //only submit policy
+	{
+		fvt_paramlist_presubmit(form_name);
+		return;
+	}
+	if(isFull_dest && document.getElementById("id_show_destmac_tb").checked) //only submit policy
+	{
+		fvt_paramlist_presubmit(form_name);
+		return;
+	}
+
+	//Source
+	if ((form_name=='BridgeFilter_form' || form_name=='*')
+		&& document.getElementById("id_show_srcmac_tb").checked)
+	{
+		if (edit_num != 99)
+		{
+			fvt_paramlist_cat_str("fw_macfilter"+edit_num+"_en", "1");
+			fvt_paramlist_cat_str("fw_macfilter"+edit_num+"_mac", fvt_form_obj_get("BridgeFilter_form", "srcMAC"));
+			edit_num=99;
+		}
+		else
+		{
+			fvt_paramlist_cat_str("fw_macfilter"+ruleNum+"_en", "1");
+			fvt_paramlist_cat_str("fw_macfilter"+ruleNum+"_mac", fvt_form_obj_get("BridgeFilter_form", "srcMAC"));
+		}
+	}
+	else if ((form_name=='BridgeFilter_table_form' || form_name=='*')
+			&& document.getElementById("id_show_srcmac_tb").checked)
+	{
+		var del_num=document.getElementById("id_delete_src_item").value;
+		var j=0;
+		for (var i=0; i< mac_filter_max; i++)
+		{
+			if (j < ruleNum)
+			{
+				if(i == del_num)
+				{
+					j++;
+					if( del_num == ruleNum-1 )
+					{
+						fvt_paramlist_cat_str("fw_macfilter"+i+"_en", "");
+						fvt_paramlist_cat_str("fw_macfilter"+i+"_mac", "");
+					}
+					else
+					{
+						fvt_paramlist_cat_str("fw_macfilter"+i+"_en", (document.getElementById("id_macfilter_en_"+j).value == "Enable"?0:1));
+						fvt_paramlist_cat_str("fw_macfilter"+i+"_mac", document.getElementById("id_hidden_mac_"+j).value);
+					}
+				}
+				else if(i==(ruleNum-1))
+				{
+					fvt_paramlist_cat_str("fw_macfilter"+i+"_en", "");
+					fvt_paramlist_cat_str("fw_macfilter"+i+"_mac", "");
+				}
+				else
+				{
+					fvt_paramlist_cat_str("fw_macfilter"+i+"_en", (document.getElementById("id_macfilter_en_"+j).value == "Enable"?0:1));
+					fvt_paramlist_cat_str("fw_macfilter"+i+"_mac", document.getElementById("id_hidden_mac_"+j).value);
+				}
+				j++;
+			}
+			else
+			{
+				fvt_paramlist_cat_str("fw_macfilter"+i+"_en", "");
+				fvt_paramlist_cat_str("fw_macfilter"+i+"_mac", "");
+			}
+		}
+	}
+
+	//Dest
+	if ((form_name=='BridgeFilter_form' || form_name=='*')
+		&& document.getElementById("id_show_destmac_tb").checked)
+	{
+		if (edit_num != 99)
+		{
+			fvt_paramlist_cat_str("fw_macfilter"+edit_num+"_dest_en", "1");
+			fvt_paramlist_cat_str("fw_macfilter"+edit_num+"_dest_mac", fvt_form_obj_get("BridgeFilter_form", "destMAC"));
+			edit_num=99;
+		}
+		else
+		{
+			fvt_paramlist_cat_str("fw_macfilter"+ruleNum_dest+"_dest_en", "1");
+			fvt_paramlist_cat_str("fw_macfilter"+ruleNum_dest+"_dest_mac", fvt_form_obj_get("BridgeFilter_form", "destMAC"));
+		}
+	}
+	else if ((form_name=='BridgeFilter_table_form' || form_name=='*')
+			&& document.getElementById("id_show_destmac_tb").checked)
+	{
+		var del_num=document.getElementById("id_delete_dest_item").value;
+		var j=0;
+		for (var i=0; i< mac_filter_max_dest; i++)
+		{
+			if (j < ruleNum_dest)
+			{
+				if(i == del_num)
+				{
+					j++;
+					if( del_num == ruleNum_dest-1 )
+					{
+						fvt_paramlist_cat_str("fw_macfilter"+i+"_dest_en", "");
+						fvt_paramlist_cat_str("fw_macfilter"+i+"_dest_mac", "");
+					}
+					else
+					{
+						fvt_paramlist_cat_str("fw_macfilter"+i+"_dest_en", (document.getElementById("id_macfilter_dest_en_"+j).value == "Enable"?0:1));
+						fvt_paramlist_cat_str("fw_macfilter"+i+"_dest_mac", document.getElementById("id_hidden_destmac_"+j).value);
+					}
+				}
+				else if(i==(ruleNum_dest-1))
+				{
+					fvt_paramlist_cat_str("fw_macfilter"+i+"_dest_en", "");
+					fvt_paramlist_cat_str("fw_macfilter"+i+"_dest_mac", "");
+				}
+				else
+				{
+					fvt_paramlist_cat_str("fw_macfilter"+i+"_dest_en", (document.getElementById("id_macfilter_dest_en_"+j).value == "Enable"?0:1));
+					fvt_paramlist_cat_str("fw_macfilter"+i+"_dest_mac", document.getElementById("id_hidden_destmac_"+j).value);
+				}
+				j++;
+			}
+			else
+			{
+				fvt_paramlist_cat_str("fw_macfilter"+i+"_dest_en", "");
+				fvt_paramlist_cat_str("fw_macfilter"+i+"_dest_mac", "");
+			}
+		}
+	}
+
+	fvt_paramlist_presubmit(form_name);
+}
+
+function list_BridgeFilter_rules()
+{
+	fvt_form_init('BridgeFilter_table_form');
+	var i;
+	var j;
+	var line=0;
+
+	//for list Source MAC
+	for(i=0;i<ruleNum;i++)
+	{
+		var Srcmac = fvt_meta_config("fw_macfilter"+i+"_mac");
+		if(Srcmac!="")
+		{
+			if(line%2 == 0)
+				document.write("<tr class='color_rowh'>");
+			else
+				document.write("<tr class='color_rown'>");
+			line++;
+
+			document.write("<td style='padding-left:8px'>"+line+"</td><input type='hidden' id='id_hidden_macnum_"+i+"' value='"+(i+1)+"'>");
+			if(fvt_meta_config("fw_macfilter"+i+"_en")==1)
+				{document.write("<td>Enabled</td>");}
+			else
+				{document.write("<td>Disabled</td>");}
+			document.write("<td>Source</td>");
+
+			var Src_mac = Srcmac.split(":");
+			document.write("<td><table><tr><td><input type='hidden' id='id_hidden_mac_"+i+"' value='"+Srcmac+"'>"+Srcmac+"</td></tr>");
+			document.write("<input type='hidden' id='id_hidden_srcmac_item1_"+i+"' value='"+Src_mac[0]+"'>");
+			document.write("<input type='hidden' id='id_hidden_srcmac_item2_"+i+"' value='"+Src_mac[1]+"'>");
+			document.write("<input type='hidden' id='id_hidden_srcmac_item3_"+i+"' value='"+Src_mac[2]+"'>");
+			document.write("<input type='hidden' id='id_hidden_srcmac_item4_"+i+"' value='"+Src_mac[3]+"'>");
+			document.write("<input type='hidden' id='id_hidden_srcmac_item5_"+i+"' value='"+Src_mac[4]+"'>");
+			document.write("<input type='hidden' id='id_hidden_srcmac_item6_"+i+"' value='"+Src_mac[5]+"'></table></td>");
+
+			document.write("<td><table><tr>");
+			document.write("<td ctrlflip='etc'><input type='button' value='Edit' class='submitBtn' onclick='editRuleSrc("+i+");'></td>");
+			document.write("<td ctrlflip='etc'><input type='button' value='Delete' class='submitBtn' onclick='deleteRuleSrc("+i+");'></td>");
+			document.write("<td>&nbsp;&nbsp;</td>");
+			if(fvt_meta_config("fw_macfilter"+i+"_en")==1)
+				document.write("<td><input ctrlflip='etc' id='id_macfilter_en_"+i+"' type='button' name='nosave_enable' value='Disable' class='width_dns_endisable' onclick='enableRule(\""+i+"\");' ></td>");
+			else if(fvt_meta_config("fw_macfilter"+i+"_en")==0)
+				document.write("<td><input ctrlflip='etc' id='id_macfilter_en_"+i+"' type='button' name='nosave_enable' value='Enable' class='width_dns_endisable' onclick='enableRule(\""+i+"\");' ></td>");
+			document.write("</tr></table></td>");
+			document.write("</tr>");
+		}
+		else
+		{
+			document.write("<td><table><tr><td id='id_hidden_mac_"+i+"'ctrlflip='right'>"+Srcmac+"</td></tr>");
+			document.write("<input type='hidden' id='id_hidden_srcmac_item1_"+i+"' value=''>");
+			document.write("<input type='hidden' id='id_hidden_srcmac_item2_"+i+"' value=''>");
+			document.write("<input type='hidden' id='id_hidden_srcmac_item3_"+i+"' value=''>");
+			document.write("<input type='hidden' id='id_hidden_srcmac_item4_"+i+"' value=''>");
+			document.write("<input type='hidden' id='id_hidden_srcmac_item5_"+i+"' value=''>");
+			document.write("<input type='hidden' id='id_hidden_srcmac_item6_"+i+"' value=''></table></td>");
+		}
+		document.write("</tr>")
+	}
+
+	//for list destination MAC
+	for(i=0;i<ruleNum_dest;i++)
+	{
+		var Destmac = fvt_meta_config("fw_macfilter"+i+"_dest_mac");
+		if(Destmac!="")
+		{
+			if(line%2 == 0)
+				document.write("<tr class='color_rowh'>");
+			else
+				document.write("<tr class='color_rown'>");
+			line++;
+
+			document.write("<td style='padding-left:8px'>"+line+"</td><input type='hidden' id='id_hidden_destmacnum_"+i+"' value='"+(i+1)+"'>");
+			if(fvt_meta_config("fw_macfilter"+i+"_dest_en")==1)
+				{document.write("<td>Enabled</td>");}
+			else
+				{document.write("<td>Disabled</td>");}
+			document.write("<td>Destination</td>");
+
+			var Dest_mac = Destmac.split(":");
+			document.write("<td><table><tr><td><input type='hidden' id='id_hidden_destmac_"+i+"' value='"+Destmac+"'>"+Destmac+"</td></tr>");
+			document.write("<input type='hidden' id='id_hidden_destmac_item1_"+i+"' value='"+Dest_mac[0]+"'>");
+			document.write("<input type='hidden' id='id_hidden_destmac_item2_"+i+"' value='"+Dest_mac[1]+"'>");
+			document.write("<input type='hidden' id='id_hidden_destmac_item3_"+i+"' value='"+Dest_mac[2]+"'>");
+			document.write("<input type='hidden' id='id_hidden_destmac_item4_"+i+"' value='"+Dest_mac[3]+"'>");
+			document.write("<input type='hidden' id='id_hidden_destmac_item5_"+i+"' value='"+Dest_mac[4]+"'>");
+			document.write("<input type='hidden' id='id_hidden_destmac_item6_"+i+"' value='"+Dest_mac[5]+"'></table></td>");
+
+			document.write("<td><table><tr>");
+			document.write("<td ctrlflip='etc'><input type='button' value='Edit' class='submitBtn' onclick='editRuleDest("+i+");'></td>");
+			document.write("<td ctrlflip='etc'><input type='button' value='Delete' class='submitBtn' onclick='deleteRuleDest("+i+");'></td>");
+			document.write("<td>&nbsp;&nbsp;</td>");
+			if(fvt_meta_config("fw_macfilter"+i+"_dest_en")==1)
+				document.write("<td><input ctrlflip='etc' id='id_macfilter_dest_en_"+i+"' type='button' name='nosave_enable' value='Disable' class='width_dns_endisable' onclick='enableRuleDest(\""+i+"\");' ></td>");
+			else if(fvt_meta_config("fw_macfilter"+i+"_dest_en")==0)
+				document.write("<td><input ctrlflip='etc' id='id_macfilter_dest_en_"+i+"' type='button' name='nosave_enable' value='Enable' class='width_dns_endisable' onclick='enableRuleDest(\""+i+"\");' ></td>");
+			document.write("</tr></table></td>");
+			document.write("</tr>");
+		}
+		else
+		{
+			document.write("<td><table><tr><td id='id_hidden_destmac_"+i+"'ctrlflip='right'>"+Destmac+"</td></tr>");
+			document.write("<input type='hidden' id='id_hidden_destmac_item1_"+i+"' value=''>");
+			document.write("<input type='hidden' id='id_hidden_destmac_item2_"+i+"' value=''>");
+			document.write("<input type='hidden' id='id_hidden_destmac_item3_"+i+"' value=''>");
+			document.write("<input type='hidden' id='id_hidden_destmac_item4_"+i+"' value=''>");
+			document.write("<input type='hidden' id='id_hidden_destmac_item5_"+i+"' value=''>");
+			document.write("<input type='hidden' id='id_hidden_destmac_item6_"+i+"' value=''></table></td>");
+		}
+		document.write("</tr>")
+	}
+
+}
+function Show_MAC_tb()
+{
+if (document.getElementById("id_show_srcmac_tb").checked)
+	{
+		document.getElementById("Src_MAC_tb").style.display="inline";
+		document.getElementById("Dest_MAC_tb").style.display="none";
+	}
+	else
+	{
+		document.getElementById("Src_MAC_tb").style.display="none";
+		document.getElementById("Dest_MAC_tb").style.display="inline";
+	}
+}
+
+var BrFilterPolicy_previousVal;
+function changeL2rule()
+{
+//BrFilterPolicy: 0:Disable, 1:Deny, 2:Allow
+if (document.BridgeFilter_form.BrFilterPolicy.selectedIndex==1 && BrFilterPolicy_previousVal!=1)
+	{
+		alert ("Note: Change to [MAC Deny mode]\n"+
+		"\nIf your own MAC address in the rule list, Remember to remove it from the list firstly, otherwise you will unable to login!");
+		document.getElementById("id_allow_warning").style.display="none";
+	}
+else if (document.BridgeFilter_form.BrFilterPolicy.selectedIndex==2 && BrFilterPolicy_previousVal!=2)
+	{
+		alert ("Note: Change to [MAC Allow mode]\n"+
+		"\nRemember to set your own MAC address to the rule list, otherwise you will unable to login!");
+		document.getElementById("id_allow_warning").style.display="inline";
+	}
+else
+	{
+		document.getElementById("id_allow_warning").style.display="none";
+	}
+}
+
+</script>
+</head>
+
+<body align="left" onload="check_process();init();">
+	<div id="loading_pic" name="loading" style="display:none;">
+		<img src="../images/loading.gif" width="50%" height="50%">
+	</div>
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr id="main_content1"><td valign="top">
+<form id="BridgeFilter_form" name="BridgeFilter_form" method="post">
+	<fieldset>
+	<script language="javascript" type="text/javascript">
+		if(fvt_meta_config('sess_level')=="admin")
+			document.write("<div class='lv1_title'>Firewall Setup&nbsp;&gt;&nbsp;Layer 2 Filter</div>");
+		else
+			document.write("<div class='lv1_title'>Firewall&nbsp;&gt;&nbsp;MAC Filter</div>");
+	</script>
+	</fieldset>
+
+	<div class="lv2_th" style="margin:20px 0 20px 2.3em">
+	<input name="nosave_editEntry" id="id_edit_item" value="0" type="hidden">
+		<div>
+			<table><tbody>
+				<tr>
+					<td	 class="width_l2f1"><div class="lv2_title">LAN Access Restriction</div></td>
+					<td></td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td id="id_allow_warning" style="display:none" class="warning">Warning:<br>In [Allow mode], Remember to set your own MAC address to the rule list,<br>otherwise you will unable to login!<br>&nbsp;</td>
+				</tr>
+				<tr>
+					<td class="width_l2f1">Filter Policy</td>
+					<td><select id="id_BrFilterPolicy" name="BrFilterPolicy" class="width_select80" onchange="changeL2rule();">
+							<option value="0">Disable</option>
+							<option value="1">Deny</option>
+							<option value="2">Allow</option>
+						</select>
+						<script type="text/javascript">
+							BrFilterPolicy_previousVal=document.BridgeFilter_form.BrFilterPolicy.value;
+						</script>
+					</td>
+				</tr>
+				<tr>
+					<td class="width_l2f1">
+					</td>
+					<td>
+					<BR>
+					<input name="Show_MACTB" id="id_show_srcmac_tb" onclick="Show_MAC_tb();" value="Source Mac" type="radio"> Source MAC
+					<BR>
+					<input name="Show_MACTB" id="id_show_destmac_tb" onclick="Show_MAC_tb();" value="Destination MAC" type="radio"> Destination MAC
+					</td>
+				</tr>
+			</tbody></table>
+		</div>
+		<div id="Src_MAC_tb" style="display:none">
+			<table><tbody>
+			<tr><td class="width_l2f1"></td></tr>
+				<tr>
+					<td>Source&nbsp;MAC&nbsp;Address</td>
+					<td>
+						<table><tbody>
+						<td><input name="srcMAC" id="id_srcMAC" value="" type="hidden"></td>
+						<td><input id="id_Src_mac_item1" class="width_mac" maxlength="2" type="text">:</td>
+						<td><input id="id_Src_mac_item2" class="width_mac" maxlength="2" type="text">:</td>
+						<td><input id="id_Src_mac_item3" class="width_mac" maxlength="2" type="text">:</td>
+						<td><input id="id_Src_mac_item4" class="width_mac" maxlength="2" type="text">:</td>
+						<td><input id="id_Src_mac_item5" class="width_mac" maxlength="2" type="text">:</td>
+						<td><input id="id_Src_mac_item6" class="width_mac" maxlength="2" type="text"></td>
+						</tbody></table>
+					</td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+				</tr>
+			</tbody></table>
+		</div>
+
+		<div id="Dest_MAC_tb" style="display:none">
+			<table><tbody>
+			<tr><td class="width_l2f1"></td></tr>
+				<tr>
+					<td>Destination&nbsp;MAC&nbsp;Address</td>
+					<td>
+						<table><tbody>
+						<td><input name="destMAC" id="id_destMAC" value="" type="hidden"></td>
+						<td><input id="id_Dest_mac_item1" class="width_mac" maxlength="2" type="text">:</td>
+						<td><input id="id_Dest_mac_item2" class="width_mac" maxlength="2" type="text">:</td>
+						<td><input id="id_Dest_mac_item3" class="width_mac" maxlength="2" type="text">:</td>
+						<td><input id="id_Dest_mac_item4" class="width_mac" maxlength="2" type="text">:</td>
+						<td><input id="id_Dest_mac_item5" class="width_mac" maxlength="2" type="text">:</td>
+						<td><input id="id_Dest_mac_item6" class="width_mac" maxlength="2" type="text"></td>
+						</tbody></table>
+					</td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+				</tr>
+			</tbody></table>
+		</div>
+
+		<div>
+		<table class="utiltable" ><tbody>
+			<tr id="id_apply_tr"><td ></td><td ></td>
+			<td><input type="button" onclick="BridgeSetting()" id="add_applybtn" name="applybtn" value="Apply Changes" style="padding:0px 2px;width:auto;height:20px;"></td>
+			</tr>
+			<tr id="id_wait_progress" style="display:none">
+				<td ></td><td ></td>
+				<td >
+						<img src="../images/progress1.gif">
+				</td>
+			</tr>
+		</tbody></table>
+		</div>
+			<tr style="height:5px;">
+				<td colspan="4">
+					<div><hr class="hr2"></div>
+				</td>
+			</tr>
+	</div>
+</form>
+
+<form id="id_BridgeFilter_table_form" name="BridgeFilter_table_form" method="post">
+	<div class="lv2_th" style="margin:20px 0 20px 2.3em" >
+	<input name="nosave_deleteEntry" id="id_delete_src_item" value="0" type="hidden">
+	<input name="nosave_deleteEntry" id="id_delete_dest_item" value="0" type="hidden">
+		<div style="display:none">
+			<table style="margin:20px 0 20px 90px"><tbody>
+			<tr>
+				<td class="width_portF1"><div class="lv2_title">Overview</div></td>
+			</tr>
+			<tr><td>&nbsp;</td></tr>
+			<tr>
+				<td class="width_portF_SIP"><div class="lv2_new" ctrlflip="right" ctrlid="204">Filter Policy ></div></td>
+				<script language="javascript" type="text/javascript">
+					var policy = fvt_meta_config('fw_macfilter_enable');
+					var policy_type = parseInt(fvt_meta_config('fw_macfilter_type'),10)+1;
+					document.write("<td class='id_filtertype' style='color:blue; font-size:15px;'>");
+					if(policy == '0')
+					{
+						document.write("Disable");
+					}else
+					{
+						if(policy_type=='1')
+							document.write("Deny");
+						else
+							document.write("Allow");
+					}
+					document.write("</td>");
+				</script>
+			</tr>
+			</tbody></table>
+			<table style="margin:20px 0 20px 90px"><tbody>
+			<tr>
+				<td class="width_portF_name"><div class="lv2_new" ctrlflip="right" ctrlid="204">Num</div></td>
+				<td class="width_portF_name"><div class="lv2_new" ctrlflip="right" ctrlid="204">Status</div></td>
+				<td class="width_portF_SIP"><div class="lv2_new" ctrlflip="right" ctrlid="204">Direction</div></td>
+				<td class="width_portF_SIP"><div class="lv2_new" ctrlflip="right" ctrlid="250">MAC Address</div></td>
+			</tr>
+			<tr style="height:5px;">
+				<td colspan="7">
+					<div><hr class="hr2"></div>
+				</td>
+			</tr>
+			<script language="javascript" type="text/javascript">
+				list_BridgeFilter_rules();
+			</script>
+
+			</tbody></table>
+		</div>
+	</div>
+
+</form>
+</td></tr>
+</tbody></table>
+</div>
+
+<br>
+</body>
+</html>

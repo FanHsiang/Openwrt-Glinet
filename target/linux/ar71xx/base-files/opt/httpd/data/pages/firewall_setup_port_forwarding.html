@@ -1,0 +1,939 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+
+
+<script language="javascript" type="text/javascript">
+var maxrule = 16;
+var NodeLength = 0;
+var edit_rule = 99;
+
+function SetPrf(type, index)
+{
+	var nat_index =0;
+	var rule_index = index;
+	var pf_en_key;
+	var en=0;
+
+	
+
+	if(type=="0")
+	{
+		en=1;
+		document.getElementById("id_prf_status").value="1"; //+":"+index;
+	}
+	else
+	{
+		en =0;
+		document.getElementById("id_prf_status").value="0"; //+":"+index;
+	}
+
+	for(nat_index=0; nat_index<8; nat_index++)
+	{
+		pf_en_key = 'nat'+nat_index+'_pf_'+rule_index+'_en';
+		fvt_paramlist_cat_str(pf_en_key , en);
+	}
+	
+	
+	fvt_paramlist_presubmit("prf_table_form");
+	document.getElementById('id_apply_tr').style.display="none";
+	document.getElementById('id_wait_progress').style.display="";
+	document.getElementById("id_prf_table_form").submit();	
+}
+
+function openList()
+{
+        newWindow = window.open('../cgi-bin/wwwctrl.cgi?action=protocol_num','Protocol',
+                'modal=yes,width=870,height=500,left=100,screenX=100,top=200,screen=200,resizable=no');
+}
+
+function isFallRule()
+{
+
+	if(get_empty_index() <0)
+		document.getElementById("add_applybtn").disabled=true;
+
+	
+}
+
+function checkSpecSymbol(s)
+{
+ for(i=0;i<s.length;i++)
+ {
+  c=s.charAt(i);
+  if(c==';')
+        return false;
+ }
+ return true;
+}
+
+function prf_check()
+{
+	var item,min,max;
+	var i=0;
+	var No=0;
+	if (document.getElementById("id_PRFAP").value.length==0 || !checkSpecSymbol(document.getElementById("id_PRFAP").value))
+	{
+		item = "Name";
+                alert("The "  + item + " is invalid!");
+                document.getElementById("id_PRFAP").focus();
+                return;
+	}
+
+	
+	if (	(document.getElementById("id_user_prot").value=="TCP" || document.getElementById("id_user_prot").value=="UDP" ))
+	{
+		if (document.getElementById("id_PRFPORT2").checked)
+	        {
+			if (document.getElementById("id_manual_port").value.length==0 || 
+				!check_integer_range(document.getElementById("id_manual_port").value,1,65535))
+	                {
+        	                min = 1;
+                		max = 65535;
+	                        item = "Port";
+        	                alert(item+" should be an integer between "+min+" and "+max);
+				document.getElementById("id_manual_port").focus();
+                        	return;
+	                }
+        	        document.getElementById("id_manual_port").value =
+                	        parseInt(document.getElementById("id_manual_port").value);
+	        }
+		else if (document.getElementById("id_PRFPORT3").checked)
+        	{
+                	if (document.getElementById("id_manual_sport").value.length==0 || 
+				!check_integer_range(document.getElementById("id_manual_sport").value,1,65535))
+	                {
+        	                min = 1;
+                	        max = 65535;
+                        	item = "Port";
+	                        alert(item+" should be an integer between "+min+" and "+max);
+				document.getElementById("id_manual_sport").focus();
+                	        return;
+                	}
+			if (document.getElementById("id_manual_eport").value.length==0 || 
+				!check_integer_range(document.getElementById("id_manual_eport").value,1,65535))
+	                {
+        	                min = 1;
+                	        max = 65535;
+                        	item = "Port";
+	                        alert(item+" should be an integer between "+min+" and "+max);
+        	                document.getElementById("id_manual_eport").focus();
+                	        return;
+	                }
+			if (parseInt(document.getElementById("id_manual_eport").value)
+				 <= parseInt(document.getElementById("id_manual_sport").value))
+			{
+				item = "Port";
+	                        alert("The "  + item + " is invalid!");
+				document.getElementById("id_manual_eport").focus();
+                	        return;
+			}
+	        }
+	}
+		
+	merge_ip("id_PRFLANIPUSER","id_PRFLANIPUSER_item1","id_PRFLANIPUSER_item2","id_PRFLANIPUSER_item3","id_PRFLANIPUSER_item4");
+	if (document.getElementById("id_PRFLANIPUSER").value.length==0 || !check_ip(document.getElementById("id_PRFLANIPUSER").value))
+	{
+		item = "LAN IP Address";
+		alert("The "  + item + " is invalid!");
+        return;
+	}
+
+    if (!check_integer_range(document.getElementById("id_DestPort").value,1,65535))
+    {
+		min = 1;
+		max = 65535;
+        item = "Destination Port";
+        alert(item+" should be an integer between "+min+" and "+max);
+        document.getElementById("id_DestPort").focus();
+		return;
+    }
+
+	
+	if( fvt_form_submit('pwd_form') )
+	{
+		document.getElementById('id_apply_tr').style.display="none";
+		document.getElementById('id_wait_progress').style.display="";
+		document.getElementById("id_pwd_form").submit();
+	}
+}
+
+function deleteRule(val)
+{
+	var rule_index = val;
+	var nat_index = 0;
+
+	var pf_en_key;
+	var pf_name_key;
+	var pf_proto_key;
+	var pf_port_key;
+	var pf_toip_key;
+	var port_range_val;
+	var pf_port_dest;
+
+	var next_pf_en_key;
+	var next_pf_name_key;
+	var next_pf_proto_key;
+	var next_pf_port_key;
+	var next_pf_toip_key;
+	var next_port_range_val;
+	var next_pf_port_dest;
+
+	fvt_paramlist_clear();
+
+	document.getElementById("id_delete_item").value=val;
+	for(nat_index=0; nat_index<8; nat_index++)
+	{
+		//delete last one rule
+		if( rule_index == (maxrule-1) )
+		{
+			pf_en_key = 'nat'+nat_index+'_pf_'+rule_index+'_en';
+			pf_name_key = 'nat'+nat_index+'_pf_'+rule_index+'_name';
+			pf_proto_key = 'nat'+nat_index+'_pf_'+rule_index+'_type';
+			pf_port_key = 'nat'+nat_index+'_pf_'+rule_index+'_origport';
+			pf_toip_key = 'nat'+nat_index+'_pf_'+rule_index+'_ip';
+			pf_port_dest = 'nat'+nat_index+'_pf_'+rule_index+'_transport';
+			
+			fvt_paramlist_cat_str(pf_en_key ,"0");
+			fvt_paramlist_cat_str(pf_name_key ,"");
+			fvt_paramlist_cat_str(pf_proto_key ,"");
+			fvt_paramlist_cat_str(pf_port_key ,"");
+			fvt_paramlist_cat_str(pf_toip_key ,"");
+			fvt_paramlist_cat_str(pf_port_dest ,"");
+		}
+		else
+		{
+			for(rule_index=val; rule_index<maxrule; rule_index++)
+			{
+				pf_en_key = 'nat'+nat_index+'_pf_'+rule_index+'_en';
+				pf_name_key = 'nat'+nat_index+'_pf_'+rule_index+'_name';
+				pf_proto_key = 'nat'+nat_index+'_pf_'+rule_index+'_type';
+				pf_port_key = 'nat'+nat_index+'_pf_'+rule_index+'_origport';
+				pf_toip_key = 'nat'+nat_index+'_pf_'+rule_index+'_ip';
+				pf_port_dest = 'nat'+nat_index+'_pf_'+rule_index+'_transport';
+			
+				next_pf_en_key = 'nat'+nat_index+'_pf_'+(rule_index+1)+'_en';
+				next_pf_name_key = 'nat'+nat_index+'_pf_'+(rule_index+1)+'_name';
+				next_pf_proto_key = 'nat'+nat_index+'_pf_'+(rule_index+1)+'_type';
+				next_pf_port_key = 'nat'+nat_index+'_pf_'+(rule_index+1)+'_origport';
+				next_pf_toip_key = 'nat'+nat_index+'_pf_'+(rule_index+1)+'_ip';
+				next_pf_port_dest = 'nat'+nat_index+'_pf_'+(rule_index+1)+'_transport';
+
+				if(rule_index == (maxrule-1) || fvt_meta_config(next_pf_name_key) == "")
+				{
+					fvt_paramlist_cat_str(pf_en_key ,"0");
+					fvt_paramlist_cat_str(pf_name_key ,"");
+					fvt_paramlist_cat_str(pf_proto_key ,"");
+					fvt_paramlist_cat_str(pf_port_key ,"");
+					fvt_paramlist_cat_str(pf_toip_key ,"");
+					fvt_paramlist_cat_str(pf_port_dest ,"");
+					break;
+				}
+
+				fvt_paramlist_cat_str(pf_en_key , fvt_meta_config(next_pf_en_key) );
+				fvt_paramlist_cat_str(pf_name_key , fvt_meta_config(next_pf_name_key) );
+				fvt_paramlist_cat_str(pf_proto_key , fvt_meta_config(next_pf_proto_key) );
+				fvt_paramlist_cat_str(pf_port_key , fvt_meta_config(next_pf_port_key) );
+				fvt_paramlist_cat_str(pf_toip_key , fvt_meta_config(next_pf_toip_key) );
+				fvt_paramlist_cat_str(pf_port_dest , fvt_meta_config(next_pf_port_dest) );
+			}
+		}
+
+
+	}
+
+	fvt_paramlist_presubmit('prf_table_form');
+	document.getElementById('id_apply_tr').style.display="none";
+	document.getElementById('id_wait_progress').style.display="";
+	document.getElementById("id_prf_table_form").submit();
+}
+
+function editRule(val)
+{
+	edit_rule=val;
+		
+	document.getElementById("add_applybtn").disabled=false;		
+	document.getElementById("add_applybtn").value="Apply";	
+	document.getElementById("id_edit_item").value=val;		
+
+	document.getElementById("id_PRFAP").value = document.getElementById("id_hidden_app" + val).value;
+
+	
+	document.getElementById("id_user_prot").value = document.getElementById("id_hidden_proto_known" + val).value;
+
+
+
+	if (	(document.getElementById("id_user_prot").value=="TCP" || document.getElementById("id_user_prot").value=="UDP" ))
+	{
+		 if (document.getElementById("id_hidden_radio1_"+val).value=="2")
+		{
+			document.getElementById("id_PRFPORT3").checked = true;
+			document.getElementById("id_manual_sport").value = document.getElementById("id_hidden_sport"+val).value;
+			document.getElementById("id_manual_eport").value = document.getElementById("id_hidden_eport"+val).value;
+		}
+		else
+		{
+			document.getElementById("id_PRFPORT2").checked = true;
+			document.getElementById("id_manual_port").value = document.getElementById("id_hidden_port_single"+val).value;
+		}
+	}
+
+	document.getElementById("id_PRFLANIPUSER_item1").value = document.getElementById("id_hidden_ip_item1_" + val).value;
+	document.getElementById("id_PRFLANIPUSER_item2").value = document.getElementById("id_hidden_ip_item2_" + val).value;
+	document.getElementById("id_PRFLANIPUSER_item3").value = document.getElementById("id_hidden_ip_item3_" + val).value;
+	document.getElementById("id_PRFLANIPUSER_item4").value = document.getElementById("id_hidden_ip_item4_" + val).value;
+	
+	
+	document.getElementById("id_DestPort").value = document.getElementById("id_hidden_destport" + val).value;
+		
+	checkPort();
+}
+
+function isBridgeMode()
+{
+        var wan_type="";
+        if (wan_type=="bridge")
+                document.getElementById("add_applybtn").disabled=true;
+}
+
+function changeKnownProto()
+{
+	var tcp_opt=new Array(9),udp_opt=new Array(3);
+	tcp_opt[0]=new Option("FTP","FTP",0,0);
+	tcp_opt[1]=new Option("TELNET","TELNET",0,0);
+	tcp_opt[2]=new Option("SSH","SSH",0,0);
+	tcp_opt[3]=new Option("HTTP","HTTP",0,0);
+	tcp_opt[4]=new Option("HTTPS","HTTPS",0,0);
+	tcp_opt[5]=new Option("SMTP","SMTP",0,0);
+	tcp_opt[6]=new Option("POP3","POP3",0,0);
+	tcp_opt[7]=new Option("DNS","DNS",0,0);
+	tcp_opt[8]=new Option("IMAP","IMAP",0,0);
+	udp_opt[0]=new Option("TFTP","TFTP",0,0);
+	udp_opt[1]=new Option("DNS","DNS",0,0);
+	udp_opt[2]=new Option("NTP","NTP",0,0);
+	var obj=document.getElementById("id_user_port");
+	var i=0;
+
+	
+	for (i=obj.length-1;i>=0;i--)
+        	obj.options[i]=null;
+	
+
+	if (document.getElementById("id_user_prot").value=="TCP")	
+	{
+		for (i=0;i<9;i++)
+			obj.options[obj.length]=tcp_opt[i];	
+	}
+	else if (document.getElementById("id_user_prot").value=="UDP")
+	{
+		for (i=0;i<3;i++)
+                        obj.options[obj.length]=udp_opt[i];
+	}
+}
+
+/*
+function disabledPort(val)
+{
+	document.getElementById("id_PRFPORT1").disabled=val;
+	document.getElementById("id_PRFPORT2").disabled=val;
+	document.getElementById("id_PRFPORT3").disabled=val;
+	document.getElementById("id_user_port").disabled=val;
+	document.getElementById("id_manual_port").disabled=val;
+	document.getElementById("id_manual_sport").disabled=val;
+	document.getElementById("id_manual_eport").disabled=val;
+	document.getElementById("id_manual_lanport").disabled=val;
+	document.getElementById("id_PRFLANPORT2").disabled=val;
+}
+*/
+
+/*
+function init()
+{
+	//document.getElementById("id_manual_proto").disabled=true;
+	//document.getElementById("id_list").style.display="none";
+	document.getElementById("id_user_prot").disabled=true;
+	//disabledPort(true);
+	
+	if (document.getElementById("id_PRFPOL3").checked)
+	{
+		document.getElementById("id_user_prot").disabled=false;
+		checkProto();
+	}
+	else if (document.getElementById("id_PRFPOL2").checked)
+	{
+		document.getElementById("id_manual_proto").disabled=false;
+		//document.getElementById("id_list").style.display="";
+	}
+}
+*/
+
+function checkPort()
+{
+	//document.getElementById("id_user_port").disabled=true;
+	document.getElementById("id_manual_port").disabled=true;
+	document.getElementById("id_manual_sport").disabled=true;
+	document.getElementById("id_manual_eport").disabled=true;
+	//document.getElementById("id_manual_lanport").disabled=true;
+	//document.getElementById("id_PRFLANPORT2").disabled=true;
+
+	/*
+	if (document.getElementById("id_PRFPORT1").checked)
+	{
+		document.getElementById("id_user_port").disabled=false;
+	}*/
+	if (document.getElementById("id_PRFPORT2").checked)
+	{
+		document.getElementById("id_manual_port").disabled=false;
+		//document.getElementById("id_PRFLANPORT2").disabled=false;
+		//document.getElementById("id_manual_lanport").disabled=false;
+	}
+	else
+	{
+		document.getElementById("id_manual_sport").disabled=false;
+		document.getElementById("id_manual_eport").disabled=false;
+		//document.getElementById("id_PRFLANPORT1").checked=true;
+	}
+}
+/*
+function initIP()
+{
+	document.getElementById("id_auto_lanip").disabled=true;
+	
+	if (document.getElementById("id_auto_lanip").length==0)
+	{
+		document.getElementById("id_auto_lanip").disabled=true;
+	}
+	
+}
+*/
+function checkProto()
+{
+	if (document.getElementById("id_user_prot").value=="TCP" || 
+		document.getElementById("id_user_prot").value=="UDP" )
+	{
+		//disabledPort(false);
+		checkPort();
+	}
+	//else
+		//disabledPort(true);
+}
+
+function get_empty_index()
+{
+	var i;
+	var pf_name_key;
+	var rule_index;
+
+	
+
+	if( document.getElementById("id_edit_item").value != "" && document.getElementById("id_edit_item").value != 0)
+		return document.getElementById("id_edit_item").value;
+
+	for(i=0; i< maxrule; i++)
+	{
+		rule_index = i;
+		pf_name_key = 'nat0_pf_'+rule_index+'_name';
+		if( fvt_meta_config(pf_name_key) == "")
+		{
+			return rule_index;
+		}
+	}
+
+	return -1;
+}
+function list_port_forward_rules()
+{
+	var i;
+	var count=0;
+	var type;
+	var rule_index;
+	var nat_index =0;
+
+	var pf_en_key;
+	var pf_name_key;
+	var pf_proto_key;
+	var pf_port_key;
+	var pf_toip_key;
+	var port_range_val;
+	var pf_port_dest;
+
+	fvt_form_init('prf_table_form');
+
+		
+	for(i=0;i<maxrule;i++)
+	{
+		rule_index = i;
+		pf_en_key = 'nat'+nat_index+'_pf_'+rule_index+'_en';
+		pf_name_key = 'nat'+nat_index+'_pf_'+rule_index+'_name';
+		pf_proto_key = 'nat'+nat_index+'_pf_'+rule_index+'_type';
+		pf_port_key = 'nat'+nat_index+'_pf_'+rule_index+'_origport';
+		pf_toip_key = 'nat'+nat_index+'_pf_'+rule_index+'_ip';
+		pf_port_dest = 'nat'+nat_index+'_pf_'+rule_index+'_transport';
+	
+		var prfStatus = fvt_meta_config(pf_en_key);
+		//var j=i;
+		var option0,option1,option2;
+
+		var Name = fvt_meta_config(pf_name_key);
+
+		if(Name=="")
+			continue;
+		
+		if(prfStatus == "1")
+			{type = "Disable";}
+		else
+			{type = "Enable";}
+		
+		if(count%2 == 0)
+			document.write("<tr class='color_rown'>");
+		else
+			document.write("<tr class='color_rowh'>");
+
+		count++;
+			
+		
+		//var radio0 = fvt_meta_config(pf_proto_key);
+		document.write("<td ctrlflip='right'>"+Name+"<input type='hidden' id='id_hidden_app"+rule_index+"' value='"+Name+"'></td>");
+		
+				
+
+		var proto = fvt_meta_config(pf_proto_key);
+		document.write("<td ctrlflip='right'>"+proto+"<input type='hidden' id='id_hidden_proto_known"+rule_index+"' value='"+proto+"'></td>");
+
+		
+		var radio1;
+		
+		//if(radio1 == "1") //single port
+		var port = fvt_meta_config(pf_port_key);
+		if( port.indexOf("-")<0)
+		{
+			radio1 = 1;
+			var port = fvt_meta_config(pf_port_key);
+			document.write("<td ctrlflip='right'>"+port+"<input type='hidden' id='id_hidden_port_single"+rule_index+"' value='"+port+"'></td>");
+		}
+		else //port range
+		{
+			radio1 = 2;
+			var port = fvt_meta_config(pf_port_key).split("-");
+			var sport =port[0];
+			var eport = port[1];
+			document.write("<td><table><tr><td>"+sport+"<input type='hidden' id='id_hidden_sport"+rule_index+"' value='"+sport+"'></td></tr>");				
+			document.write("<tr><td>"+eport+"<input type='hidden' id='id_hidden_eport"+rule_index+"' value='"+eport+"'></td></tr></table></td>");	
+		}	
+
+
+		/*Lan IP address*/
+		var radio2;
+		var lanIP = fvt_meta_config(pf_toip_key);
+
+		document.write("<td ctrlflip='right'><input type='hidden' id='id_hidden_lanip_manual"+rule_index+"' value='"+lanIP+"'>");
+		if(lanIP != "")	
+		{
+			var lan_IP = lanIP.split(".");
+			document.write(lanIP+"<input type='hidden' id='id_hidden_ip_item1_"+rule_index+"' value='"+lan_IP[0]+"'>");
+			document.write("<input type='hidden' id='id_hidden_ip_item2_"+rule_index+"' value='"+lan_IP[1]+"'>");
+			document.write("<input type='hidden' id='id_hidden_ip_item3_"+rule_index+"' value='"+lan_IP[2]+"'>");
+			document.write("<input type='hidden' id='id_hidden_ip_item4_"+rule_index+"' value='"+lan_IP[3]+"'>");
+		}
+		document.write("</td>");
+
+		
+		var destport = fvt_meta_config(pf_port_dest);
+		document.write("<td ctrlflip='right'>"+destport+"<input type='hidden' id='id_hidden_destport"+rule_index+"' value='"+destport+"'></td>");
+
+			
+		document.write("<td><table><tr>");
+		document.write("<td ctrlflip='etc'><input type='button' value='Edit' class='submitBtn' onclick='editRule("+rule_index+");'></td>");
+		document.write("<td ctrlflip='etc'><input type='button' value='Delete' class='submitBtn' onclick='deleteRule("+rule_index+");'></td>");
+		document.write("<td ctrlflip='etc'><input type='button' value='"+type+"' class='submitBtn' onclick='SetPrf("+prfStatus+","+rule_index+");'></td></tr></table>");
+		
+		//document.write("<input type='hidden' id='id_hidden_radio0_"+i+"' value='"+radio0+"'>");
+		document.write("<input type='hidden' id='id_hidden_radio1_"+rule_index+"' value='"+radio1+"'>");
+		document.write("<input type='hidden' id='id_hidden_radio2_"+rule_index+"' value='"+radio2+"'>");
+		//document.write("<input type='hidden' id='id_hidden_radio3_"+i+"' value='"+radio3+"'>");
+		
+
+		document.write("</td>");
+		document.write("</tr>");
+	}	
+}
+
+function check_duplicate(index)
+{
+	var i=0;
+	//var ret=(-1);
+	var pf_en_key;
+	var pf_name_key;
+	var pf_proto_key;
+	var pf_port_key;
+	var pf_toip_key;
+	var pf_port_dest;
+	var cur_port_val;
+	var checkRange=0;
+
+	if (edit_rule != 99) // in edit case
+		checkRange = maxrule;
+	else
+		checkRange = index;	
+		
+	
+	for(i=0; i<checkRange; i++)
+	{
+		pf_en_key = 'nat0_pf_'+i+'_en';
+		pf_name_key = 'nat0_pf_'+i+'_name';
+		pf_proto_key = 'nat0_pf_'+i+'_type';
+		pf_port_key = 'nat0_pf_'+i+'_origport';
+		pf_toip_key = 'nat0_pf_'+i+'_ip';
+		pf_port_dest = 'nat0_pf_'+i+'_transport';
+
+		
+		
+		
+		if(fvt_meta_config(pf_name_key)=="")
+			break;
+
+		if( i == edit_rule )
+			continue;
+		
+		if(  fvt_meta_config(pf_name_key) == fvt_form_obj_get("pwd_form", "PRFAP") )
+		{
+			alert("Rule name \""+ fvt_form_obj_get("pwd_form", "PRFAP") +"\" is duplicat");
+			return 0;
+		}
+
+		/*get current port setting value*/
+		if (document.getElementById('id_PRFPORT2').checked == true)
+		{
+			cur_port_val = document.getElementById("id_manual_port").value;		
+		}
+		else
+		{
+			cur_port_val =  fvt_form_obj_get("pwd_form", "PORTSTART")+'-'+fvt_form_obj_get("pwd_form", "PORTEND");
+		}
+		
+		if (  fvt_meta_config(pf_proto_key) == fvt_form_obj_get("pwd_form", "USERPROTO") &&
+		       fvt_meta_config(pf_port_key) == cur_port_val &&
+		       fvt_meta_config(pf_toip_key) ==  fvt_form_obj_get("pwd_form", "PRFLANIPUSER") 
+		      // fvt_meta_config(pf_port_dest) == fvt_form_obj_get("pwd_form", "DestPort")
+		    )
+		{
+			alert("The same rule exist in rule named \""+fvt_meta_config(pf_name_key)+"\"");
+			return 0
+		}
+
+	}
+	return 1;
+}
+
+function fvt_form_init(form_name) 
+{
+	var i=0;
+	var rule_index;
+	if (form_name=='pwd_form' || form_name=='*') {
+		
+	}
+	else if (form_name=='prf_table_form' || form_name=='*') {
+		for(i=0; i < maxrule; i++)
+		{
+			rule_index = i+1;
+			var fw_pf_name = fvt_meta_config("nat0_pf_"+rule_index+"_name");
+			if (fw_pf_name == '')
+			{
+				continue;
+			}
+			NodeLength++;
+		}
+	}
+}
+
+function fvt_form_submit(form_name) 	{
+	var nat_index= 0;
+	var rule_index =0;
+
+	var pf_en_key;
+	var pf_name_key;
+	var pf_proto_key;
+	var pf_port_key;
+	var pf_toip_key;
+	var port_range_val;
+	var pf_port_dest;
+	
+	rule_index = get_empty_index();
+
+	
+	
+	fvt_paramlist_clear();
+	if (form_name=='pwd_form' || form_name=='*') 
+	{
+
+			
+			if (edit_rule != 99)
+			{
+				rule_index = edit_rule;	
+			}
+
+			if( !check_duplicate(rule_index) )
+			{
+				return 0
+			}
+			
+			for(nat_index=0; nat_index<8; nat_index++)
+			{
+				
+					pf_en_key = 'nat'+nat_index+'_pf_'+rule_index+'_en';
+					pf_name_key = 'nat'+nat_index+'_pf_'+rule_index+'_name';
+					pf_proto_key = 'nat'+nat_index+'_pf_'+rule_index+'_type';
+					pf_port_key = 'nat'+nat_index+'_pf_'+rule_index+'_origport';
+					pf_toip_key = 'nat'+nat_index+'_pf_'+rule_index+'_ip';
+					pf_port_dest = 'nat'+nat_index+'_pf_'+rule_index+'_transport';
+
+					fvt_paramlist_cat_str(pf_en_key, "1");	
+					fvt_paramlist_cat_str(pf_name_key, fvt_form_obj_get("pwd_form", "PRFAP"));
+					fvt_paramlist_cat_str(pf_proto_key, fvt_form_obj_get("pwd_form", "USERPROTO"));	
+
+					if (document.getElementById('id_PRFPORT2').checked == true)
+					{
+						fvt_paramlist_cat_str(pf_port_key,document.getElementById("id_manual_port").value);		//text	
+					}
+					else
+					{
+						port_range_val =  fvt_form_obj_get("pwd_form", "PORTSTART")+'-'+fvt_form_obj_get("pwd_form", "PORTEND");
+						fvt_paramlist_cat_str(pf_port_key, port_range_val);		//text
+					}
+					
+					fvt_paramlist_cat_str(pf_toip_key, fvt_form_obj_get("pwd_form", "PRFLANIPUSER") );	
+					fvt_paramlist_cat_str(pf_port_dest, fvt_form_obj_get("pwd_form", "DestPort"));	
+						
+			}//end for
+		
+			fvt_paramlist_presubmit(form_name);
+			document.getElementById("id_edit_item").value="";
+			return 1;
+	}
+	
+	
+}
+
+</script>
+<style>
+table tr{Line-height:19pt;}
+</style>
+</head>
+
+<body align="left" onload="isBridgeMode();isFallRule();">
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<form id="id_pwd_form" name="pwd_form" method="post">
+	<fieldset>
+	<script language="javascript" type="text/javascript">
+		if(fvt_meta_config('sess_level')=="admin")
+			document.write("<div class='lv1_title'>Firewall Setup&nbsp;&gt;&nbsp;Port Forwarding</div>");
+		else
+			document.write("<div class='lv1_title'>Firewall&nbsp;&gt;&nbsp;Port Forwarding</div>");
+	</script>
+	</fieldset>		
+<div class="div1_indent lv2_new">
+	<input name="nosave_editEntry" id="id_edit_item" value="0" type="hidden">		
+	<table>
+		<tr>
+			<td class="width_portF1"><div ctrlflip="right" ctrlid="204">Name</div></td>
+			<td class="width_portF2"><input ctrlflip="etc" name="PRFAP" id="id_PRFAP" size="12" maxlength="6" class="width_text80" type="text"></td>			
+		</tr>
+		<tr>
+			<td><div ctrlflip="right" ctrlid="205">Protocol</div></td> 
+			
+			<td>
+				<select ctrlflip="etc" name="USERPROTO" id="id_user_prot" onclick="checkProto();" onchange="checkProto();" class="width_select80">
+			                <option selected="selected" value="TCP">TCP</option>
+			                <option value="UDP">UDP</option>
+				</select>
+			</td>
+		</tr>
+		
+		
+		<tr>
+			<td><div ctrlflip="right" ctrlid="210">Port</div></td>
+			<td>
+				<table><tr>
+					<td><input ctrlflip="etc"  name="PRFPORT" id="id_PRFPORT2" onclick="checkPort();" value="SINGLE"  class="radio" type="radio"></td>
+					<td><div ctrlflip="etc" ctrlid="212">Single Port</div></td>
+				</tr></table>
+			</td>
+			<td><input ctrlflip="etc" disabled="disabled" name="PORTNUM" id="id_manual_port" size="5" maxlength="5" class="width_text80" type="text"></td>
+		</tr>
+		<tr>
+			<td></td>
+			<td>
+				<table><tr>
+				  <td><input ctrlflip="etc"  name="PRFPORT" id="id_PRFPORT3" onclick="checkPort();" value="MULTI"  class="radio" type="radio"></td>
+				  <td><div ctrlflip="etc" ctrlid="213">Port Range</div></td>
+				</tr></table>
+			</td>
+			<td>
+				<table><tr>
+				  <td><input ctrlflip="etc" disabled="disabled" name="PORTSTART" id="id_manual_sport" size="5" maxlength="5" class="width_portF_port" type="text">&nbsp;-&nbsp;</td>
+				  <td><input disabled="disabled" name="PORTEND" id="id_manual_eport" size="5" maxlength="5"  class="width_portF_port" type="text"></td>
+				</tr></table>
+			</td>
+		</tr>
+		<!--
+		<tr>
+			<td><div ctrlflip="right" ctrlid="214">Source&nbsp;IP&nbsp;Address</div></td>
+			<td>
+			  <table>
+			  	<tr ctrlflip="etc">
+					<td><input name="srcIP" id="id_srcIP" value="" type="hidden"></td>
+					<td><input name="srcIPflag" id="id_srcIPflag" value="" type="hidden"></td>
+					<td><input id="id_srcIP_item1" maxlength="3" class="width_ip" type="text">&nbsp;.&nbsp;</td>
+					<td><input id="id_srcIP_item2" maxlength="3" class="width_ip" type="text">&nbsp;.&nbsp;</td>
+					<td><input id="id_srcIP_item3" maxlength="3" class="width_ip" type="text">&nbsp;.&nbsp;</td>
+					<td><input id="id_srcIP_item4" maxlength="3" class="width_ip" type="text"></td>
+			  	</tr>
+			  </table>
+			 </td>	
+			 <td>
+				<select ctrlflip="etc" name="srcNetmask" id="id_srcNetmask" class="width_select80">
+					<option value="255.255.255.255">255.255.255.255</option>
+					<option value="255.255.255.254">255.255.255.254</option>
+					<option value="255.255.255.252">255.255.255.252</option>
+					<option value="255.255.255.248">255.255.255.248</option>
+					<option value="255.255.255.240">255.255.255.240</option>
+					<option value="255.255.255.224">255.255.255.224</option>
+					<option value="255.255.255.192">255.255.255.192</option>
+					<option value="255.255.255.128">255.255.255.128</option>
+					<option selected="selected" value="255.255.255.0">255.255.255.0</option>
+					<option value="255.255.254.0">255.255.254.0</option>
+					<option value="255.255.252.0">255.255.252.0</option>
+					<option value="255.255.248.0">255.255.248.0</option>
+					<option value="255.255.240.">255.255.240.0</option>
+					<option value="255.255.224.0">255.255.224.0</option>
+					<option value="255.255.192.0">255.255.192.0</option>
+					<option value="255.255.128.0">255.255.128.0</option>
+					<option value="255.255.0.0">255.255.0.0</option>
+					<option value="255.254.0.0">255.254.0.0</option>
+					<option value="255.252.0.0">255.252.0.0</option>
+					<option value="255.248.0.0">255.248.0.0</option>
+					<option value="255.240.0.0">255.240.0.0</option>
+					<option value="255.224.0.0">255.224.0.0</option>
+					<option value="255.192.0.0">255.192.0.0</option>
+					<option value="255.128.0.0">255.128.0.0</option>
+					<option value="255.0.0.0">255.0.0.0</option>
+					<option value="254.0.0.0">254.0.0.0</option>
+					<option value="252.0.0.0">252.0.0.0</option>
+					<option value="248.0.0.0">248.0.0.0</option>
+					<option value="240.0.0.0">240.0.0.0</option>
+					<option value="224.0.0.0">224.0.0.0</option>
+					<option value="192.0.0.0">192.0.0.0</option>
+					<option value="128.0.0.0">128.0.0.0</option>
+				</select>
+        		</td>  
+		</tr>
+		-->
+		<tr>
+			<td><div ctrlflip="right" ctrlid="215">LAN&nbsp;IP&nbsp;Address</div></td>
+<!--			<td><table><tr>
+				  <td><select ctrlflip="etc" name="LANIPAUTO" id="id_auto_lanip" class="width_select80" style="width:123px">
+					<script language="javascript" type="text/javascript">
+							document.write("<option value="+fvt_meta_config('lan0_ip')+">"+fvt_meta_config('lan0_ip')+"</option>");
+							document.write("<option value="+fvt_meta_config('lan1_ip')+">"+fvt_meta_config('lan1_ip')+"</option>");
+							document.write("<option value="+fvt_meta_config('lan2_ip')+">"+fvt_meta_config('lan2_ip')+"</option>");
+							document.write("<option value="+fvt_meta_config('lan3_ip')+">"+fvt_meta_config('lan3_ip')+"</option>");
+					</script>	
+				  </select></td>
+			  </tr></table>
+			</td>							
+		</tr>
+		<tr>					
+			<td></td>
+-->			
+			<td>
+				<table>
+					<tr>
+					  <td>
+					  	<table>
+					  		<tr ctrlflip="etc">
+								<td><input ctrlflip="etc" name="PRFLANIPUSER" id="id_PRFLANIPUSER" value="" type="hidden"></td>
+								<td><input id="id_PRFLANIPUSER_item1" class="width_ip" maxlength="3" type="text">&nbsp;.&nbsp;</td>
+								<td><input id="id_PRFLANIPUSER_item2" class="width_ip" maxlength="3" type="text">&nbsp;.&nbsp;</td>
+								<td><input id="id_PRFLANIPUSER_item3" class="width_ip" maxlength="3" type="text">&nbsp;.&nbsp;</td>
+								<td><input id="id_PRFLANIPUSER_item4" class="width_ip" maxlength="3" type="text"></td>
+					  		</tr>
+					  	</table>
+					  </td>
+			  		</tr>
+			  	</table>
+			</td>					
+		</tr>
+		
+		<tr>
+			<td class="width_portF1"><div ctrlflip="right" ctrlid="204">Destination Port</div></td>
+			<td class="width_portF2"><input ctrlflip="etc" name="DestPort" id="id_DestPort" maxlength="5" class="width_text80" type="text"></td>			
+		</tr>
+		<tr><td>&nbsp;</td></tr>
+		
+		<tr id="id_apply_tr">		
+			<td></td>
+			<td>
+				<input ctrlflip="etc" id="add_applybtn" name="submitBtn" type="button" onclick="prf_check();" class="width_portAdd" value="Add">
+			</td>	
+		</tr>
+
+		<tr id="id_wait_progress" style="display:none">
+			<td></td>
+			<td>
+					<img src="../images/progress1.gif">
+			</td>	
+		</tr>
+		
+		
+		
+	</table>	
+</div>
+</form>
+<form id="id_prf_table_form" name="prf_table_form" method="post">
+		<div> <hr class="hr2"></div>
+
+<div class="div1_indent">
+	<input ctrlflip="etc" name="nosave_deleteEntry" id="id_delete_item" value="0" type="hidden">
+	<input ctrlflip="etc" name="nosave_prf_status" id="id_prf_status" value="0" type="hidden">
+	<input ctrlflip="etc" name="nosave_statusEntry" id="id_status_item" value="0" type="hidden">
+	<table><tbody>
+		<tr>
+			<td class="width_portF_name"><div class="lv2_new" ctrlflip="right" ctrlid="204">Name</div></td>
+			<td class="width_portF_pro"><div class="lv2_new" ctrlflip="right" ctrlid="205">Protocol</div></td>
+			<td class="width_portF_port"><div class="lv2_new" ctrlflip="right" ctrlid="210">Port</div></td>
+		<!--	<td class="width_portF_SIP"><div class="lv2_new" ctrlflip="right" ctrlid="214">Source IP Address</div></td>-->
+			<td class="width_portF_LIP"><div class="lv2_new" ctrlflip="right" ctrlid="215">LAN IP Address</div></td>
+			<td ><div class="lv2_new" width="200" ctrlflip="right" ctrlid="216">Destination Port</div></td>
+			
+		</tr>
+			<tr style="height:5px;">
+				<td colspan="6">
+					<div><hr class="hr2"></div>
+				</td>
+			</tr>
+		
+			<script language="javascript" type="text/javascript">		
+				list_port_forward_rules();
+			</script>
+		</tr>
+	</tbody></table>
+</div>
+</form>
+</td></tr>	
+</tbody></table>
+</div>
+
+<br>		
+</body>
+</html>
+
+
+

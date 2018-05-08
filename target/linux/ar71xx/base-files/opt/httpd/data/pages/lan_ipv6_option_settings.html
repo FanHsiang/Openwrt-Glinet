@@ -1,0 +1,988 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+<style type="text/css">
+td.darkgray{color: #808080;}
+td.lightgray{color: #D3D3D3;}
+div.rowh{color:#00008B}
+div.cells{color:#2F4F4F}
+td.radiocell{padding-left:1px;padding-right:5px;}
+td.st_bold{font-weight:bold;}
+</style>
+
+<script language="javascript" type="text/javascript">
+
+var OPTN_v6Rule=URLParams("opt");
+var vidpit_off=1;
+var DHCPSEnable;
+var DhcpRelayEnable;
+
+var i=0;
+var max_option=4;
+var DHCPenable=0,DHCP_s=0,DHCP_e=0;
+// #16-18: pool0, #19-21: pool1, #22-24: pool2, #25-27: pool3
+var meta_opt_base = 16 + (parseInt(OPTN_v6Rule)*3);
+var meta_opt16 = meta_opt_base;
+var meta_opt1  = meta_opt_base+1;
+var meta_opt17 = meta_opt_base+2;
+
+function check_process()
+{
+	var process="Success";
+	if (process=="Existed")
+		alert("Please wait!!");
+}
+
+function checkRelayVenderId()
+{
+	if (document.getElementById("id_DHCPSRelayServer2VID").value.length==0)
+	{
+		var item="Mapping Vender ID";
+		warn_not_empty(item);
+		//alert(item+" can't be empty!");
+		return false;
+	}
+	return true;
+}
+
+function option_select()
+{
+	var opt16_dis=false;
+	var opt1_dis=false;
+	var opt17_dis=false;
+	var srcinf_dis=false;
+	var clientmac_dis=false;
+
+	if(document.getElementById("id_Opt16_disable").checked) opt16_dis = true;
+	else opt16_dis = false;
+
+	if(document.getElementById("id_Opt1_disable").checked) opt1_dis = true;
+	else opt1_dis = false;
+
+	if(document.getElementById("id_Opt17_disable").checked) opt17_dis = true;
+	else opt17_dis = false;
+
+	if(document.getElementById("id_srcinf_disable").checked) srcinf_dis = true;
+	else srcinf_dis = false;
+	
+	if(document.getElementById("id_clientmac_disable").checked) clientmac_dis = true;
+	else clientmac_dis = false;
+	
+	document.getElementById("id_Opt16_value").disabled = opt16_dis;
+	document.getElementById("id_Opt16_vid").disabled = opt16_dis;
+	document.getElementById("id_Opt16_pbit").disabled = opt16_dis;
+
+	if(opt1_dis==false)
+		{
+		document.lanv6opt_form.DHCPopt1_type[0].disabled = opt1_dis;
+		document.lanv6opt_form.DHCPopt1_type[1].disabled = opt1_dis;
+		document.lanv6opt_form.DHCPopt1_type[2].disabled = opt1_dis;
+		document.getElementById("id_Opt1_vid").disabled = opt1_dis;
+		document.getElementById("id_Opt1_pbit").disabled = opt1_dis;
+		option1_type_change();
+		}
+	else
+		{
+		document.lanv6opt_form.DHCPopt1_type[0].disabled = opt1_dis;
+		document.lanv6opt_form.DHCPopt1_type[1].disabled = opt1_dis;
+		document.lanv6opt_form.DHCPopt1_type[2].disabled = opt1_dis;
+		document.getElementById("id_Opt1_HWType").disabled = opt1_dis;
+		document.getElementById("id_Opt1_Time").disabled = opt1_dis;
+		document.getElementById("id_Opt1_LLaddr").disabled = opt1_dis;
+		document.getElementById("id_Opt1_Identifier").disabled = opt1_dis;
+		document.getElementById("id_Opt1_EntNum").disabled = opt1_dis;
+		document.getElementById("id_Opt1_vid").disabled = opt1_dis;
+		document.getElementById("id_Opt1_pbit").disabled = opt1_dis;
+		}
+
+	document.getElementById("id_Opt17_EnterpriseNum").disabled = opt17_dis;
+	document.getElementById("id_Opt17_ManufacturerOui").disabled = opt17_dis;
+	document.getElementById("id_Opt17_ProductClass").disabled = opt17_dis;
+	document.getElementById("id_Opt17_ModelName").disabled = opt17_dis;
+	document.getElementById("id_Opt17_SerialNum").disabled = opt17_dis;
+	document.getElementById("id_Opt17_vid").disabled = opt17_dis;
+	document.getElementById("id_Opt17_pbit").disabled = opt17_dis;
+	
+	document.getElementById("id_SrcInf_value").disabled = srcinf_dis;
+	document.getElementById("id_SrcInf_vid").disabled = srcinf_dis;
+	document.getElementById("id_SrcInf_pbit").disabled = srcinf_dis;
+
+	document.getElementById("id_ClientMac_value").disabled = clientmac_dis;
+	document.getElementById("id_ClientMac_vid").disabled = clientmac_dis;
+	document.getElementById("id_ClientMac_pbit").disabled = clientmac_dis;
+
+}
+
+function check_DHCPOption()
+{
+
+	if(document.lanv6opt_form.Opt16_enable[1].checked)
+		{
+		if( (document.getElementById("id_Opt16_value").value == ""))
+			{
+			warn_not_empty("Option 16 Vender Class ID");
+			return false;
+			}
+		for(i=0;i<document.getElementById("id_Opt16_value").value.length;i++)
+			{
+			c = document.getElementById("id_Opt16_value").value.charCodeAt(i);
+			if (c=='34')
+				{
+				item = "Vender Class ID";
+				warn_int(item);
+				// alert(" "+item+" should be an integer.");
+				return false;
+				}
+			}
+
+		if (!check_vid_pbit("id_Opt16_vid","id_Opt16_pbit","Option 16")) return false;
+		}
+
+	if(document.lanv6opt_form.Opt1_enable[1].checked)
+		{
+		if (document.lanv6opt_form.DHCPopt1_type[0].checked==true)
+			{
+			if( (document.getElementById("id_Opt1_HWType").value == ""))
+				{
+				warn_not_empty("Option 1 Client ID");
+				return false;
+				}
+			document.getElementById("id_Opt1_HWType").value = document.getElementById("id_Opt1_HWType").value.toLowerCase();
+			if(!check_mac(document.getElementById("id_Opt1_HWType").value))
+				{
+				item = "Client ID";
+				msg = "";
+				//warn_int(item)
+				alert(msg+" "+item+" should be a MAC address.");
+				return false;
+				}
+			}
+		else if (document.lanv6opt_form.DHCPopt1_type[1].checked==true)
+			{
+			if (!check_integer_range(document.getElementById("id_Opt1_LLaddr").value,0,4294967295))
+				{
+				item = "[Enterprise Number]";
+				msg = "DHCP";
+				min = "0";
+				max = "4294967295"; //2^32
+				warn_int_between(item,min,max);
+				//alert(msg+" "+item+" should be an integer between "+min+" and "+max);
+				return false;
+				}
+			if(document.getElementById("id_Opt1_Identifier").value=="")
+				{
+				warn_not_empty("Option 1 Identifier");
+				return false;
+				}
+			if(document.getElementById("id_Opt1_Time").value=="")
+				{
+				warn_not_empty("Option 1 IAID");
+				return false;
+				}
+			}
+		else if (document.lanv6opt_form.DHCPopt1_type[2].checked==true)
+			{
+			if(document.getElementById("id_Opt1_EntNum").value=="")
+				{
+				warn_not_empty("Option 1 DUID");
+				return false;
+				}
+			if(document.getElementById("id_Opt1_Time").value=="")
+				{
+				warn_not_empty("Option 1 IAID");
+				return false;
+				}
+			}
+		if (!check_vid_pbit("id_Opt1_vid","id_Opt1_pbit","Option 1")) return false;
+		}
+
+	if(document.lanv6opt_form.Opt17_enable[1].checked)
+		{
+		if(document.getElementById("id_Opt17_EnterpriseNum").value=="")
+			{
+			warn_not_empty("Option 17 Enterprise Number");
+			return false;
+			}
+
+		if(!check_integer(document.getElementById("id_Opt17_EnterpriseNum").value))
+			{
+			item = "Enterprise Number";
+			warn_int(item);
+			return false;
+			}
+		if(document.getElementById("id_Opt17_ManufacturerOui").value=="")
+			{
+			warn_not_empty("Option 17 Manufacturer Oui");
+			return false;
+			}
+		if(document.getElementById("id_Opt17_ProductClass").value=="")
+			{
+			warn_not_empty("Option 17 Product Class");
+			return false;
+			}
+		if(document.getElementById("id_Opt17_ModelName").value=="")
+			{
+			warn_not_empty("Option 17 Model Name");
+			return false;
+			}
+		if(document.getElementById("id_Opt17_SerialNum").value=="")
+			{
+			warn_not_empty("Option 17 Serial Number");
+			return false;
+			}
+
+		if (!check_vid_pbit("id_Opt17_vid","id_Opt17_pbit","Option 17")) return false;
+		}
+
+	if (!check_vid_pbit("id_SrcInf_vid","id_SrcInf_pbit","Source Interface")) return false;
+	if (!check_vid_pbit("id_ClientMac_vid","id_ClientMac_pbit","Client MAC")) return false;
+		
+	if ( !check_ip(document.getElementById("id_PoolIPEnd_t").value) )
+		{
+		item = "Pool Ending IP";
+		alert(item+" is not a valid IP address.");
+		return false;
+		}
+	if ( !check_ip(document.getElementById("id_PoolIPStart_t").value) )
+		{
+		item = "Pool Starting IP";
+		alert(item+" is not a valid IP address.");
+		return false;
+		}
+	return true;
+}
+
+function check_vid_pbit(id_vid,id_pbit,Label)
+{
+	if( vidpit_off==1 ) return true;
+	if( (document.getElementById(id_vid).value == "") ||
+	    (isBlank(document.getElementById(id_vid).value)))
+		{
+		warn_not_empty(Label+" Vid");
+		return false;
+		}
+
+	if(!check_integer(document.getElementById(id_vid).value))
+		{
+		item = Label+" Vid";
+		msg = Label+" ";
+		min = "0";
+		max = "4094";
+		warn_int_between(item,min,max);
+		return false;
+		}
+
+	if (!check_integer_range(document.getElementById(id_vid).value,0,4094))
+		{
+		item = Label+" Vid";
+		msg = Label+" 17 ";
+		min = "0";
+		max = "4094";
+		warn_int_between(item,min,max);
+		return false;
+		}
+
+	if( (document.getElementById(id_pbit).value == "") ||
+	    (isBlank(document.getElementById(id_pbit).value)) )
+		{
+		warn_not_empty(Label+" Pbit");
+		return false;
+		}
+
+	if(!check_integer(document.getElementById(id_pbit).value))
+		{
+		item = Label+" PBit";
+		msg = Label+" ";
+		min = "0";
+		max = "7";
+		warn_int_between(item,min,max);
+		return false;
+		}
+
+	if (!check_integer_range(document.getElementById(id_pbit).value,0,7))
+		{
+		item = Label+" PBit";
+		msg = Label+" ";
+		min = "0";
+		max = "7";
+		warn_int_between(item,min,max);
+		return false;
+		}
+}
+
+function saveChanges()
+{
+	var msg;
+	var no;
+	var i;
+	var j;
+
+	if(!check_DHCPOption())
+		return false;
+
+	fvt_form_submit('lanv6opt_form');
+	document.getElementById('id_wait_progress').style.display="";
+	check_process();
+	document.lanv6opt_form.submit();
+	localStorage.setItem("redirectPage", "1");
+	return true;
+}
+
+function Passthrough_Enable()
+{
+	if(document.getElementById("id_DHCPPassthrough").value=="0")
+		{
+		document.lanv6opt_form.DHCPAction.disabled=true;
+		document.lanv6opt_form.id_PoolIPStart_t.disabled=true;
+		document.lanv6opt_form.id_PoolIPEnd_t.disabled=true;
+		}
+	else
+		{
+		document.lanv6opt_form.DHCPAction.disabled=false;
+		}
+}
+
+function option1_type_change()
+{
+	if(document.lanv6opt_form.DHCPopt1_type[0].checked)
+		{
+		document.lanv6opt_form.Opt1_HWType.disabled=false;
+		document.lanv6opt_form.Opt1_Time.disabled=false;
+		document.lanv6opt_form.Opt1_LLaddr.disabled=false;
+		document.lanv6opt_form.Opt1_EntNum.disabled=true;
+		document.lanv6opt_form.Opt1_Identifier.disabled=true;
+		}
+	else if(document.lanv6opt_form.DHCPopt1_type[1].checked)
+		{
+		document.lanv6opt_form.Opt1_HWType.disabled=true;
+		document.lanv6opt_form.Opt1_Time.disabled=true;
+		document.lanv6opt_form.Opt1_LLaddr.disabled=true;
+		document.lanv6opt_form.Opt1_EntNum.disabled=false;
+		document.lanv6opt_form.Opt1_Identifier.disabled=false;
+		//document.lanv6opt_form.Opt1_EntNum.value="";
+		}
+	else
+		{
+		document.lanv6opt_form.Opt1_HWType.disabled=false;
+		document.lanv6opt_form.Opt1_Time.disabled=true;
+		//document.lanv6opt_form.Opt1_LLaddr.value="";
+		document.lanv6opt_form.Opt1_LLaddr.disabled=false;
+		document.lanv6opt_form.Opt1_EntNum.disabled=true;
+		document.lanv6opt_form.Opt1_Identifier.disabled=true;
+		}
+}
+
+function fvt_form_init(form_name)
+{
+//alert ("OPTN_v6Rule = " + OPTN_v6Rule);
+	document.getElementById('id_showoption').style.display="block";
+	if (form_name=='lanv6opt_form' || form_name=='*') {
+
+		DHCPSEnable=fvt_meta_config('dhcp0_enable');
+		var dhcp_pool_capability = fvt_meta_config('dhcp_pool'+OPTN_v6Rule+'_capability');
+		// capability=2: Match Remote Server, 3: Match Local Server
+		fvt_form_obj_set("lanv6opt_form", "DHCPAction", dhcp_pool_capability );
+
+		if(dhcp_pool_capability=="1")
+			{
+			document.lanv6opt_form.DHCPPassthrough.value="0";
+			document.lanv6opt_form.DHCPAction.disabled=true;
+			}
+		else
+			{
+			document.lanv6opt_form.DHCPPassthrough.value="1";
+			document.lanv6opt_form.DHCPAction.disabled=false;
+			if(dhcp_pool_capability=="2") //Match Remote Server
+				{
+				document.lanv6opt_form.id_PoolIPStart_t.disabled=true;
+				document.lanv6opt_form.id_PoolIPEnd_t.disabled=true;
+				}
+			if(dhcp_pool_capability=="3") //Match Local Server
+				{
+				document.lanv6opt_form.id_PoolIPStart_t.disabled=false;
+				document.lanv6opt_form.id_PoolIPEnd_t.disabled=false;
+				}
+			}
+
+		fvt_form_obj_set("lanv6opt_form", "Opt16_enable", fvt_meta_config('dhcp_pool'+OPTN_v6Rule+'_option16_enable'));
+		fvt_form_obj_set("lanv6opt_form", "Opt1_enable", fvt_meta_config('dhcp_pool'+OPTN_v6Rule+'_option1_enable'));
+		fvt_form_obj_set("lanv6opt_form", "Opt17_enable", fvt_meta_config('dhcp_pool'+OPTN_v6Rule+'_option17_enable'));
+		fvt_form_obj_set("lanv6opt_form", "Opt16_value", fvt_meta_config('dhcp_relay_option_value'+meta_opt16));
+		fvt_form_obj_set("lanv6opt_form", "Opt16_vid", fvt_meta_config('dhcp_relay_vid'+meta_opt16));
+		fvt_form_obj_set("lanv6opt_form", "Opt16_pbit", fvt_meta_config('dhcp_relay_cos'+meta_opt16));
+
+		fvt_form_obj_set("lanv6opt_form", "Opt16_pool", 'pool'+OPTN_v6Rule);
+
+		if(fvt_meta_config('dhcp_relay_sub_option_num'+meta_opt1)=="0")
+			{
+			document.lanv6opt_form.DHCPopt1_type[0].checked=true;
+			}
+		else if(fvt_meta_config('dhcp_relay_sub_option_num'+meta_opt1)=="2")
+			{
+			document.lanv6opt_form.DHCPopt1_type[1].checked=true;
+			}
+		else if(fvt_meta_config('dhcp_relay_sub_option_num'+meta_opt1)=="255")
+			{
+			document.lanv6opt_form.DHCPopt1_type[2].checked=true;
+			}
+		else
+			{
+			document.lanv6opt_form.DHCPopt1_type[0].checked=true;
+			}
+
+		if (fvt_meta_config('dhcp_relay_option_value'+meta_opt1) == "")
+			{
+			fvt_form_obj_set("lanv6opt_form", "Opt1_HWType", "");
+			}
+		else
+			{
+			var client_ID = fvt_meta_config('dhcp_relay_option_value'+meta_opt1).split(":");
+			fvt_form_obj_set("lanv6opt_form", "Opt1_HWType", client_ID[1]+":"+client_ID[2]+":"+client_ID[3]+":"+client_ID[4]+":"+client_ID[5]+":"+client_ID[6]);
+			}
+
+		fvt_form_obj_set("lanv6opt_form", "Opt1_Time", fvt_meta_config('dhcp_relay_sub_option_value1_'+meta_opt1));
+		fvt_form_obj_set("lanv6opt_form", "DHCPopt1_duid", fvt_meta_config('dhcp_relay_sub_option_value2_'+meta_opt1));
+
+		var do61_duid_mata_o=fvt_meta_config('dhcp_relay_sub_option_value2_'+meta_opt1);
+		var do61_duid_mata=do61_duid_mata_o.replace(/\\x/g, '');
+		var dhcpv4_opt1_duid_ent=HEX2DEC(do61_duid_mata);
+		document.getElementById('id_Opt1_LLaddr').value = dhcpv4_opt1_duid_ent;
+
+		fvt_form_obj_set("lanv6opt_form", "Opt1_EntNum", fvt_meta_config('dhcp_relay_sub_option_value2_'+meta_opt1));
+
+		fvt_form_obj_set("lanv6opt_form", "Opt1_Identifier", fvt_meta_config('dhcp_relay_sub_option_value3_'+meta_opt1));
+
+		fvt_form_obj_set("lanv6opt_form", "Opt1_vid", fvt_meta_config('dhcp_relay_vid'+meta_opt1));
+		fvt_form_obj_set("lanv6opt_form", "Opt1_pbit", fvt_meta_config('dhcp_relay_cos'+meta_opt1));
+		fvt_form_obj_set("lanv6opt_form", "Opt1_pool", 'pool'+OPTN_v6Rule);
+
+		fvt_form_obj_set("lanv6opt_form", "Opt17_EnterpriseNum", fvt_meta_config('dhcp_relay_enterprise_num'+meta_opt17));
+		fvt_form_obj_set("lanv6opt_form", "Opt17_ManufacturerOui", fvt_meta_config('dhcp_relay_sub_option_value1_'+meta_opt17));
+		fvt_form_obj_set("lanv6opt_form", "Opt17_ProductClass", fvt_meta_config('dhcp_relay_sub_option_value2_'+meta_opt17));
+		fvt_form_obj_set("lanv6opt_form", "Opt17_ModelName", fvt_meta_config('dhcp_relay_sub_option_value3_'+meta_opt17));
+		fvt_form_obj_set("lanv6opt_form", "Opt17_SerialNum", fvt_meta_config('dhcp_relay_sub_option_value4_'+meta_opt17));
+		fvt_form_obj_set("lanv6opt_form", "Opt17_vid", fvt_meta_config('dhcp_relay_vid'+meta_opt17));
+		fvt_form_obj_set("lanv6opt_form", "Opt17_pbit", fvt_meta_config('dhcp_relay_cos'+meta_opt17));
+		fvt_form_obj_set("lanv6opt_form", "Opt17_pool", 'pool'+OPTN_v6Rule);
+
+		option_select();
+	}
+
+	localStorage.setItem("redirectPage", "0");
+	if ( vidpit_off==1 )
+		{
+		document.getElementById("tr_Opt1_vid").style.display = "none";
+		document.getElementById("tr_Opt1_pbit").style.display = "none";
+		document.getElementById("tr_Opt16_vid").style.display = "none";
+		document.getElementById("tr_Opt16_pbit").style.display = "none";
+		document.getElementById("tr_Opt17_vid").style.display = "none";
+		document.getElementById("tr_Opt17_pbit").style.display = "none";
+		document.getElementById("tr_SrcInf_vid").style.display = "none";
+		document.getElementById("tr_SrcInf_pbit").style.display = "none";
+		document.getElementById("tr_ClientMac_vid").style.display = "none";
+		document.getElementById("tr_ClientMac_pbit").style.display = "none";
+		}
+	else
+		{
+		document.getElementById("tr_Opt1_vid").style.display = "";
+		document.getElementById("tr_Opt1_pbit").style.display = "";
+		document.getElementById("tr_Opt16_vid").style.display = "";
+		document.getElementById("tr_Opt16_pbit").style.display = "";
+		document.getElementById("tr_Opt17_vid").style.display = "";
+		document.getElementById("tr_Opt17_pbit").style.display = "";
+		document.getElementById("tr_SrcInf_vid").style.display = "";
+		document.getElementById("tr_SrcInf_pbit").style.display = "";
+		document.getElementById("tr_ClientMac_vid").style.display = "";
+		document.getElementById("tr_ClientMac_pbit").style.display = "";
+		}
+}
+
+function fvt_form_submit(form_name) 	{
+	fvt_paramlist_clear();
+	if (form_name=='lanv6opt_form' || form_name=='*') {
+
+		fvt_paramlist_cat_str('dhcp0_pool'+OPTN_v6Rule+'_number_start', fvt_form_obj_get("lanv6opt_form", "PoolIPStart_t"));
+		fvt_paramlist_cat_str('dhcp0_pool'+OPTN_v6Rule+'_number_end', fvt_form_obj_get("lanv6opt_form", "PoolIPEnd_t"));
+
+		for (i=0; i<max_option; i++)
+		{
+			if ( i==OPTN_v6Rule )
+				{
+				if (document.getElementById('id_DHCPPassthrough').value== "1") eval("pool_pass"+i+"=0");
+				else eval("pool_pass"+i+"=1");
+				}
+			else
+				eval("pool_pass"+i+"=fvt_meta_config('dhcp_pool'+i+'_capability')");
+		}
+
+		if(DHCPSEnable=="1")
+		{
+			//if(document.getElementById("id_DHCPPassthrough").value!="1") //passthrough disable
+			if( (pool_pass0=="1") && (pool_pass1=="1") && (pool_pass2=="1") && (pool_pass3=="1") ) //passthrough disable
+			{
+				fvt_paramlist_cat_str('remote0_gateway', "");
+				fvt_paramlist_cat_str('remote1_gateway', "");
+				fvt_paramlist_cat_str('remote2_gateway', "");
+				fvt_paramlist_cat_str('remote3_gateway', "");
+			}else //passthrough enable
+			{
+				fvt_paramlist_cat_str('remote0_gateway', "255.255.255.255");
+				fvt_paramlist_cat_str('remote1_gateway', "255.255.255.255");
+				fvt_paramlist_cat_str('remote2_gateway', "255.255.255.255");
+				fvt_paramlist_cat_str('remote3_gateway', "255.255.255.255");
+				fvt_paramlist_cat_str('dhcp_trigger_omcicli_enable', "1");
+			}
+
+			if(document.getElementById("id_DHCPPassthrough").value=="1") //passthrough enable
+			{
+				fvt_paramlist_cat_str('dhcp_pool'+OPTN_v6Rule+'_option17_enable', "1");
+				fvt_paramlist_cat_str('dhcp_pool'+OPTN_v6Rule+'_capability', fvt_form_obj_get("lanv6opt_form", "DHCPAction"));
+			}else //passthrough disable
+			{
+				fvt_paramlist_cat_str('dhcp_pool'+OPTN_v6Rule+'_capability', "1");
+			}
+
+			fvt_paramlist_cat_str('dhcp_pool'+OPTN_v6Rule+'_option16_enable', fvt_form_obj_get("lanv6opt_form", "Opt16_enable"));
+			fvt_paramlist_cat_str('dhcp_pool'+OPTN_v6Rule+'_option1_enable', fvt_form_obj_get("lanv6opt_form", "Opt1_enable"));
+			fvt_paramlist_cat_str('dhcp_pool'+OPTN_v6Rule+'_option17_enable', fvt_form_obj_get("lanv6opt_form", "Opt17_enable"));
+
+			if(document.lanv6opt_form.Opt16_enable[1].checked)
+			{
+				fvt_paramlist_cat_str('dhcp_relay_option_id'+meta_opt16, "60");
+				fvt_paramlist_cat_str('dhcp_relay_sub_option_num'+meta_opt16, "0");
+				fvt_paramlist_cat_str('dhcp_relay_option_value'+meta_opt16, fvt_form_obj_get("lanv6opt_form", "Opt16_value"));
+				fvt_paramlist_cat_str('dhcp_relay_pool_name'+meta_opt16, fvt_form_obj_get("lanv6opt_form", "Opt16_pool"));
+				fvt_paramlist_cat_str('dhcp_relay_vid'+meta_opt16, fvt_form_obj_get("lanv6opt_form", "Opt16_vid"));
+				fvt_paramlist_cat_str('dhcp_relay_cos'+meta_opt16, fvt_form_obj_get("lanv6opt_form", "Opt16_pbit"));
+
+			}
+			if(document.lanv6opt_form.Opt1_enable[1].checked)
+			{
+				fvt_paramlist_cat_str('dhcp_relay_option_id'+meta_opt1, "61");
+				fvt_paramlist_cat_str('dhcp_relay_pool_name'+meta_opt1, fvt_form_obj_get("lanv6opt_form", "Opt1_pool"));
+				fvt_paramlist_cat_str('dhcp_relay_vid'+meta_opt1, fvt_form_obj_get("lanv6opt_form", "Opt1_vid"));
+				fvt_paramlist_cat_str('dhcp_relay_cos'+meta_opt1, fvt_form_obj_get("lanv6opt_form", "Opt1_pbit"));
+				if(document.lanv6opt_form.DHCPopt1_type[0].checked==true)
+				{
+					var client_ID = fvt_form_obj_get("lanv6opt_form", "Opt1_HWType");
+					fvt_paramlist_cat_str('dhcp_relay_option_value'+meta_opt1, "01:"+client_ID);
+					fvt_paramlist_cat_str('dhcp_relay_sub_option_num'+meta_opt1, "0");
+					fvt_paramlist_cat_str('dhcp_relay_sub_option_id1_'+meta_opt1, "");
+					//fvt_paramlist_cat_str('dhcp_relay_sub_option_value1_'+meta_opt1, "");
+					fvt_paramlist_cat_str('dhcp_relay_sub_option_id2_'+meta_opt1, "");
+					//fvt_paramlist_cat_str('dhcp_relay_sub_option_value2_'+meta_opt1, "");
+				}else if(document.lanv6opt_form.DHCPopt1_type[1].checked==true)
+				{
+					//fvt_paramlist_cat_str('dhcp_relay_option_value'+meta_opt1, "");
+					fvt_paramlist_cat_str('dhcp_relay_sub_option_num'+meta_opt1, "2");
+					fvt_paramlist_cat_str('dhcp_relay_sub_option_id1_'+meta_opt1, "1");
+					fvt_paramlist_cat_str('dhcp_relay_sub_option_value1_'+meta_opt1, fvt_form_obj_get("lanv6opt_form", "Opt1_Time"));
+					fvt_paramlist_cat_str('dhcp_relay_sub_option_id2_'+meta_opt1, "2");
+
+					var dhcpv4_opt1_enterprise=DEC2HEX_array(fvt_form_obj_get("lanv6opt_form", "Opt1_LLaddr"));
+					fvt_paramlist_cat_str('dhcp_relay_sub_option_value2_'+meta_opt1, dhcpv4_opt1_enterprise);
+					fvt_paramlist_cat_str('dhcp_relay_sub_option_value3_'+meta_opt1, fvt_form_obj_get("lanv6opt_form", "Opt1_Identifier"));
+				}else if(document.lanv6opt_form.DHCPopt1_type[2].checked==true)
+				{
+					//fvt_paramlist_cat_str('dhcp_relay_option_value1', "");
+					fvt_paramlist_cat_str('dhcp_relay_sub_option_num'+meta_opt1, "255");
+					fvt_paramlist_cat_str('dhcp_relay_sub_option_id1_'+meta_opt1, "1");
+					fvt_paramlist_cat_str('dhcp_relay_sub_option_value1_'+meta_opt1, fvt_form_obj_get("lanv6opt_form", "Opt1_Time"));
+					fvt_paramlist_cat_str('dhcp_relay_sub_option_id2_'+meta_opt1, "2");
+					fvt_paramlist_cat_str('dhcp_relay_sub_option_value2_'+meta_opt1, fvt_form_obj_get("lanv6opt_form", "Opt1_EntNum"));
+					//fvt_paramlist_cat_str('dhcp_relay_sub_option_value3_1', fvt_form_obj_get("lanv6opt_form", "Opt1_Identifier"));
+				}
+			}
+			if(document.lanv6opt_form.Opt17_enable[1].checked)
+			{
+				fvt_paramlist_cat_str('dhcp_relay_option_id'+meta_opt17, "125");
+				fvt_paramlist_cat_str('dhcp_relay_enterprise_num'+meta_opt17, fvt_form_obj_get("lanv6opt_form", "Opt17_EnterpriseNum"));
+				fvt_paramlist_cat_str('dhcp_relay_sub_option_num'+meta_opt17, "4");
+				fvt_paramlist_cat_str('dhcp_relay_sub_option_id1_'+meta_opt17, "1");
+				fvt_paramlist_cat_str('dhcp_relay_sub_option_value1_'+meta_opt17, fvt_form_obj_get("lanv6opt_form", "Opt17_ManufacturerOui"));
+				fvt_paramlist_cat_str('dhcp_relay_sub_option_id2_'+meta_opt17, "2");
+				fvt_paramlist_cat_str('dhcp_relay_sub_option_value2_'+meta_opt17, fvt_form_obj_get("lanv6opt_form", "Opt17_ProductClass"));
+				fvt_paramlist_cat_str('dhcp_relay_sub_option_id3_'+meta_opt17, "3");
+				fvt_paramlist_cat_str('dhcp_relay_sub_option_value3_'+meta_opt17, fvt_form_obj_get("lanv6opt_form", "Opt17_ModelName"));
+				fvt_paramlist_cat_str('dhcp_relay_sub_option_id4_'+meta_opt17, "4");
+				fvt_paramlist_cat_str('dhcp_relay_sub_option_value4_'+meta_opt17, fvt_form_obj_get("lanv6opt_form", "Opt17_SerialNum"));
+				fvt_paramlist_cat_str('dhcp_relay_pool_name'+meta_opt17, fvt_form_obj_get("lanv6opt_form", "Opt17_pool"));
+				fvt_paramlist_cat_str('dhcp_relay_vid'+meta_opt17, fvt_form_obj_get("lanv6opt_form", "Opt17_vid"));
+				fvt_paramlist_cat_str('dhcp_relay_cos'+meta_opt17, fvt_form_obj_get("lanv6opt_form", "Opt17_pbit"));
+			}
+// option200
+			if(document.getElementById("id_DHCPPassthrough").value=="1" ||  //passthrough enable
+				document.lanv6opt_form.Opt16_enable[1].checked ||
+				document.lanv6opt_form.Opt1_enable[1].checked ||
+				document.lanv6opt_form.Opt17_enable[1].checked)
+			{
+				fvt_paramlist_cat_str('dhcp_pool'+OPTN_v6Rule+'_option200_enable', "1");
+			}
+			else
+			{
+				fvt_paramlist_cat_str('dhcp_pool'+OPTN_v6Rule+'_option200_enable', "0");
+			}
+		}
+	}
+	fvt_paramlist_presubmit(form_name);
+}
+
+function HEX2DEC(number)
+{
+	// Return error if number is not hexadecimal or contains more than ten characters (10 digits)
+	//if (!/^[0-9A-Fa-f]{1,10}$/.test(number)) return '#NUM!';
+	if (!/^[0-9A-Fa-f]{1,10}$/.test(number)) return '';
+
+	// Convert hexadecimal number to decimal
+	var decimal = parseInt(number, 16);
+
+	// Return decimal number
+	return (decimal >= 549755813888) ? decimal - 1099511627776 : decimal;
+}
+
+function DEC2HEX(dec)
+{
+	var buf = [],
+	//map = '0123456789ABCDEF';
+	map = '0123456789abcdef';
+	while (parseInt(dec / 16, 10) !== 0)
+		{
+		buf.unshift(map[dec % 16]);
+		dec = parseInt(dec / 16, 10);
+		}
+	buf.unshift(map[dec % 16]);
+	return buf.join('');
+};
+
+function DEC2HEX_array(dec)
+{
+	var result = DEC2HEX(dec);
+	var result8 = result;
+	var xout="";
+	for (i = result.length ; i < 8; i++)
+		{
+		result8 = "0" + result8;
+		}
+	var hex_array = result8.match(/.{1,2}/g)
+	for (i = 0 ; i <= 3; i++){xout = xout + "\\x" + hex_array[i];}
+	return xout;
+}
+
+function Back()
+{
+	window.location.href="wwwctrl.cgi?action=lan_ipv6";
+}
+//-->
+function check_redirectPage()
+{
+	if (localStorage.getItem("redirectPage")=="1") Back();
+}
+function changematch()
+{
+	if(document.getElementById("id_DHCPAction").value=="2")
+		{
+		document.lanv6opt_form.id_PoolIPStart_t.disabled=true;
+		document.lanv6opt_form.id_PoolIPEnd_t.disabled=true;
+		}
+	else
+		{
+		document.lanv6opt_form.id_PoolIPStart_t.disabled=false;
+		document.lanv6opt_form.id_PoolIPEnd_t.disabled=false;
+		}
+}
+
+</script>
+</head>
+
+<body align="left" onload="check_redirectPage();fvt_form_init('lanv6opt_form');">
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<form id="lanv6opt_form" name="lanv6opt_form" method="post" >
+<fieldset>
+	<div class="lv1_title">Advanced Setup&nbsp;&gt;&nbsp;LAN IPv6 Setup&nbsp;&gt;&nbsp;
+	<script language="javascript" type="text/javascript">
+		document.write("LAN IPv6 Option Pool [ " + OPTN_v6Rule + "	] Settings");
+	</script>
+	</div>
+</fieldset>
+<div class="div1_indent lv2_new">
+
+<!--dhcp server-->
+	<div><hr class="hr2"></div>
+	<div>
+		<table><tbody>
+		<tr>
+			<input name="nosave_DHCPPassthrough" id="mm_DHCPPassthrough" type="hidden"/>
+			<td class="width_lanset1"><div>DHCP Passthrough</div></td>
+			<td>
+				<select name="DHCPPassthrough" id="id_DHCPPassthrough" class="width_lansetEnable" onchange="Passthrough_Enable();" >
+					<option value='0'>Disable</option>
+					<option value='1'>Enable</option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<input name="nosave_DHCPAction" id="mm_DHCPAction" type="hidden"/>
+			<td class="width_lanset1"><div>Matching Action</div></td>
+			<td>
+				<select name="DHCPAction" id="id_DHCPAction" onchange="changematch()" width="100" >
+					<option value='2'>Forward to WAN</option>
+					<option value='3'>Match Local Server</option>
+				</select>
+			</td>
+		</tr>
+		</tbody></table>
+	</div>
+	<div id="id_showoption" style="display:none">
+		<table><tbody>
+		<tr>
+			<td><div>Pool Starting IP Address</div></td>
+			<input name="PoolIPStart" id="id_PoolIPStart" type="hidden">
+
+			<script language="javascript" type="text/javascript">
+				var IP_Address = fvt_meta_config('lan0_ip');
+				var IP_Address_split = IP_Address.split(".");
+				var Pool_Start_IP_Address = fvt_meta_config('dhcp0_pool'+OPTN_v6Rule+'_number_start');
+				document.write("<td><div>");
+				document.write("<input disabled='disabled' id='id_PoolIPStart_t' class='width_ipAddr' size='16' maxlength='15' value='"+Pool_Start_IP_Address+"' type='text' name='PoolIPStart_t'>");
+				document.write("</div></td>");
+			</script>
+		</tr>
+		<tr>
+			<td><div>Pool Ending IP Address</div></td>
+			<input name="PoolIPEnd" id="id_PoolIPEnd" type="hidden">
+
+			<script language="javascript" type="text/javascript">
+				var Pool_End_IP_Address = fvt_meta_config('dhcp0_pool'+OPTN_v6Rule+'_number_end');
+				document.write("<td><div>");
+				document.write("<input disabled='disabled' id='id_PoolIPEnd_t' class='width_ipAddr' size='16' maxlength='15' value='"+Pool_End_IP_Address+"' type='text' name='PoolIPEnd_t'>");
+				document.write("</div></td>");
+			</script>
+		</tr>
+<!---- Option 16 --->
+		<tr>
+			<td class="width_lanset1"><div>DHCPv6 Option 16 :</div></td>
+			<td><table><tr>
+			<td class="radiocell">
+				<input type="radio" name="Opt16_enable" id="id_Opt16_disable" value="0" class="radio" onclick="option_select()" checked>
+				Disable
+			</td>
+			<td class="radiocell">
+				<input type="radio" name="Opt16_enable" id="id_Opt16_enable" value="1" onclick="option_select()" class="radio">
+				Enable
+			</td>
+			</tr></table></td>
+		</tr>
+		<input name="Opt16_pool" id="id_Opt16_pool" type="hidden">
+		<tr>
+			<td class="width_lanset1" ><div class="width_lanset3">Vender Class ID</div></td>
+			<td><input type="text" name="Opt16_value" id="id_Opt16_value"></td>
+		</tr>
+		<tr id="tr_Opt16_vid">
+			<td class="width_lanset1"><div class="width_lanset3">vid</div></td>
+			<td><input type="text" name="Opt16_vid" id="id_Opt16_vid"></td>
+		</tr>
+		<tr id="tr_Opt16_pbit">
+			<td class="width_lanset1"><div class="width_lanset3">pbit</div></td>
+			<td><input type="text" name="Opt16_pbit" id="id_Opt16_pbit"></td>
+		</tr>
+<!---- Option 1 --->
+		<tr>
+			<td class="width_lanset1"><div>DHCPv6 Option 1 :</div></td>
+			<td><table><tr>
+			<td class="radiocell">
+				<input type="radio" name="Opt1_enable" id="id_Opt1_disable" value="0" class="radio" onclick="option_select()" checked>
+				Disable
+			</td>
+			<td class="radiocell">
+				<input type="radio" name="Opt1_enable" id="id_Opt1_enable" value="1" onclick="option_select()" class="radio">
+				Enable
+			</td>
+			</tr></table></td>
+		</tr>
+		<input name="Opt1_pool" id="id_Opt1_pool" type="hidden">
+		<tr>
+			<td class="width_lanset1"><div class="width_lanset3">Type</div></td>
+				<td><table><tr>
+				<td class="radiocell">
+					<input type="radio" name="DHCPopt1_type" id="id_DHCPopt1_LLT" value="1" onclick="option1_type_change()" class="radio" checked>
+					DUID-LLT
+				</td>
+				<td class="radiocell">
+					<input type="radio" name="DHCPopt1_type" id="id_DHCPopt1_EN" value="2" onclick="option1_type_change()" class="radio">
+					DUID-EN
+				</td>
+				<td class="radiocell">
+					<input type="radio" name="DHCPopt1_type" id="id_DHCPopt1_LL" value="3" onclick="option1_type_change()" class="radio">
+					DUID-LL
+				</td>
+				</tr></table></td>
+		</tr>
+		<tr>
+			<td class="width_lanset1" ><div class="width_lanset3">Hardware type</div></td>
+			<td><input type="text" name="Opt1_HWType" id="id_Opt1_HWType"></td>
+		</tr>
+		<tr>
+			<td class="width_lanset1" ><div class="width_lanset3">Time</div></td>
+			<td><input type="text" name="Opt1_Time" id="id_Opt1_Time" maxlength="4"></td>
+		</tr>
+		<tr>
+			<td class="width_lanset1"><div class="width_lanset3">Link-layer address</div></td>
+			<td><input type="text" name="Opt1_LLaddr" id="id_Opt1_LLaddr"></td>
+		</tr>
+		<tr>
+			<td class="width_lanset1" ><div class="width_lanset3">Enterprise Number</div></td>
+			<td><input type="text" name="Opt1_EntNum" id="id_Opt1_EntNum"></td>
+		</tr>
+		<tr>
+			<td class="width_lanset1"><div class="width_lanset3">Identifier</div></td>
+			<td><input type="text" name="Opt1_Identifier" id="id_Opt1_Identifier"></td>
+		</tr>
+
+		<tr id="tr_Opt1_vid">
+			<td class="width_lanset1"><div class="width_lanset3">vid</div></td>
+			<td><input type="text" name="Opt1_vid" id="id_Opt1_vid"></td>
+		</tr>
+		<tr id="tr_Opt1_pbit">
+			<td class="width_lanset1"><div class="width_lanset3">pbit</div></td>
+			<td><input type="text" name="Opt1_pbit" id="id_Opt1_pbit"></td>
+		</tr>
+<!---- Option 17 --->
+		<tr>
+			<td class="width_lanset1"><div>DHCPv6 Option 17 :</div></td>
+			<td><table><tr>
+			<td class="radiocell">
+				<input type="radio" name="Opt17_enable" id="id_Opt17_disable" value="0" class="radio" onclick="option_select()" checked>
+				Disable
+			</td>
+			<td class="radiocell">
+				<input type="radio" name="Opt17_enable" id="id_Opt17_enable" value="1" onclick="option_select()" class="radio">
+				Enable
+			</td>
+			</tr></table></td>
+		</tr>
+		<input name="Opt17_pool" id="id_Opt17_pool" type="hidden">
+		<tr>
+			<td><div class="width_lanset3">Enterprise Number</div></td>
+			<td><input type="text" name="Opt17_EnterpriseNum" id="id_Opt17_EnterpriseNum" ></td>
+		</tr>
+		<tr>
+			<td><div class="width_lanset3">Manufacturer Oui</div></td>
+			<td><input type="text" name="Opt17_ManufacturerOui" id="id_Opt17_ManufacturerOui" ></td>
+		</tr>
+		<tr>
+			<td><div class="width_lanset3">Product Class</div></td>
+			<td><input type="text" name="Opt17_ProductClass" id="id_Opt17_ProductClass"></td>
+		</tr>
+		<tr>
+			<td><div class="width_lanset3">Model Name</div></td>
+			<td><input type="text" name="Opt17_ModelName" id="id_Opt17_ModelName"></td>
+		</tr>
+		<tr>
+			<td><div class="width_lanset3">Serial Number</div></td>
+			<td><input type="text" name="Opt17_SerialNum" id="id_Opt17_SerialNum"></td>
+		</tr>
+		<tr id="tr_Opt17_vid">
+			<td class="width_lanset1"><div class="width_lanset3">vid</div></td>
+			<td><input type="text" name="Opt17_vid" id="id_Opt17_vid"></td>
+		</tr>
+		<tr id="tr_Opt17_pbit">
+			<td class="width_lanset1"><div class="width_lanset3">pbit</div></td>
+			<td><input type="text" name="Opt17_pbit" id="id_Opt17_pbit"></td>
+		</tr>
+<!---- Source Interface --->
+		<tr>
+			<td class="width_lanset1"><div>Source Interface :</div></td>
+			<td><table><tr>
+			<td class="radiocell">
+				<input type="radio" name="SrcInf_enable" id="id_srcinf_disable" value="0" class="radio" onclick="option_select()" checked>
+				Disable
+			</td>
+			<td class="radiocell">
+				<input type="radio" name="SrcInf_enable" id="id_SrcInf_enable" value="1" onclick="option_select()" class="radio">
+				Enable
+			</td>
+			</tr></table></td>
+		</tr>
+		<input name="SrcInf_pool" id="id_SrcInf_pool" type="hidden">
+		<tr>
+			<td><div class="width_lanset3">Interface</div></td>
+			<td>
+				<select name="SrcInf_value" id="id_SrcInf_value" onchange="SrcInf_value()" width="100" >
+					<option value='0'>ETH Port 1</option>
+					<option value='1'>ETH Port 2</option>
+					<option value='2'>ETH Port 3</option>
+					<option value='3'>ETH Port 4</option>
+				</select>
+			</td>
+		</tr>
+		<tr id="tr_SrcInf_vid">
+			<td class="width_lanset1"><div class="width_lanset3">vid</div></td>
+			<td><input type="text" name="SrcInf_vid" id="id_SrcInf_vid"></td>
+		</tr>
+		<tr id="tr_SrcInf_pbit">
+			<td class="width_lanset1"><div class="width_lanset3">pbit</div></td>
+			<td><input type="text" name="SrcInf_pbit" id="id_SrcInf_pbit"></td>
+		</tr>
+<!---- Client MAC --->
+		<tr>
+			<td class="width_lanset1"><div>Client MAC :</div></td>
+			<td><table><tr>
+			<td class="radiocell">
+				<input type="radio" name="ClientMac_enable" id="id_clientmac_disable" value="0" class="radio" onclick="option_select()" checked>
+				Disable
+			</td>
+			<td class="radiocell">
+				<input type="radio" name="ClientMac_enable" id="id_ClientMac_enable" value="1" onclick="option_select()" class="radio">
+				Enable
+			</td>
+			</tr></table></td>
+		</tr>
+		<input name="ClientMac_pool" id="id_ClientMac_pool" type="hidden">
+		<tr>
+			<td><div class="width_lanset3">MAC Address</div></td>
+			<td>
+				<input type="text" name="ClientMac_value" id="id_ClientMac_value">
+			</td>
+		</tr>
+		<tr id="tr_ClientMac_vid">
+			<td class="width_lanset1"><div class="width_lanset3">vid</div></td>
+			<td><input type="text" name="ClientMac_vid" id="id_ClientMac_vid"></td>
+		</tr>
+		<tr id="tr_ClientMac_pbit">
+			<td class="width_lanset1"><div class="width_lanset3">pbit</div></td>
+			<td><input type="text" name="ClientMac_pbit" id="id_ClientMac_pbit"></td>
+		</tr>
+		</tbody></table>
+	</div>
+
+	<div class="top_cwmp2">
+	<table><tbody>
+		<tr>
+			<td class="button_center">
+				<input type="button" onclick="saveChanges()" name="applybtn" value="Apply Changes" class="width_apply">
+				<input type="button" onclick="Back()" name="applybtn" value="Back" class="width_apply">
+			</td>
+		</tr>
+		<tr id="id_wait_progress" style="display:none;position:fixed;top:0px;left:0px;width:100%;height:100%;opacity:0.4;background-color:rgb(0,0,0);">
+			<td class="button_center">
+				<img src="../images/progress-w.gif" style="position:fixed;display:block;top:50%;left:50%;transform:translate(-50%,-50%);">
+			</td>
+		</tr>
+
+	</tbody></table>
+	</div>
+</div>
+</form>
+</td></tr>
+</tbody></table>
+</div>
+</body>
+</html>

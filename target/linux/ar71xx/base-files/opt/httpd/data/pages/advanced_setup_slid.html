@@ -1,0 +1,267 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset="UTF-8" />
+<title>.:: Welcome to the Web-Based Configurator::.</title>
+<link href="../css/zycss.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script type="text/JavaScript" src="../js/common.js" ></script>
+
+<script type="text/javascript">
+var NavLang=GetNavLang();
+
+if (NavLang == "ZH")
+{
+var vRegSLID = "註冊ID\(SLID\)值";
+var vEnterLN = "請輸入專線編號後10碼";
+var vNotice = "請注意：";
+var vRegInfo = "SLID格式最多為10個ASCII字元或是以0x開頭的20個16進位字元所組成";
+var vWarningRestart = "警告：改變SLID將會導致重新啟動設備";
+var vWanMode = "WAN端模式";
+var vEnPPPoE = "請輸入中華電信所提供之使用者名稱與密碼以建立網路連線";
+var vSetup = "設定";
+var vSSIDName = "名稱\(SSID\)";
+var vValue = "值";
+var vApply = "套用";
+var vCancel = "取消";
+var vStartRegID = "啟用註冊ID\(SLID\)";
+
+}
+else
+{
+var vRegSLID = "Registration ID\(SLID\)";
+var vEnterLN = "";
+var vNotice = "Notice :";
+var vRegInfo = "Registration ID is composed by 10 ASCII characters or 20 hex characters";
+var vWarningRestart = "Warning : It will reboot device if changing Registration ID";
+var vWanMode = "WAN Mode";
+var vEnPPPoE = "Please enter PPPoE username and password to enable network connection";
+var vSetup = "Setup";
+var vSSIDName = "Name\(SSID\)";
+var vValue = " Value";
+var vApply = "Apply";
+var vCancel = "Cancel";
+var vStartRegID = "Apply Registered ID\(SLID\)";
+
+}
+
+function doLoad()
+{
+	changeEnable();
+}
+function changeEnable()
+{
+	if ( fvt_meta_config('pon_status') == 'O5') {
+		document.getElementById("apply_btn").disabled = true;
+		document.getElementById("clean_btn").disabled = true;
+		document.getElementById("id_hint").style.display ="";
+		document.getElementById("onu_password").disabled = true;
+		/*
+		if ( fvt_meta_config('slid_enable') == '0') {
+			document.getElementById("onu_password").disabled = true;
+			document.getElementById("enableSLID").checked = false;
+		} else {
+			if( document.getElementById("enableSLID").checked ) {
+				document.getElementById("onu_password").disabled = false;
+			} else {
+				document.getElementById("onu_password").disabled = true;
+			}
+		}
+		*/
+	}
+	else {
+		document.getElementById("id_hint").style.display ="none";
+		document.getElementById("onu_password").disabled = false;
+		/*
+		if( document.getElementById("enableSLID").checked ) {
+			document.getElementById("onu_password").disabled = false;
+		} else {
+			document.getElementById("onu_password").disabled = true;
+		}
+		*/
+	}
+}
+
+function checkRegID() {
+	var regId = document.getElementById("onu_password").value;
+	if (regId.substring(0,2) == "0x" ) {
+		/* Hex input case */
+		/* Check length first */
+		if( regId.length > 22 ) {
+			alert("Error: Registration ID(SLID) value exceed maximum length: 20 ");
+			return false;
+		} else {
+
+			if( regId.length % 2 != 0 ) {
+				alert("Error: Wrong Registration ID(SLID) format, please input correct hex value");
+				return false;
+			}
+
+			/* Check HEX format */
+			var regu = /^[0-9a-fA-F]+$/;
+			if( regu.test(regId.substring(2, regId.length)) ){
+				document.getElementById("onu_password").value="0x"+regId.substring(2, regId.length).toUpperCase();
+				return true;
+			} else {
+				alert("Error: Wrong Registration ID(SLID) format, please input correct hex value");
+				return false;
+			}
+		}
+	} else {
+		/* ASCII case */
+		if ( regId.length > 10 ) {
+			alert("SLID value exceed maximum length: 10");
+			return false;
+		} else {
+			return true;
+		}
+	}
+	return true;
+}
+
+function checkMyForm(myForm){
+	if( checkRegID() ) {
+		document.getElementById("enableSLID").disabled = false;
+		document.getElementById("onu_password").disabled = false
+		return true;
+	} else {
+		return false;
+	}
+}
+function fvt_page_init() {
+	fvt_form_obj_set("form1", "onu_password", fvt_meta_config('kv_onu_password'));
+	if(meta_config['slid_enable']=='1') {
+		fvt_form_checkbox_set('form1', 'enableSLID', '1');
+	}
+	doLoad();
+}
+
+function fvt_form_submit(form_name) {
+	var form_obj = document.forms[form_name];
+	var onu_password = fvt_form_obj_get(form_name,"onu_password");
+	var old_onu_password =	fvt_meta_config('kv_onu_password');
+
+	if(onu_password == "")
+	{
+		alert("SLID can't be empty!");
+		return -1;
+	}
+
+	fvt_paramlist_cat_str ("slid_enable",	fvt_form_checkbox_get(form_name, "enableSLID"));
+
+	if( onu_password != old_onu_password)
+	{
+		fvt_paramlist_cat_str ("onu_password",	onu_password);
+		document.getElementById('form1').action="wwwctrl.cgi?action=wait_restart";
+	}
+
+	if( checkRegID() ) {
+		fvt_paramlist_presubmit(form_name);
+		document.form1.submit();
+	}
+	else
+	{
+		return -1;
+	}
+	return true;
+}
+
+</script>
+</head>
+
+<body onload="fvt_page_init()">
+
+<form id="form1" name="form1"  method="post"  action="" target="contentfrm">
+
+<!--<input TYPE="hidden" NAME="action" VALUE="LAN">-->
+<!--<input TYPE="hidden" NAME="redirect_action" VALUE="%redirect_action%">-->
+
+	<fieldset>
+		<div class="lv1_title">Advanced Setup&nbsp;&gt;&nbsp;
+		<script language="javascript" type="text/javascript">
+			document.write(vRegSLID);
+		</script>
+		</div>
+	</fieldset>
+
+	<div class="left">
+		<br class="clearfloat" />
+		<div class="right">
+			<br class="clearfloat" />
+			<!-- configuration beginning -->
+			<div class="headline">
+			<script language="javascript" type="text/javascript">
+				document.write(vRegSLID);
+			</script>
+			</div>
+			<table width="90%" border="0" align="center" cellpadding="0" cellspacing="0" class="cfgpadding">
+			<tr id="id_hint" style="display:none">
+				<!--<td colspan="2">-->
+				<label >
+					<!--<input type="checkbox" name="enableSLID" id="enableSLID" value="1" onchange="changeEnable();" />-->
+				</label>
+					<td colspan="2">
+						<div><font color="red"><b>Can not modify this setting ! Please disconnect the PON fiber firstly.</b></font><div>
+					</td>
+				<!--</td>-->
+			</tr>
+			<tr style="display:none">
+
+						<td colspan="2">
+						<label>
+						<input type="checkbox" name="enableSLID" id="enableSLID" value="1" onchange="changeEnable();" />
+						</label>
+						<script language="javascript" type="text/javascript">
+							document.write(vStartRegID);
+						</script>
+						</td>
+				</tr>
+				  <tr>
+						<td width="100 px" nowrap="nowrap">
+						<script language="javascript" type="text/javascript">
+							document.write(vRegSLID+vValue);
+						</script>
+						</td>
+						<td>
+							<input name="onu_password" id="onu_password" size="30" maxlength="22" value="" type="text">
+							<script language="javascript" type="text/javascript">
+								document.write(vEnterLN);
+							</script>
+						</td>
+				  </tr>
+			   <tr>
+					<td colspan="2"><br><p>
+					<script language="javascript" type="text/javascript">
+						document.write("<strong>"+vNotice+"</strong>");
+						document.write(vRegInfo);
+					</script>
+					</p></td>
+			   </tr>
+			</table>
+			<div class="warning">
+			  <div class="title">
+				<script language="javascript" type="text/javascript">
+					document.write(vWarningRestart);
+				</script>
+			  </div>
+			</div>
+			<div class="btn-block".>
+
+				<script language="javascript" type="text/javascript">
+					document.write("<input type='button' id='apply_btn' name='Submit' ");
+					document.write("value="+vApply+" class='btnstyle' ");
+					document.write("onclick=\"return fvt_form_submit('form1');\" \/>");
+					document.write(" ");
+					document.write("<input type='reset' id='clean_btn' name='Submit2' ");
+					document.write("value="+vCancel+" class='btnstyle'\/>");
+				</script>
+					<input type="hidden" id="result" name="result" value="" />
+			</div>
+				<!-- configuration ending -->
+		</div>
+	</div>
+
+</form>
+</body>
+
+</html>

@@ -1,0 +1,719 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+
+<script language="javascript" type="text/javascript">
+var WAN_MAX_NUM=8
+var wanStatus;
+var connectStatus = 0;
+var ROUTER_MODE = parseInt(fvt_meta_config('ont_mode'),10);
+if (fvt_meta_config('dev_wlanac0_interface') != '') var ac_installed = "1";
+//var connectStatus = 1;
+
+if (connectStatus==1)
+{
+	wanStatus = 'Up';
+}
+else
+{
+	wanStatus = 'Down';
+}
+
+function reloadPage()
+{
+	window.location.replace("/cgi-bin/wwwctrl.cgi?action=statistics");
+	timer = setTimeout("reloadPage()",30000);
+}
+
+function reloadw()
+{
+	timer = setTimeout("reloadPage()",30000);
+}
+
+function get_wan_num()
+{
+	var num=0;
+	var wan_if_key
+	var wan_if_name;
+
+	for(i=0; i<WAN_MAX_NUM; i++)
+	{
+		wan_if_key = 'dev_wan'+i+'_interface';
+		wan_if_name = fvt_meta_config(wan_if_key);
+
+		if(wan_if_name != "")
+		{
+			num++;
+			continue;
+		}
+		break;
+	}
+	return num;
+}
+
+function list_pon0_statistics()
+{
+	var i=0;
+	var row=0;
+	var wan_num=1;
+	var wan_if_key
+	var wan_if_name;
+	var rx_byte_key;
+	var rx_pkts_key;
+	var rx_errs_key;
+	var rx_drop_key;
+	var rx_unicast_key;
+	var rx_multicast_key;
+	var rx_broadcast_key;
+	var rx_rate_key;
+
+	var tx_byte_key;
+	var tx_pkts_key;
+	var tx_errs_key;
+	var tx_drop_key;
+	var tx_unicast_key;
+	var tx_multicast_key;
+	var tx_broadcast_key;
+	var tx_rate_key;
+
+	rx_byte_key='kv_wan_rx_byte'+i;
+	rx_pkts_key='kv_wan_rx_pkg'+i;
+	rx_errs_key='kv_wan_rx_error'+i;
+	rx_drop_key='kv_wan_rx_drop'+i;
+	rx_unicast_key='kv_wan_rx_unicast_pkg'+i;
+	rx_multicast_key='kv_wan_rx_multicast_pkg'+i;
+	rx_broadcast_key='kv_wan_rx_broadcast_pkg'+i;
+	rx_rate_key='kv_wan_rx_rate'+i;
+
+	tx_byte_key='kv_wan_tx_byte'+i;
+	tx_pkts_key='kv_wan_tx_pkg'+i;
+	tx_errs_key='kv_wan_tx_error'+i;
+	tx_drop_key='kv_wan_tx_drop'+i;
+	tx_unicast_key='kv_wan_tx_unicast_pkg'+i;
+	tx_multicast_key='kv_wan_tx_multicast_pkg'+i;
+	tx_broadcast_key='kv_wan_tx_broadcast_pkg'+i;
+	tx_rate_key='kv_wan_tx_rate'+i;
+
+
+
+	document.write("<tr>");
+	document.write("<td align=\"center\">pon0</td>");
+	document.write("<td align=\"center\">"+fvt_meta_config(rx_byte_key)+"</td>");
+	document.write("<td align=\"center\">"+fvt_meta_config(rx_pkts_key)+"</td>");
+	document.write("<td align=\"center\">"+fvt_meta_config(rx_errs_key)+"</td>");
+	document.write("<td align=\"center\">"+fvt_meta_config(rx_drop_key)+"</td>");
+	if(row==0)
+	{
+		document.write("<td align=\"center\"rowspan=\""+wan_num+"\">"+fvt_meta_config(rx_unicast_key)+"</td>");
+		document.write("<td align=\"center\"rowspan=\""+wan_num+"\">"+fvt_meta_config(rx_multicast_key)+"</td>");
+		document.write("<td align=\"center\"rowspan=\""+wan_num+"\">"+fvt_meta_config(rx_broadcast_key)+"</td>");
+		document.write("<td align=\"center\"rowspan=\""+wan_num+"\">"+fvt_meta_config(rx_rate_key)+"</td>");
+	}
+	document.write("<td align=\"center\">"+fvt_meta_config(tx_byte_key)+"</td>");
+	document.write("<td align=\"center\">"+fvt_meta_config(tx_pkts_key)+"</td>");
+	document.write("<td align=\"center\">"+fvt_meta_config(tx_errs_key)+"</td>");
+	document.write("<td align=\"center\">"+fvt_meta_config(tx_drop_key)+"</td>");
+	if(row==0)
+	{
+		document.write("<td align=\"center\" rowspan=\""+wan_num+"\">"+fvt_meta_config(tx_unicast_key)+"</td>");
+		document.write("<td align=\"center\" rowspan=\""+wan_num+"\">"+fvt_meta_config(tx_multicast_key)+"</td>");
+		document.write("<td align=\"center\"rowspan=\""+wan_num+"\">"+fvt_meta_config(tx_broadcast_key)+"</td>");
+		document.write("<td align=\"center\" rowspan=\""+wan_num+"\">"+fvt_meta_config(tx_rate_key)+"</td>");
+	}
+	document.write("</tr>");
+
+
+}
+
+function list_wan_statistics()
+{
+	var i=0;
+	var row=0;
+	var wan_num;
+	var wan_if_key
+	var wan_if_name;
+	var rx_byte_key;
+	var rx_pkts_key;
+	var rx_errs_key;
+	var rx_drop_key;
+	var rx_unicast_key;
+	var rx_multicast_key;
+	var rx_broadcast_key;
+	var rx_rate_key;
+
+	var tx_byte_key;
+	var tx_pkts_key;
+	var tx_errs_key;
+	var tx_drop_key;
+	var tx_unicast_key;
+	var tx_multicast_key;
+	var tx_broadcast_key;
+	var tx_rate_key;
+
+	wan_num = get_wan_num();
+
+	if(!ROUTER_MODE)
+	{
+		list_pon0_statistics();
+		return 0;
+	}
+
+	for(i=0; i<WAN_MAX_NUM; i++)
+	{
+		wan_if_key = 'dev_wan'+i+'_interface';
+		wan_if_name = fvt_meta_config(wan_if_key);
+		rx_byte_key='kv_wan_rx_byte'+i;
+		rx_pkts_key='kv_wan_rx_pkg'+i;
+		rx_errs_key='kv_wan_rx_error'+i;
+		rx_drop_key='kv_wan_rx_drop'+i;
+		rx_unicast_key='kv_wan_rx_unicast_pkg'+i;
+		rx_multicast_key='kv_wan_rx_multicast_pkg'+i;
+		rx_broadcast_key='kv_wan_rx_broadcast_pkg'+i;
+		rx_rate_key='kv_wan_rx_rate'+i;
+
+		tx_byte_key='kv_wan_tx_byte'+i;
+		tx_pkts_key='kv_wan_tx_pkg'+i;
+		tx_errs_key='kv_wan_tx_error'+i;
+		tx_drop_key='kv_wan_tx_drop'+i;
+		tx_unicast_key='kv_wan_tx_unicast_pkg'+i;
+		tx_multicast_key='kv_wan_tx_multicast_pkg'+i;
+		tx_broadcast_key='kv_wan_tx_broadcast_pkg'+i;
+		tx_rate_key='kv_wan_tx_rate'+i;
+
+
+		if(wan_if_name != "")
+		{
+			document.write("<tr>");
+			document.write("<td align=\"center\">"+fvt_meta_config("wan"+i+"_if_name")+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(rx_byte_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(rx_pkts_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(rx_errs_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(rx_drop_key)+"</td>");
+			if(row==0)
+			{
+				document.write("<td align=\"center\"rowspan=\""+wan_num+"\">"+fvt_meta_config(rx_unicast_key)+"</td>");
+				document.write("<td align=\"center\"rowspan=\""+wan_num+"\">"+fvt_meta_config(rx_multicast_key)+"</td>");
+				document.write("<td align=\"center\"rowspan=\""+wan_num+"\">"+fvt_meta_config(rx_broadcast_key)+"</td>");
+				document.write("<td align=\"center\"rowspan=\""+wan_num+"\">"+fvt_meta_config(rx_rate_key)+"</td>");
+			}
+			document.write("<td align=\"center\">"+fvt_meta_config(tx_byte_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(tx_pkts_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(tx_errs_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(tx_drop_key)+"</td>");
+			if(row==0)
+			{
+				document.write("<td align=\"center\" rowspan=\""+wan_num+"\">"+fvt_meta_config(tx_unicast_key)+"</td>");
+				document.write("<td align=\"center\" rowspan=\""+wan_num+"\">"+fvt_meta_config(tx_multicast_key)+"</td>");
+				document.write("<td align=\"center\"rowspan=\""+wan_num+"\">"+fvt_meta_config(tx_broadcast_key)+"</td>");
+				document.write("<td align=\"center\" rowspan=\""+wan_num+"\">"+fvt_meta_config(tx_rate_key)+"</td>");
+			}
+			document.write("</tr>");
+			row++;
+		}
+	}
+}
+
+function list_lan_statistics()
+{
+	var i=0;
+	var lan_if_name;
+	var rx_byte_key;
+	var rx_pkts_key;
+	var rx_errs_key;
+	var rx_drop_key;
+	var rx_unicast_key;
+	var rx_multicast_key;
+	var rx_broadcast_key;
+	var rx_rate_key;
+
+	var tx_byte_key;
+	var tx_pkts_key;
+	var tx_errs_key;
+	var tx_drop_key;
+	var tx_unicast_key;
+	var tx_multicast_key;
+	var tx_broadcast_key;
+	var tx_rate_key;
+
+	for(i=0; i<4; i++)
+	{
+		lan_if_name="ETH"+(i+1);
+		rx_byte_key='kv_lan_rx_byte'+i;
+		rx_pkts_key='kv_lan_rx_pkg'+i;
+		rx_errs_key='kv_lan_rx_error'+i;
+		rx_drop_key='kv_lan_rx_drop'+i;
+		rx_unicast_key='kv_lan_rx_unicast_pkg'+i;
+		rx_multicast_key='kv_lan_rx_multicast_pkg'+i;
+		rx_broadcast_key='kv_lan_rx_broadcast_pkg'+i;
+		rx_rate_key='kv_lan_rx_rate'+i;
+
+		tx_byte_key='kv_lan_tx_byte'+i;
+		tx_pkts_key='kv_lan_tx_pkg'+i;
+		tx_errs_key='kv_lan_tx_error'+i;
+		tx_drop_key='kv_lan_tx_drop'+i;
+		tx_unicast_key='kv_lan_tx_unicast_pkg'+i;
+		tx_multicast_key='kv_lan_tx_multicast_pkg'+i;
+		tx_broadcast_key='kv_lan_tx_broadcast_pkg'+i;
+		tx_rate_key='kv_lan_tx_rate'+i;
+
+
+		document.write("<tr>");
+		document.write("<td align=\"center\">"+lan_if_name+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_byte_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_pkts_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_errs_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_drop_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_unicast_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_multicast_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_broadcast_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_rate_key)+"</td>");
+
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_byte_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_pkts_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_errs_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_drop_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_unicast_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_multicast_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_broadcast_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_rate_key)+"</td>");
+		document.write("</tr>");
+
+	}
+}
+
+function list_wlan_statistics()
+{
+	var i=0;
+	var vap_num=fvt_meta_config('wlan_vap_num');
+	var rowspan=0;
+	var wlan_enable=fvt_meta_config('wlan_enable');
+	var ssid_key;
+	var rx_byte_key;
+	var rx_pkts_key;
+	var rx_errs_key;
+	var rx_drop_key;
+	var rx_unicast_key;
+	var rx_multicast_key;
+	var rx_broadcast_key;
+
+	var tx_byte_key;
+	var tx_pkts_key;
+	var tx_errs_key;
+	var tx_drop_key;
+	var tx_unicast_key;
+	var tx_multicast_key;
+	var tx_broadcast_key;
+
+	//var sum_rx_byte=0;
+	//var sum_rx_pkts=0;
+	//var sum_rx_errs=0;
+	//var sum_rx_drop=0;
+
+	//var sum_tx_byte=0;
+	//var sum_tx_pkts=0;
+	//var sum_tx_errs=0;
+	//var sum_tx_drop=0;
+
+	ssid_key = 'wlan_ssid';
+	rx_byte_key='kv_wlan_rx_byte';
+	rx_pkts_key='kv_wlan_rx_pkg';
+	rx_errs_key='kv_wlan_rx_error';
+	rx_drop_key='kv_wlan_rx_drop';
+	rx_unicast_key='kv_wlan_rx_ucast_pkts';
+	rx_multicast_key='kv_wlan_rx_mcast_pkts';
+	rx_broadcast_key='kv_wlan_rx_bcast_pkts';
+	rx_rate_key='kv_wlan_rx_rate';
+
+	tx_byte_key='kv_wlan_tx_byte';
+	tx_pkts_key='kv_wlan_tx_pkg';
+	tx_errs_key='kv_wlan_tx_error';
+	tx_drop_key='kv_wlan_tx_drop';
+	tx_unicast_key='kv_wlan_tx_ucast_pkts';
+	tx_multicast_key='kv_wlan_tx_mcast_pkts';
+	tx_broadcast_key='kv_wlan_tx_bcast_pkts';
+	tx_rate_key='kv_wlan_tx_rate';
+
+	//var vapac_num=fvt_meta_config('wlanac_vap_num');
+	//if (ac_installed == "1")
+	//	//rowspan=parseInt(vap_num, 10)+parseInt(vapac_num, 10)+2;
+	//	rowspan=parseInt(vap_num, 10)+parseInt(vapac_num, 10)+1;
+	//else
+		//rowspan=parseInt(vap_num, 10)+1;
+		rowspan=parseInt(vap_num, 10);
+
+	if(wlan_enable == 1)
+	{
+		document.write("<tr>");
+		document.write("<td align=\"center\">Wi-Fi 11n ("+fvt_meta_config(ssid_key)+")</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_byte_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_pkts_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_errs_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_drop_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_unicast_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_multicast_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_broadcast_key)+"</td>");
+		document.write("<td align=\"center\" rowspan=\""+rowspan+"\">"+fvt_meta_config(rx_rate_key)+"</td>");
+
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_byte_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_pkts_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_errs_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_drop_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_unicast_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_multicast_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_broadcast_key)+"</td>");
+		document.write("<td align=\"center\" rowspan=\""+rowspan+"\">"+fvt_meta_config(tx_rate_key)+"</td>");
+
+		document.write("</tr>");
+
+		//sum_rx_byte+=parseInt(fvt_meta_config(rx_byte_key), 10);
+		//sum_rx_pkts+=parseInt(fvt_meta_config(rx_pkts_key), 10);
+		//sum_rx_errs+=parseInt(fvt_meta_config(rx_errs_key), 10);
+		//sum_rx_drop+=parseInt(fvt_meta_config(rx_drop_key), 10);
+
+		//sum_tx_byte+=parseInt(fvt_meta_config(tx_byte_key), 10);
+		//sum_tx_pkts+=parseInt(fvt_meta_config(tx_pkts_key), 10);
+		//sum_tx_errs+=parseInt(fvt_meta_config(tx_errs_key), 10);
+		//sum_tx_drop+=parseInt(fvt_meta_config(tx_drop_key), 10);
+
+		for(i=0; i<(vap_num-1); i++)
+		{
+			ssid_key = 'wlan_vap'+i+'_ssid';
+			rx_byte_key='kv_wlan_vap'+i+'_rx_byte';
+			rx_pkts_key='kv_wlan_vap'+i+'_rx_pkg';
+			rx_errs_key='kv_wlan_vap'+i+'_rx_error';
+			rx_drop_key='kv_wlan_vap'+i+'_rx_drop';
+			rx_unicast_key='kv_wlan_vap'+i+'_rx_ucast_pkts';
+			rx_multicast_key='kv_wlan_vap'+i+'_rx_mcast_pkts';
+			rx_broadcast_key='kv_wlan_vap'+i+'_rx_bcast_pkts';
+
+			tx_byte_key='kv_wlan_vap'+i+'_tx_byte';
+			tx_pkts_key='kv_wlan_vap'+i+'_tx_pkg';
+			tx_errs_key='kv_wlan_vap'+i+'_tx_error';
+			tx_drop_key='kv_wlan_vap'+i+'_tx_drop';
+			tx_unicast_key='kv_wlan_vap'+i+'_tx_ucast_pkts';
+			tx_multicast_key='kv_wlan_vap'+i+'_tx_mcast_pkts';
+			tx_broadcast_key='kv_wlan_vap'+i+'_tx_bcast_pkts';
+
+			document.write("<tr>");
+			document.write("<td align=\"center\">Wi-Fi 11n ("+fvt_meta_config(ssid_key)+")</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(rx_byte_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(rx_pkts_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(rx_errs_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(rx_drop_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(rx_unicast_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(rx_multicast_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(rx_broadcast_key)+"</td>");
+
+			document.write("<td align=\"center\">"+fvt_meta_config(tx_byte_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(tx_pkts_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(tx_errs_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(tx_drop_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(tx_unicast_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(tx_multicast_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(tx_broadcast_key)+"</td>");
+
+			document.write("</tr>");
+
+			//sum_rx_byte+=parseInt(fvt_meta_config(rx_byte_key), 10);
+			//sum_rx_pkts+=parseInt(fvt_meta_config(rx_pkts_key), 10);
+			//sum_rx_errs+=parseInt(fvt_meta_config(rx_errs_key), 10);
+			//sum_rx_drop+=parseInt(fvt_meta_config(rx_drop_key), 10);
+
+			//sum_tx_byte+=parseInt(fvt_meta_config(tx_byte_key), 10);
+			//sum_tx_pkts+=parseInt(fvt_meta_config(tx_pkts_key), 10);
+			//sum_tx_errs+=parseInt(fvt_meta_config(tx_errs_key), 10);
+			//sum_tx_drop+=parseInt(fvt_meta_config(tx_drop_key), 10);
+		}
+
+		//document.write("<tr>");
+		//document.write("<td align=\"center\">Total Wi-Fi 11n</td>");
+		//document.write("<td align=\"center\">"+sum_rx_byte+"</td>");
+		//document.write("<td align=\"center\">"+sum_rx_pkts+"</td>");
+		//document.write("<td align=\"center\">"+sum_rx_errs+"</td>");
+		//document.write("<td align=\"center\">"+sum_rx_drop+"</td>");
+
+		//document.write("<td align=\"center\">"+sum_tx_byte+"</td>");
+		//document.write("<td align=\"center\">"+sum_tx_pkts+"</td>");
+		//document.write("<td align=\"center\">"+sum_tx_errs+"</td>");
+		//document.write("<td align=\"center\">"+sum_tx_drop+"</td>");
+		//document.write("</tr>");
+	}
+}
+
+function list_wlanac_statistics()
+{
+	var i=0;
+	var vap_num=fvt_meta_config('wlanac_vap_num');
+	var rowspan=0;
+	var wlan_enable=fvt_meta_config('wlanac_enable');
+	var ssid_key;
+	var rx_byte_key;
+	var rx_pkts_key;
+	var rx_errs_key;
+	var rx_drop_key;
+	var rx_unicast_key;
+	var rx_multicast_key;
+	var rx_broadcast_key;
+
+	var tx_byte_key;
+	var tx_pkts_key;
+	var tx_errs_key;
+	var tx_drop_key;
+	var tx_unicast_key;
+	var tx_multicast_key;
+	var tx_broadcast_key;
+
+	//var sum_rx_byte=0;
+	//var sum_rx_pkts=0;
+	//var sum_rx_errs=0;
+	//var sum_rx_drop=0;
+
+	//var sum_tx_byte=0;
+	//var sum_tx_pkts=0;
+	//var sum_tx_errs=0;
+	//var sum_tx_drop=0;
+
+	ssid_key = 'wlanac_ssid';
+	rx_byte_key='kv_wlanac_rx_byte';
+	rx_pkts_key='kv_wlanac_rx_pkg';
+	rx_errs_key='kv_wlanac_rx_error';
+	rx_drop_key='kv_wlanac_rx_drop';
+	rx_unicast_key='kv_wlanac_rx_ucast_pkts';
+	rx_multicast_key='kv_wlanac_rx_mcast_pkts';
+	rx_broadcast_key='kv_wlanac_rx_bcast_pkts';
+	rx_rate_key='kv_wlanac_rx_rate';
+
+	tx_byte_key='kv_wlanac_tx_byte';
+	tx_pkts_key='kv_wlanac_tx_pkg';
+	tx_errs_key='kv_wlanac_tx_error';
+	tx_drop_key='kv_wlanac_tx_drop';
+	tx_unicast_key='kv_wlanac_tx_ucast_pkts';
+	tx_multicast_key='kv_wlanac_tx_mcast_pkts';
+	tx_broadcast_key='kv_wlanac_tx_bcast_pkts';
+	tx_rate_key='kv_wlanac_tx_rate';
+
+	//var vapac_num=fvt_meta_config('wlanac_vap_num');
+	//if (ac_installed == "1")
+	//	//rowspan=parseInt(vap_num, 10)+parseInt(vapac_num, 10)+2;
+	//	rowspan=parseInt(vap_num, 10)+parseInt(vapac_num, 10)+1;
+	//else
+		//rowspan=parseInt(vap_num, 10)+1;
+	rowspan=parseInt(vap_num, 10);
+
+	if(wlan_enable == 1)
+	{
+		document.write("<tr>");
+		document.write("<td align=\"center\">Wi-Fi 11ac ("+fvt_meta_config(ssid_key)+")</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_byte_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_pkts_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_errs_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_drop_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_unicast_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_multicast_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(rx_broadcast_key)+"</td>");
+		document.write("<td align=\"center\" rowspan=\""+rowspan+"\">"+fvt_meta_config(rx_rate_key)+"</td>");
+
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_byte_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_pkts_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_errs_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_drop_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_unicast_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_multicast_key)+"</td>");
+		document.write("<td align=\"center\">"+fvt_meta_config(tx_broadcast_key)+"</td>");
+		document.write("<td align=\"center\" rowspan=\""+rowspan+"\">"+fvt_meta_config(tx_rate_key)+"</td>");
+
+		document.write("</tr>");
+
+		//sum_rx_byte+=parseInt(fvt_meta_config(rx_byte_key), 10);
+		//sum_rx_pkts+=parseInt(fvt_meta_config(rx_pkts_key), 10);
+		//sum_rx_errs+=parseInt(fvt_meta_config(rx_errs_key), 10);
+		//sum_rx_drop+=parseInt(fvt_meta_config(rx_drop_key), 10);
+
+		//sum_tx_byte+=parseInt(fvt_meta_config(tx_byte_key), 10);
+		//sum_tx_pkts+=parseInt(fvt_meta_config(tx_pkts_key), 10);
+		//sum_tx_errs+=parseInt(fvt_meta_config(tx_errs_key), 10);
+		//sum_tx_drop+=parseInt(fvt_meta_config(tx_drop_key), 10);
+
+		for(i=0; i<(vap_num-1); i++)
+		{
+			ssid_key = 'wlanac_vap'+i+'_ssid';
+			rx_byte_key='kv_wlanac_vap'+i+'_rx_byte';
+			rx_pkts_key='kv_wlanac_vap'+i+'_rx_pkg';
+			rx_errs_key='kv_wlanac_vap'+i+'_rx_error';
+			rx_drop_key='kv_wlanac_vap'+i+'_rx_drop';
+			rx_unicast_key='kv_wlanac_vap'+i+'_rx_ucast_pkts';
+			rx_multicast_key='kv_wlanac_vap'+i+'_rx_mcast_pkts';
+			rx_broadcast_key='kv_wlanac_vap'+i+'_rx_bcast_pkts';
+
+			tx_byte_key='kv_wlanac_vap'+i+'_tx_byte';
+			tx_pkts_key='kv_wlanac_vap'+i+'_tx_pkg';
+			tx_errs_key='kv_wlanac_vap'+i+'_tx_error';
+			tx_drop_key='kv_wlanac_vap'+i+'_tx_drop';
+			tx_unicast_key='kv_wlanac_vap'+i+'_tx_ucast_pkts';
+			tx_multicast_key='kv_wlanac_vap'+i+'_tx_mcast_pkts';
+			tx_broadcast_key='kv_wlanac_vap'+i+'_tx_bcast_pkts';
+
+			document.write("<tr>");
+			document.write("<td align=\"center\">Wi-Fi 11ac ("+fvt_meta_config(ssid_key)+")</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(rx_byte_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(rx_pkts_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(rx_errs_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(rx_drop_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(rx_unicast_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(rx_multicast_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(rx_broadcast_key)+"</td>");
+
+			document.write("<td align=\"center\">"+fvt_meta_config(tx_byte_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(tx_pkts_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(tx_errs_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(tx_drop_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(tx_unicast_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(tx_multicast_key)+"</td>");
+			document.write("<td align=\"center\">"+fvt_meta_config(tx_broadcast_key)+"</td>");
+
+			document.write("</tr>");
+
+			//sum_rx_byte+=parseInt(fvt_meta_config(rx_byte_key), 10);
+			//sum_rx_pkts+=parseInt(fvt_meta_config(rx_pkts_key), 10);
+			//sum_rx_errs+=parseInt(fvt_meta_config(rx_errs_key), 10);
+			//sum_rx_drop+=parseInt(fvt_meta_config(rx_drop_key), 10);
+
+			//sum_tx_byte+=parseInt(fvt_meta_config(tx_byte_key), 10);
+			//sum_tx_pkts+=parseInt(fvt_meta_config(tx_pkts_key), 10);
+			//sum_tx_errs+=parseInt(fvt_meta_config(tx_errs_key), 10);
+			//sum_tx_drop+=parseInt(fvt_meta_config(tx_drop_key), 10);
+		}
+
+		//document.write("<tr>");
+		//document.write("<td align=\"center\">Total Wi-Fi 11ac</td>");
+		//document.write("<td align=\"center\">"+sum_rx_byte+"</td>");
+		//document.write("<td align=\"center\">"+sum_rx_pkts+"</td>");
+		//document.write("<td align=\"center\">"+sum_rx_errs+"</td>");
+		//document.write("<td align=\"center\">"+sum_rx_drop+"</td>");
+
+		//document.write("<td align=\"center\">"+sum_tx_byte+"</td>");
+		//document.write("<td align=\"center\">"+sum_tx_pkts+"</td>");
+		//document.write("<td align=\"center\">"+sum_tx_errs+"</td>");
+		//document.write("<td align=\"center\">"+sum_tx_drop+"</td>");
+		//document.write("</tr>");
+	}
+}
+
+function statistics_clear(){
+	fvt_paramlist_clear();
+	fvt_paramlist_cat_str("statistics_clear", "1");
+	fvt_paramlist_presubmit("fWlan_static");
+	document.getElementById("fWlan_static").submit();
+}
+
+</script>
+</head>
+
+<body align="left" onload="reloadw();">
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<form id="fWlan_static" name="fWlan_static" method="post" action=>
+<fieldset>
+		<div class="lv1_title">
+		Status&nbsp;&gt;&nbsp;WAN/(W)LAN Statistics</div>
+</fieldset>
+
+<div class="div1_indent lv3_new">
+	<!--wan 0~7-->
+	<div><h1>WAN</h1></div>
+	<div id="wan_table0_hr"><hr class="hr2"></div>
+	<table border="2" class="statistics_Tbl">
+		<tr style="font-family:Arial;font-weight:bold">
+			<td rowspan="2" align="center" valign="center" style="padding-left:10px;padding-right:10px;">Interface</td>
+			<td colspan="8" align="center" valign="center">Received</td>
+			<td colspan="8" align="center" valign="center">Transmitted</td>
+		</tr>
+		<tr style="font-weight:bold">
+			<td align="center" style="padding-left:2px;padding-right:2px;">Bytes</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Pkts</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Errs</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Drops</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Unicast</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Multicast</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Broadcast</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Rate</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Bytes</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Pkts</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Errs</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Drops</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Unicast</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Multicast</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Broadcast</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Rate</td>
+		</tr>
+
+		<script language="javascript" type="text/javascript">
+			list_wan_statistics();
+		</script>
+	</table>
+	</br>
+	</br>
+
+	<!--Lan 0~3 & WLAN 0~3-->
+	<div><h1>LAN</h1></div>
+	<div id="wan_table0_hr"><hr class="hr2"></div>
+	<table border="2" class="statistics_Tbl">
+
+		<tr style="font-family:Arial;font-weight:bold">
+			<td rowspan="2" align="center" valign="center">Interface</td>
+			<td colspan="8" align="center" valign="center">Received</td>
+			<td colspan="8" align="center" valign="center">Transmitted</td>
+		</tr>
+		<tr style="font-weight:bold">
+			<td align="center" style="padding-left:2px;padding-right:2px;">Bytes</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Pkts</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Errs</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Drops</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Unicast</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Multicast</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Broadcast</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Rate(bps)</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Bytes</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Pkts</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Errs</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Drops</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Unicast</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Multicast</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Broadcast</td>
+			<td align="center" style="padding-left:2px;padding-right:2px;">Rate(bps)</td>
+		</tr>
+
+		<script language="javascript" type="text/javascript">
+			list_lan_statistics();
+			list_wlan_statistics();
+			if (ac_installed == "1") list_wlanac_statistics();
+		</script>
+	</table>
+	</br>
+	<table><tbody>
+		<tr>
+			<td class="button_center">
+				<input ctrlflip="etc" type="button" onclick="statistics_clear();" name="applybtn" value="Clear" class="width_apply">
+			</td>
+		</tr>
+	</tbody></table>
+
+</div>
+
+</form>
+</td></tr>
+</tbody></table>
+</div>
+
+<br>
+</body>
+</html>
+
+

@@ -1,0 +1,210 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+<style>
+input.width_250px{width: 250px; height:25px; text-align:center;vertical-align:text-top;}
+</style>
+<script language="javascript" type="text/javascript">
+var NavLang=GetNavLang();
+
+if (NavLang == "ZH")
+{
+var vHttpMode = "Https Mode:";
+var vMasqAttack = "Masquerade Attack Prevention:";
+}
+else
+{
+var vHttpMode = "Https Mode:";
+var vMasqAttack = "Masquerade Attack Prevention:";
+}
+
+function check_process()
+{
+	var process="Success";
+	if (process=="Existed")
+		warn_wait();
+		//alert("Please wait!!Another client is upgading firmware.");
+}
+
+function enable_https(mode)
+{
+	if (confirm("Are you sure you want to change http/https mode? After applying changes, ONT will reboot automatically."))
+	{
+		fvt_form_submit('httpsw_form',mode);
+		window.top.location.href="wwwctrl.cgi?action=wait_restart&time=125";
+		document.httpsw_form.submit();
+	}
+}
+
+function setup_masq_attack(mode)
+{
+	if (confirm("Are you sure you want to change Masquerade Attack Prevention? After applying changes, ONT will reboot automatically."))
+	{
+		fvt_form_submit('httpsw_form',mode);
+		window.top.location.href="wwwctrl.cgi?action=wait_restart&time=125";
+		document.httpsw_form.submit();
+	}
+}
+
+function fvt_form_init(form_name)
+{
+	if (form_name=='httpsw_form' || form_name=='*')
+	{
+
+		if(fvt_meta_config('system_https_enable')=="1")
+		{
+			document.getElementById("http_mode").style.color = 'blue';
+			document.getElementById("http_mode").innerHTML = "Https Enable";
+			document.getElementById("enable_https").style.display = "none";
+			document.getElementById("disable_https").style.display = "";
+		}
+		else
+		{
+			document.getElementById("http_mode").style.color = 'black';
+			document.getElementById("http_mode").innerHTML = "Https Disable (Http mode)";
+			document.getElementById("enable_https").style.display = "";
+			document.getElementById("disable_https").style.display = "none";
+		}
+
+		if(fvt_meta_config('system_masq_attack_prevent')=="1")
+		{
+			document.getElementById("masq_attack_status").style.color = 'blue';
+			document.getElementById("masq_attack_status").innerHTML = "Masquerade Attack Prevention Enable";
+			document.getElementById("disable_masq_attack").style.display = "";
+			document.getElementById("enable_masq_attack").style.display = "none";
+		}
+		else
+		{
+			document.getElementById("masq_attack_status").style.color = 'black';
+			document.getElementById("masq_attack_status").innerHTML = "Masquerade Attack Prevention Disable";
+			document.getElementById("disable_masq_attack").style.display = "none";
+			document.getElementById("enable_masq_attack").style.display = "";
+		}
+
+	}
+}
+
+function fvt_form_submit(form_name, mode)	{
+	fvt_paramlist_clear();
+	if (form_name=='httpsw_form' || form_name=='*')
+	{
+		//alert(mode);
+		if (mode=="https_dis")
+			{
+			fvt_paramlist_cat_str('system_httpd_enable',"1");
+			fvt_paramlist_cat_str('system_https_enable',"0");
+			}
+		if (mode=="https_en")
+			{
+			fvt_paramlist_cat_str('system_httpd_enable',"0");
+			fvt_paramlist_cat_str('system_https_enable',"1");
+			}
+		if (mode=="masq_attack_en") fvt_paramlist_cat_str('system_masq_attack_prevent',"1");
+		if (mode=="masq_attack_dis") fvt_paramlist_cat_str('system_masq_attack_prevent',"0");
+		fvt_paramlist_cat_str('reboot', "1");
+	}
+	fvt_paramlist_presubmit(form_name);
+}
+
+function init()
+{
+
+}
+
+function toggle_visibility(id) {
+	var e = document.getElementById(id);
+	//if(e.style.display == 'none' && fvt_meta_config('igmp_status')=="off")
+	if(e.style.display == 'none')
+		e.style.display = "inline";
+	else
+		e.style.display = "none";
+}
+
+</script>
+</head>
+
+<body align="left" onload="fvt_form_init('httpsw_form');init();">
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<form id="id_httpsw_form" name="httpsw_form" method="post">
+	<fieldset>
+		<div class="lv1_title">Maintenance&nbsp;&gt;&nbsp;Utilities&nbsp;&gt;&nbsp;HTTPs Setup</div>
+	</fieldset>
+
+<div class="top_HttpMode">
+	<table>
+	<tr></tr>
+	<div class="lv5_new">
+		<tr class="lv1_title">
+			<td width="280px"><b>
+				<script language="javascript" type="text/javascript">
+					document.write(vHttpMode);
+				</script>
+			</b></td>
+			<td class="usr_tr2" height="18" name="http_mode" id="http_mode"></td>
+		</tr>
+	</div>
+
+	<tr></tr>
+		<tr id='enable_https'>
+			<td width="100px"></td>
+			<td class="button_left">
+				<input ctrlflip="etc" type="button" onclick="enable_https('https_en')" id="add_applybtn" name="applybtn" value="Enable HTTPs" class="width_250px">
+			</td>
+			<td></td>
+		</tr>
+		<tr id='disable_https'>
+			<td></td>
+			<td class="button_left">
+				<input ctrlflip="etc" type="button" onclick="enable_https('https_dis')" id="add_applybtn" name="applybtn" value="Disable HTTPs" class="width_250px">
+			</td>
+			<td></td>
+		</tr>
+	</table>
+</div>
+
+<div class="top_MasqAttack">
+	<table>
+	<tr></tr>
+	<div class="lv5_new">
+		<tr class="lv1_title">
+			<td width="280px"><b>
+				<script language="javascript" type="text/javascript">
+					document.write(vMasqAttack);
+				</script>
+			</b></td>
+			<td class="usr_tr2" height="18" name="masq_attack_status" id="masq_attack_status"></td>
+		</tr>
+	</div>
+
+	<tr></tr>
+		<tr id='disable_masq_attack'>
+			<td width="100px"></td>
+			<td class="button_left">
+				<input ctrlflip="etc" type="button" onclick="setup_masq_attack('masq_attack_dis')" id="add_applybtn" name="applybtn" value="Disable Masquerade Attack Prevention" class="width_250px">
+			</td>
+			<td></td>
+		</tr>
+		<tr id='enable_masq_attack'>
+			<td></td>
+			<td class="button_left">
+				<input ctrlflip="etc" type="button" onclick="setup_masq_attack('masq_attack_en')" id="add_applybtn" name="applybtn" value="Enable Masquerade Attack Prevention" class="width_250px">
+			</td>
+			<td></td>
+		</tr>
+	</table>
+</div>
+</form>
+</td></tr>
+</tbody></table>
+</div>
+
+</body>
+</html>

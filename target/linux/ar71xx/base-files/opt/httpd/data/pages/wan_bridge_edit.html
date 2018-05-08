@@ -1,0 +1,644 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+
+<script language="javascript" type="text/javascript">
+
+var Select_VID=URLParams("vid");
+
+var dr="";
+var di="";
+var dt="";
+var routeRuleNumtmp=0;
+var routeRuleNum_dsp=0;
+var routeRuleNum_br=0;
+
+var DefaultRouteRut="";
+var DefaultRoutePPP="";
+
+var Rutnum=0;
+var PPPRutnum=0;
+var phy_inf_flag=0;
+var ppp_flag=0;
+var untag_flag=0;
+
+var value="";
+var value1="";
+
+var NodeLength_Rut=0;
+var NodeLength_Ppp=0;
+
+var dr="";
+var di="";
+var dt="";
+var dv="";
+var au;
+var default_bridgeNum = 0;
+var bridgeRuleNum=0;
+var ruleNum = 0;
+var bridge_ruleNum=4;
+var maxrule = 8;
+var bridge_maxrule=16;
+var untag_vid=4097;
+
+function editEntry(wan_mode,val)
+{
+	var aa,url,ap,am,ab,av,at,ai;
+	//var ar;
+	var sb,svt,svi,svp,s8,si,sn,sg,sd1,sd2,sd3,smt,sm;
+	var db,dvt,dvi,dvp,d8,dh,dv,dc,dmt,dm;
+	var pb,pvt,pvi,pvb,pu,pp,pac,ps,pi,pc,pd,pa,pmt,pm,ppa;
+	var bvi,bvb,bup,bo,bet,bsm,bsmm,bdm,bdmm,bsi,bsim,bdi,bdim,bipp,bsp,bdp;
+	var bten,btid,btpb;
+	au = 2;
+	aa = val;
+	if(wan_mode == 0) //route
+	{
+
+	}
+	else if(wan_mode == 1) //bridge
+	{
+		bvi = document.getElementById("id_hidden_bridge_vlan_id"+val).value;
+		bvb = document.getElementById("id_hidden_bridge_vlan_pbit"+val).value;
+		bup = document.getElementById("id_hidden_bridge_uniport"+val).value;
+		if (bup=="?") bup = "%3F";
+		bo = document.getElementById("id_hidden_bridge_order"+val).value;
+		bet = document.getElementById("id_hidden_bridge_ethertype"+val).value;
+		bsm = document.getElementById("id_hidden_bridge_smac"+val).value;
+		bsmm = document.getElementById("id_hidden_bridge_smac_mask"+val).value;
+		bdm = document.getElementById("id_hidden_bridge_dmac"+val).value;
+		bdmm = document.getElementById("id_hidden_bridge_dmac_mask"+val).value;
+		bsi = document.getElementById("id_hidden_bridge_sip"+val).value;
+		bsim = document.getElementById("id_hidden_bridge_sipmask"+val).value;
+		bdi = document.getElementById("id_hidden_bridge_dip"+val).value;
+		bdim = document.getElementById("id_hidden_bridge_dipmask"+val).value;
+		bipp = document.getElementById("id_hidden_bridge_ip_proto"+val).value;
+		bsp = document.getElementById("id_hidden_bridge_sport"+val).value;
+		bdp = document.getElementById("id_hidden_bridge_dport"+val).value;
+		bten = document.getElementById("id_hidden_bridge_tagen"+val).value;
+		btid = document.getElementById("id_hidden_bridge_tagid"+val).value;
+		btpb = document.getElementById("id_hidden_bridge_tagpb"+val).value;
+
+		url = getlink_bridge_edit("wan_route_bridge",bvi,bvb,bup,bo,bet,bsm,bsmm,bdm,bdmm,bsi,bsim,bdi,bdim,bipp,bsp,bdp,bten,btid,btpb,au,aa);
+	}
+
+	window.location.href = url+"&vid="+Select_VID;
+}
+
+function deleteEntry(wan_mode,val)
+{
+	if(confirm("Are you sure you want to delete?"))
+	{
+		if(wan_mode == 0)
+		{
+
+		}
+		else if(wan_mode ==1)
+		{
+			document.getElementById("id_delete_item").value=val;
+			fvt_form_submit('bridgeTbl_form');
+			document.getElementById("id_bridgeTbl_form").submit();
+		}
+	}
+}
+
+function checkName(a)
+{
+	if (!isBlank(a))
+	{
+		for(var i=0;i<a.length;i++)
+		{
+			c=a.charAt(i);
+			if((c!='_')&&(c!='-')&&(c!='.')&&(c!='&')&&(c!='/')&&(c!='=')&&(c!='~')&&(c!='@')&&(c!='?')&&(!((c>='a')&&(c<='z')))&&(!((c>='A')&&(c<='Z')))&&(!((c>='0')&&(c<='9'))))
+			{
+				return c;
+			}
+		}
+	}
+	return "OK";
+}
+
+
+function init()
+{
+}
+
+
+function next()
+{
+	var aa,aq,ae,am,av,at,ai,ar,url;
+	var item,syb,i,obj;
+	au = 1;
+	//aa = ruleNum;
+	for(emptruleNum=0; emptruleNum < maxrule; emptruleNum++)
+		{
+			var wanname = fvt_meta_config("wan"+emptruleNum+"_if_name");
+			if (wanname == '')
+			{
+				aa = emptruleNum;
+				break;
+			}
+			else
+			{
+				continue;
+			}
+		}
+	ae = "3";
+	aq = document.getElementById("id_bridgeTbl_form").GUIBrigeName.value;
+	if (aq.length==0 )
+	{
+		item="Interface Name";
+		warn_not_empty(item);
+	//	alert(item+" can't be empty.");
+		return false;
+	}
+	if ((syb=checkName(aq))!="OK")
+	{
+		item="Interface Name";
+		warn_CWMP_checkSyb(item,syb)
+		// alert(item + " can't include special symbol ' " + syb + " '.");
+		return false;
+	}
+
+	av = "0"; //GUIWanVoIP.checked
+	at = "0"; //GUIWanTR069.checked
+	ai = "0"; //GUIWanIGMP.checked
+	ar = "0"; //GUIWanRoute.checked
+
+	if (ae == 3) //bridge
+	{
+		aa = bridge_ruleNum;
+		url = getlink_add("wan_route_bridge",aq,ae,am,av,at,ai,ar,au,aa);
+	}
+	window.location.href = url+"&vid="+Select_VID;
+}
+
+function fvt_form_init(form_name)
+{
+	if (form_name=='bridgeTbl_form' || form_name=='*') {
+		var index = 0;
+		var bridgeName="";
+		var i =0;
+		for(bridge_ruleNum=default_bridgeNum; bridge_ruleNum < bridge_maxrule; bridge_ruleNum++)
+		{
+			//index = i+3 ;//0~2 has fixed default value, need skip
+			bridgeName = fvt_meta_config("l2_proto_vlan"+bridge_ruleNum+"_name");
+			if (bridgeName == '')
+			{
+				return;
+			}
+			else
+			{
+				bridgeRuleNum = bridge_ruleNum;
+			}
+		}
+	}
+
+}
+
+function valueMatch(s1, s2, match_return)
+{
+	if(s1 == s2)
+		return match_return;
+	else
+		return "";
+}
+
+//index: 0~6
+function get_portName(index)
+{
+	var portName=["ETH1", "ETH2", "ETH3", "ETH4", "ETH5", "GPON", "WIFI"];
+
+	if( (index+1) > portName.length)
+		return "?";
+	else
+		return portName[index];
+}
+
+function list_bridge_interface()
+{
+	fvt_form_init('bridgeTbl_form');
+	if(bridge_ruleNum > 0)
+	{
+		document.write("<tr>");
+		if(bridge_ruleNum >= bridge_maxrule)
+		{
+			document.write("<td colspan='10' style='color:#980000;font-weight:bold;'>Your bridge rule is already full, can not add other groups.</td>");
+			document.getElementById("id_applybtn").style.visibility='hidden';
+			document.getElementById("id_GUIBrigeName").disabled = true;
+		}
+		else
+		{
+			document.getElementById("id_applybtn").style.visibility='visible';
+			document.getElementById("id_GUIBrigeName").disabled = false;
+		}
+		document.write("</tr>");
+	}
+
+	var bline=0;
+
+	for (var i=0;i<bridge_maxrule;i++)
+	{
+		if( fvt_meta_config("l2_proto_vlan"+i+"_vlan_mark")!=Select_VID ) continue;
+
+		bline++;
+		if( bline%2 == 0 )
+			document.write("<tr class='color_rowh'>");
+		else
+			document.write("<tr class='color_rown'>");
+
+		document.write("<td ctrlflip='right'>"+fvt_meta_config("l2_proto_vlan"+i+"_name")+"</td>");
+
+		if (fvt_meta_config("l2_proto_vlan"+i+"_enable") == 1)
+			document.write("<td align='center'>en</td>");
+		else
+			document.write("<td align='center'>dis</td>");
+
+		var uni = fvt_meta_config("l2_proto_vlan"+i+"_uniport");
+		if(uni=="*")
+			document.write("<td align='center'>ALL</td>");
+		else if(uni=="")
+			document.write("<td align='center'>&nbsp;</td>");
+		else if(uni=="?")
+			document.write("<td align='center'>ETH1-4</td>");
+		else{
+			uni=parseInt(uni);
+			document.write("<td align='center'>"+get_portName(uni)+"</td>");
+		}
+
+		var smac = fvt_meta_config("l2_proto_vlan"+i+"_smac");
+		var smac_mask = fvt_meta_config("l2_proto_vlan"+i+"_smac_mask");
+		var dmac = fvt_meta_config("l2_proto_vlan"+i+"_dmac");
+		var dmac_mask = fvt_meta_config("l2_proto_vlan"+i+"_dmac_mask");
+		if(dmac!="")
+		{
+			document.write("<td>"+dmac+"<br>/"+dmac_mask+"</td>");
+		}else
+		{
+			document.write("<td align='center'></td>");
+		}
+		if(smac!="")
+		{
+			document.write("<td align='center'>"+smac+"<br>/"+smac_mask+"</td>");
+		}else
+		{
+			document.write("<td align='center'></td>");
+		}
+
+		var vtag_en = fvt_meta_config("l2_proto_vlan"+i+"_vlantag_enable");
+		var vtag_id = fvt_meta_config("l2_proto_vlan"+i+"_vlantag_id");
+		var vtag_pb = fvt_meta_config("l2_proto_vlan"+i+"_vlantag_pbit");
+		if(vtag_en=="1")
+		{
+			document.write("<td align='center'>"+vtag_id+"<br>/"+vtag_pb+"</td>");
+		}else
+		{
+			document.write("<td align='center'></td>");
+		}
+
+		document.write("<td align='center'>"+fvt_meta_config("l2_proto_vlan"+i+"_ethertype")+"</td>");
+
+		if(fvt_meta_config("l2_proto_vlan"+i+"_ip_proto")=="6")
+			document.write("<td align='center'>TCP</td>");
+		else if(fvt_meta_config("l2_proto_vlan"+i+"_ip_proto")=="17")
+			document.write("<td align='center'>UDP</td>");
+		else
+		document.write("<td align='center'></td>");
+
+		if(fvt_meta_config("l2_proto_vlan"+i+"_dip")!="")
+		{	document.write("<td align='center'>"+fvt_meta_config("l2_proto_vlan"+i+"_dip")+"<br>/"+fvt_meta_config("l2_proto_vlan"+i+"_dipmask")+"</td>");
+		}else
+			document.write("<td align='center'></td>");
+		if(fvt_meta_config("l2_proto_vlan"+i+"_sip")!="")
+		{
+			document.write("<td align='center'>"+fvt_meta_config("l2_proto_vlan"+i+"_sip")+"<br>/"+fvt_meta_config("l2_proto_vlan"+i+"_sipmask")+"</td>");
+		}else
+			document.write("<td align='center'></td>");
+
+		document.write("<td align='center'>"+fvt_meta_config("l2_proto_vlan"+i+"_sport")+"</td>");
+		document.write("<td align='center'>"+fvt_meta_config("l2_proto_vlan"+i+"_dport")+"</td>");
+
+		//document.write("<td align='center'>"+fvt_meta_config("l2_proto_vlan"+i+"_vlan_mark")+"</td>");
+		document.write("<td align='center'>"+fvt_meta_config("l2_proto_vlan"+i+"_pbit_mark")+"</td>");
+
+		document.write("<td class='width_wanpon_update' align='right' ctrlfpil='left'><table><tr><td><input ctrlflip='etc' class='width_wanpon_edit' type='button' name='nosave_edit' value='Edit' onclick='editEntry(\"1\",\"" +i+ "\");' ></td>");
+		document.write("<td><input ctrlflip='etc' type='button' class='width_wanpon_del' name='nosave_delete' value='Delete' onclick='deleteEntry(\"1\",\"" +i+ "\");' ></td></tr></table></td>");
+	}
+
+	for (var i=0;i<bridge_ruleNum;i++) //list hiden id for apply
+	{
+		document.write("<input type='hidden' id='id_hidden_bridge_enable"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_enable")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_name"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_name")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_vlan_id"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_vlan_mark")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_vlan_pbit"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_pbit_mark")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_uniport"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_uniport")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_order"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_order")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_ethertype"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_ethertype")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_smac"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_smac")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_smac_mask"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_smac_mask")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_dmac"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_dmac")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_dmac_mask"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_dmac_mask")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_sip"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_sip")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_sipmask"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_sipmask")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_dip"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_dip")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_dipmask"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_dipmask")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_ip_proto"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_ip_proto")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_sport"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_sport")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_dport"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_dport")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_tagen"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_vlantag_enable")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_tagid"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_vlantag_id")+"'>");
+		document.write("<input type='hidden' id='id_hidden_bridge_tagpb"+i+"' value='"+fvt_meta_config("l2_proto_vlan"+i+"_vlantag_pbit")+"'>");
+	}
+		document.write("</tr>");
+}
+
+function fvt_form_submit(form_name)		{
+	fvt_paramlist_clear();
+	if (form_name=='bridgeTbl_form' || form_name=='*') {
+		var del_num=document.getElementById("id_delete_item").value;
+		var j=default_bridgeNum;
+		for (var i=default_bridgeNum; i< bridge_maxrule; i++)
+		{
+			if (del_num == 99)
+			{
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_enable", "0");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_name", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlan_mark", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_pbit_mark", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_uniport", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_order", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_ethertype", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_smac", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_smac_mask", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dmac", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dmac_mask", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_sip", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_sipmask", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dip", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dipmask", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_ip_proto", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_sport", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dport", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlantag_enable", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlantag_id", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlantag_pbit", "");
+			}
+			else if (j < bridge_ruleNum)
+			{
+				if(i == del_num)//yao shanchu xiang
+				{
+					j++;
+					if( del_num == bridge_ruleNum-1 )//shanchu de shi zuihouyige
+					{
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_enable", "0");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_name", "");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlan_mark", "");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_pbit_mark", "");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_uniport", "");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_order", "");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_ethertype", "");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_smac", "");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_smac_mask", "");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dmac", "");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dmac_mask", "");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_sip", "");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_sipmask", "");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dip", "");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dipmask", "");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_ip_proto", "");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_sport", "");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dport", "");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlantag_enable", "");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlantag_id", "");
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlantag_pbit", "");
+					}
+					else
+					{
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_enable", document.getElementById("id_hidden_bridge_enable"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_name", document.getElementById("id_hidden_bridge_name"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlan_mark", document.getElementById("id_hidden_bridge_vlan_id"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_pbit_mark", document.getElementById("id_hidden_bridge_vlan_pbit"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_uniport", document.getElementById("id_hidden_bridge_uniport"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_order", document.getElementById("id_hidden_bridge_order"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_ethertype", document.getElementById("id_hidden_bridge_ethertype"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_smac", document.getElementById("id_hidden_bridge_smac"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_smac_mask", document.getElementById("id_hidden_bridge_smac_mask"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dmac", document.getElementById("id_hidden_bridge_dmac"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dmac_mask", document.getElementById("id_hidden_bridge_dmac_mask"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_sip", document.getElementById("id_hidden_bridge_sip"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_sipmask", document.getElementById("id_hidden_bridge_sipmask"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dip", document.getElementById("id_hidden_bridge_dip"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dipmask", document.getElementById("id_hidden_bridge_dipmask"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_ip_proto", document.getElementById("id_hidden_bridge_ip_proto"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_sport", document.getElementById("id_hidden_bridge_sport"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dport", document.getElementById("id_hidden_bridge_dport"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlantag_enable", document.getElementById("id_hidden_bridge_tagen"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlantag_id", document.getElementById("id_hidden_bridge_tagid"+j).value);
+						fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlantag_pbit", document.getElementById("id_hidden_bridge_tagpb"+j).value);
+					}
+				}
+				else if(i==(bridge_ruleNum-1))//zuihou yige
+				{
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_enable", "0");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_name", "");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlan_mark", "");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_pbit_mark", "");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_uniport", "");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_order", "");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_ethertype", "");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_smac", "");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_smac_mask", "");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dmac", "");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dmac_mask", "");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_sip", "");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_sipmask", "");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dip", "");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dipmask", "");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_ip_proto", "");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_sport", "");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dport", "");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlantag_enable", "");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlantag_id", "");
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlantag_pbit", "");
+				}
+				else
+				{
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_enable", document.getElementById("id_hidden_bridge_enable"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_name", document.getElementById("id_hidden_bridge_name"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlan_mark", document.getElementById("id_hidden_bridge_vlan_id"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_pbit_mark", document.getElementById("id_hidden_bridge_vlan_pbit"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_uniport", document.getElementById("id_hidden_bridge_uniport"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_order", document.getElementById("id_hidden_bridge_order"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_ethertype", document.getElementById("id_hidden_bridge_ethertype"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_smac", document.getElementById("id_hidden_bridge_smac"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_smac_mask", document.getElementById("id_hidden_bridge_smac_mask"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dmac", document.getElementById("id_hidden_bridge_dmac"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dmac_mask", document.getElementById("id_hidden_bridge_dmac_mask"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_sip", document.getElementById("id_hidden_bridge_sip"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_sipmask", document.getElementById("id_hidden_bridge_sipmask"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dip", document.getElementById("id_hidden_bridge_dip"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dipmask", document.getElementById("id_hidden_bridge_dipmask"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_ip_proto", document.getElementById("id_hidden_bridge_ip_proto"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_sport", document.getElementById("id_hidden_bridge_sport"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dport", document.getElementById("id_hidden_bridge_dport"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlantag_enable", document.getElementById("id_hidden_bridge_tagen"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlantag_id", document.getElementById("id_hidden_bridge_tagid"+j).value);
+					fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlantag_pbit", document.getElementById("id_hidden_bridge_tagpb"+j).value);
+
+				}
+				j++;
+			}
+			else
+			{
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_enable", "0");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_name", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlan_mark", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_pbit_mark", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_uniport", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_order", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_ethertype", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_smac", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_smac_mask", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dmac", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dmac_mask", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_sip", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_sipmask", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dip", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dipmask", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_ip_proto", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_sport", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_dport", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlantag_enable", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlantag_id", "");
+				fvt_paramlist_cat_str("l2_proto_vlan"+i+"_vlantag_pbit", "");
+			}
+		}
+
+	} else if (form_name=='reboot_form' || form_name=='*') {
+		fvt_paramlist_cat_str('kv_reboot', "1");		//hidden
+	}
+
+	fvt_paramlist_presubmit(form_name);
+}
+
+function Back()
+{
+	window.location.href="wwwctrl.cgi?action=wan_pon_connections";
+}
+
+function Add_new_ruler()
+{
+aa=3;
+next();
+}
+//-->
+</script>
+</head>
+
+<body align="left" onload="init();">
+<table align="center" width="95%"><tbody>
+<tr><td valign="top">
+</td></tr>
+<tr>
+	<th colspan="12"><div class="overview_title1" ctrlflip="etc" ctrlid="204">
+	<script language="javascript" type="text/javascript">
+		if (Select_VID == untag_vid)
+			document.write("Bridge [ Br-Untag ]");
+		else
+			document.write("Bridge [ Br-"+Select_VID+" ]");
+	</script>
+
+	</div></th>
+</tr>
+<tr><td valign="top">
+<div class="lv1_indent lv1_td" style="margin-left:0em;margin-top:20px">
+
+<form id="id_bridgeTbl_form" name="bridgeTbl_form" method="post">
+<div class="top_Nwanpon_2 lv3_new">
+	<input name="nosave_deleteitem" id='id_delete_item' value="" type="hidden">
+
+	<div class="div1_indent lv2_new">
+	<table id="bridge_add" name="bridge_add" border="0"><tbody>
+		<tr>
+			<td width="130px" nowrap>New Rule Name</td>
+			<td width="200px">
+				<input ctrlflip="etc" name="GUIBrigeName" id="id_GUIBrigeName" class="width_text150" maxlength="12" type="text">
+			</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td>
+				<input ctrlflip="etc" type="button" onclick="Add_new_ruler()" name="applybtn" id="id_applybtn" value="Add" class="width_apply">
+			</td>
+		</tr>
+	</tbody></table>
+	</div>
+
+	<div>
+	<table id="bridge_overview" name="bridge_overview" border="0"><tbody>
+		<tr style="height:5px;">
+			<td colspan="15">
+				<div><hr class="hr2"></div>
+			</td>
+		</tr>
+		<tr class="lv2_new">
+			<th width="75px"><div class="overview_title2" align="left">Rule</div></th>
+			<th width="45px"><div class="overview_title2" align="center">Enable</div></th>
+			<th width="55px"><div class="overview_title2" align="center">LAN<br>Port</div></th>
+
+			<th width="120px"><div class="overview_title2" align="center">Dest. Mac<br>/&nbsp;Mask</div></th>
+			<th width="120px"><div class="overview_title2" align="center">Sour. Mac<br>/&nbsp;Mask</div></th>
+
+			<th width="75px"><div class="overview_title2" align="center">VLan ID<br>/&nbsp;Pbit</div></th>
+
+			<th width="55px"><div class="overview_title2" align="center">Ether<br>Type</div></th>
+			<th width="65px"><div class="overview_title2" align="center">Protocol</div></th>
+
+			<th width="120px"><div class="overview_title2" align="center">Dest. IP<br>/&nbsp;Mask</div></th>
+			<th width="120px"><div class="overview_title2" align="center">Sour. IP<br>/&nbsp;Mask</div></th>
+			<th width="55px"><div class="overview_title2" align="center">Sour.<br>Port</div></th>
+			<th width="75px"><div class="overview_title2" align="center">Dest.<br>Port</div></th>
+
+			<!--<th width="45px"><div class="lv2_new" align="center">VID</div></th>-->
+			<th width="40px"><div class="lv2_new" align="center">Pbit</div></th>
+		</tr>
+		<tr style="height:5px;">
+			<td colspan="15">
+				<div><hr class="hr2"></div>
+			</td>
+		</tr>
+		<script language="javascript" type="text/javascript">
+			list_bridge_interface();
+		</script>
+		<tr style="height:5px;">
+			<td colspan="15">
+				<div><hr class="hr2"></div>
+			</td>
+		</tr>
+	</tbody></table>
+
+	<table id="bridge_menu" name="bridge_menu" border="0"><tbody>
+		<tr>
+			<td width="130px"></td>
+			<td width="200px">
+				<input ctrlflip="etc" type="button" onclick="Back()" name="applybtn" value="Back" class="width_apply">
+			</td>
+		</tr>
+	</tbody></table>
+	</div>
+</div>
+</form>
+
+</div>
+
+</td></tr>
+</tbody></table>
+
+</body>
+</html>

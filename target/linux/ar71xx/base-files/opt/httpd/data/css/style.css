@@ -1,0 +1,239 @@
+body {
+	margin-top: 0px; margin-left: 0px; margin-right: 0px; margin-bottom: 0px;
+	font: 12px Arial, sans-serif;
+	line-height: 1.5em;
+	overflow:auto;
+}
+.direction {
+	font: 16px Arial, sans-serif;
+	FONT-WEIGHT: bold;
+}
+.middle {
+	float: left;
+	text-align: justify;
+	margin-top: 15px;
+	margin-right: 0px;
+	margin-bottom: 10px;
+	margin-left: 0px;
+	padding-top: 10px;
+	padding-right: 10px;
+	padding-bottom: 10px;
+	padding-left: 10px;
+}
+hr{
+	color: #CCCCCC;
+	border-style:solid;
+	height: 1px;
+}
+.leftLink {
+	COLOR: #003366; FONT-FAMILY: Arial, Helvetica, sans-serif; FONT-SIZE: 11px; LINE-HEIGHT: 15px; TEXT-DECORATION: none
+}
+.top_nav {
+	COLOR: #000000; FONT-FAMILY: Arial, Helvetica, sans-serif; FONT-SIZE: 12px; FONT-WEIGHT: bold; TEXT-DECORATION: none
+}
+.section {
+	COLOR: #ffffff; FONT-FAMILY: Arial, Helvetica, sans-serif; FONT-SIZE: 12px; FONT-WEIGHT: bold; LINE-HEIGHT: 15px; TEXT-DECORATION: none
+}
+.head_bold {
+	COLOR: #000000; FONT-FAMILY: Arial, Helvetica, sans-serif; FONT-SIZE: 17px; FONT-WEIGHT: bold; LINE-HEIGHT: 15px; TEXT-DECORATION: none
+}
+a {
+	COLOR: #000000; TEXT-DECORATION: none
+}
+a:hover {
+	COLOR: #000000; TEXT-DECORATION: underline
+}
+.selected_css{
+	FONT-SIZE: 12px; FONT-WEIGHT: bold;
+}
+.copy_1 {
+	COLOR: #000000; FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 11px; LINE-HEIGHT: 14px
+}
+.submitBtn {
+	FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif; FONT-SIZE: 11px;
+}
+
+.usr_title {
+	BACKGROUND-COLOR: #919191; COLOR: #FFFFFF;
+}
+.usr_tr1 {
+	BACKGROUND-COLOR: #CCCCCC;
+}
+.usr_tr2 {
+	BACKGROUND-COLOR: #F4F4F4;
+}
+.usr_hr {
+	COLOR: #CCCCCC;
+}
+.td1 {
+width:70px;
+}
+.td2 {
+width:30px;
+}
+.td3 {
+width:150px;
+}
+.td4 {
+width:300px;
+}
+.td5 {
+width:150px;
+}
+.td6 {
+width:50px;
+}
+.trTbl_1 {
+height:25px;
+}
+.tdtbl_b_l {
+border-bottom-style:solid;
+border-width:1px;
+border-color:#000000;
+}
+.tdtbl_blr_l {
+border-bottom-style:solid;
+border-right-style:solid;
+border-left-style:solid;
+border-width:1px;
+border-color:#000000;
+}
+.tdtbl_br_l {
+border-bottom-style:solid;
+border-right-style:solid;
+border-width:1px;
+border-color:#000000;
+}
+.tdtbl_bl_l {
+border-bottom-style:solid;
+border-left-style:solid;
+border-width:1px;
+border-color:#000000;
+}
+.tdtbl_1 {
+width:60px;
+BACKGROUND-COLOR: #919191;
+COLOR: #FFFFFF;
+border-left-style:solid;
+border-top-style:solid;
+border-bottom-style:solid;
+border-width:2px;
+border-color:#000000;
+}
+.tdtbl_2 {
+width:150px;
+BACKGROUND-COLOR: #919191;
+COLOR: #FFFFFF;
+border-left-style:solid;
+border-top-style:solid;
+border-bottom-style:solid;
+border-width:2px;
+border-color:#000000;
+}
+.tdtbl_3 {
+width:120px;
+BACKGROUND-COLOR: #919191;
+COLOR: #FFFFFF;
+border-left-style:solid;
+border-top-style:solid;
+border-bottom-style:solid;
+border-width:2px;
+border-color:#000000;
+}
+.tdtbl_4 {
+width:150px;
+BACKGROUND-COLOR: #919191;
+COLOR: #FFFFFF;
+border-right-style:solid;
+border-left-style:solid;
+border-top-style:solid;
+border-bottom-style:solid;
+border-width:2px;
+border-color:#000000;
+}
+.tdtbl_5 {
+width:300px;
+BACKGROUND-COLOR: #919191;
+COLOR: #FFFFFF;
+border-left-style:solid;
+border-top-style:solid;
+border-bottom-style:solid;
+border-width:2px;
+border-color:#000000;
+}
+.tdtbl_6 {
+width:150px;
+BACKGROUND-COLOR: #919191;
+COLOR: #FFFFFF;
+border-left-style:solid;
+border-top-style:solid;
+border-bottom-style:solid;
+border-width:2px;
+border-color:#000000;
+}
+.tdtbl_7 {
+width:30px;
+BACKGROUND-COLOR: #919191;
+COLOR: #FFFFFF;
+border-left-style:solid;
+border-top-style:solid;
+border-bottom-style:solid;
+border-width:2px;
+border-color:#000000;
+}
+.tr {
+height:25px;
+}
+.trhr {
+height:40px;
+}
+.trbtn {
+height:40px;
+}
+.text {
+width:230px;
+}
+.passwd {
+width:230px;
+border-style:inset;
+}
+.select {
+width:235px
+}
+
+select,option {
+background-color: #ffffff;
+}
+
+input[type=text] {
+background-color: #ffffff;
+}
+input[type=password] {
+background-color: #ffffff;
+}
+.text2 {
+width:20px;
+}
+.text3 {
+width:30px;
+}
+.text4 {
+width:100px;
+border-style:inset;
+}
+.text5 {
+width:50px;
+}
+.text6 {
+width:60px;
+}
+.system_text {
+width:275px;
+border-style:inset;
+}
+.select1{
+width:80px;
+}
+.dsptr {
+height:50px;
+}

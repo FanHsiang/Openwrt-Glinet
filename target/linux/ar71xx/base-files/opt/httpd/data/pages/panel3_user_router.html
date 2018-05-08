@@ -1,0 +1,90 @@
+﻿<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link rel="StyleSheet" href="../css/dtree.css" type="text/css" />
+	<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+    <script language="javascript" type="text/javascript" src="../js/dtree.js"></script>
+</head>
+
+<script type="text/javascript">
+var Fvt251x_on=0;
+
+var NavLang=GetNavLang();
+
+if (NavLang == "ZH")
+{
+var vRtBrMode = "\(Router模式\)";
+var vQuickSetup = "快速設定";
+var vSysStatus = "系統狀態";
+var vSysinfo = "系統資訊";
+var vMaintenance = "維護功能";
+var vConnectsetup = "連線設定";
+}
+else
+{
+var vRtBrMode = "\(Router Mode\)";
+var vQuickSetup = "Quick Setup";
+var vSysStatus = "System Status";
+var vSysinfo = "System Information";
+var vMaintenance = "Maintenance";
+var vConnectsetup = "Connection Setup";
+}
+</script>
+
+<body bgcolor="#D4E6F8">
+<table>
+	<tr>
+		<td valign="top" width="400">
+
+			<script type="text/javascript">
+				<!--
+
+				d = new dTree('d');
+
+				//var t_model_name = fvt_meta_config('version');
+				//var model_name = t_model_name.substr(0,1)+"-"+t_model_name.substr(1,5);
+				var model_name = fvt_meta_config('system_modelname');
+				if (Fvt251x_on==0)
+					d.add(0,-1,model_name+vRtBrMode);
+				else
+					d.add(0,-1,'5VT251x(Router Mode)');
+
+				d.add(11,0,vQuickSetup,'/cgi-bin/wwwctrl.cgi?action=quick_setup');
+
+				d.add(1,0,vSysStatus);
+				d.add(2,1,vSysinfo,'/cgi-bin/wwwctrl.cgi?action=sysinfo');
+
+				d.add(3,0,vConnectsetup);
+				d.add(4,3,'Connect Setup','/cgi-bin/wwwctrl.cgi?action=connect_setup');
+
+				d.add(5,0,'Firewall');
+				d.add(6,5,'MAC Filter','/cgi-bin/wwwctrl.cgi?action=l2_filter');
+				d.add(7,5,'Port Forwarding','/cgi-bin/wwwctrl.cgi?action=portforward');
+
+				d.add(8,0,vMaintenance);
+				d.add(9,8,'WLAN Association List','/cgi-bin/wwwctrl.cgi?action=wifi_association');
+				d.add(10,8,'Password','/cgi-bin/wwwctrl.cgi?action=password');
+
+				document.write(d);
+
+				//-->
+			</script>
+
+		</td>
+		<td valign="top">
+
+			<table id="user" style="display:none">
+				<tr>
+					<td>User Name</td><td><input id="myName" type="text"></td>
+				</tr>
+				<tr><td>Account</tD><td><input type="text"></td></tr>
+				<tr><td>Password</td><td><input type="text">password must be at least 4 characters long</td></tr>
+				<tr><td>Phone</td><td><input type="text"></td></tr>
+				<tr><td>Email</td><td><input type="text"></td></tr>
+				<tr><td>Department</td><td><input type="text"></td></tr>
+				<tr><td><button>Save </button></td><tD><button>Cancel</button></td></tr>
+			</table>
+
+		</td>
+	</tr>
+</table>
+</body>

@@ -1,0 +1,518 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+<style type="text/css">
+tr.rowt{background-color:#E0E0E0}
+tr.rowh{background-color:#F0F0F0}
+/* DarkBlue */
+div.rowh{color:#00008B}
+div.cellt{color:DarkGray}
+/* DarkSlateGrey */
+div.cells{color:#2F4F4F}
+</style>
+<script language="javascript" type="text/javascript">
+
+var mcl_max = 16;
+//var mcl_max = 25;
+var maxWan=8;
+
+var Have_TR069=0;
+//if ( fvt_meta_config('system_modelname')=="I-040GW") Have_TR069=1
+
+function checkIP()
+{
+	var i;
+	for(i=0;i<mcl_max;i++)
+	{
+		if (!check_integer_range(document.getElementById("id_MclNetprefix"+i).value,1,128))
+		{
+			alert("Prefix "+(i+1)+" is invalid!");
+			return false;
+		}
+		if (document.getElementById("id_mclIP"+i).value != "")
+		{
+			if (!checkIPv6(document.getElementById("id_mclIP"+i).value))
+			{
+				msg=" IPv6 Address "+(i+1);
+				warn_invalid(msg);
+				return false;
+			}
+		}
+
+		for(var j=(i+1);j<(mcl_max);j++)
+		{
+			if((document.getElementById("id_mclIP"+i).value !="")&&(document.getElementById("id_mclIP"+j).value!=""))
+			{
+				if(document.getElementById("id_mclIP"+i).value == document.getElementById("id_mclIP"+j).value)
+				{
+					alert("Accept IP "+(i+1)+" and Accept IP "+(j+1)+" are the same!");
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}
+
+function MCLSetting()
+{
+	if (!checkIP())
+    {
+		return false;
+	}
+	fvt_form_submit('MCL_ipv6_form');
+	document.getElementById('id_apply_tr').style.display="none";
+	document.getElementById('id_wait_progress').style.display="";
+	document.getElementById('MCL_ipv6_form').submit();
+}
+
+function change_disable()
+{
+	var i;
+	var val;
+	if (fvt_meta_config("ipv6_router_enable")=="0")
+	{
+		document.getElementById('MCLPolicy').value=1;
+		document.getElementById('MCLPolicy').disabled=true;
+	}
+
+	if (document.getElementById('MCLPolicy').value==1)
+		val=true;
+	else
+		val=false;
+
+	for(i=0;i<mcl_max;i++)
+	{
+		document.getElementById("id_mclIP"+i).disabled = val;
+		document.getElementById("id_MclNetprefix"+i).disabled = val;
+	}
+
+}
+
+function submit_ssh_enable()
+{
+	var keySSHW="";
+	var keySSHL="";
+	var keyTFTPW="";
+	var keySNMPW="";
+	var keyTR069W="";
+	var keyWEBW="";
+	var keyPINGW="";
+	var keyTFTPL="";
+	var keyWEBL="";
+	var keySNMPL="";
+	var keyTR069L="";
+	var valSSHW=fvt_form_obj_get("MCL_ipv6_form", "remoteSSHEnableW");
+	var valSSHL=fvt_form_obj_get("MCL_ipv6_form", "remoteSSHEnableL");
+	var valTFTPW=fvt_form_obj_get("MCL_ipv6_form", "TFTPEnableW");
+	var valSNMPW=fvt_form_obj_get("MCL_ipv6_form", "SNMPEnableW");
+	var valTR069W=fvt_form_obj_get("MCL_ipv6_form", "TR069EnableW");
+	var valWEBW=fvt_form_obj_get("MCL_ipv6_form", "WEBEnableW");
+	var valPINGW=fvt_form_obj_get("MCL_ipv6_form", "PINGEnableW");
+	var valTFTPL=fvt_form_obj_get("MCL_ipv6_form", "TFTPEnableL");
+	var valWEBL=fvt_form_obj_get("MCL_ipv6_form", "WEBEnableL");
+	var valSNMPL=fvt_form_obj_get("MCL_ipv6_form", "SNMPEnableL");
+	var valTR069L=fvt_form_obj_get("MCL_ipv6_form", "TR069EnableL");
+
+	var i=0;
+
+	for(i=0; i<maxWan; i++)
+	{
+		keySSHW="fw_ipv6_service_w"+i+"_ssh_enable";
+		fvt_paramlist_cat_str(keySSHW, valSSHW);
+
+		keyTFTPW="fw_ipv6_service_w"+i+"_tftp_enable";
+		fvt_paramlist_cat_str(keyTFTPW, valTFTPW);
+
+		keySNMPW="fw_ipv6_service_w"+i+"_snmp_enable";
+		fvt_paramlist_cat_str(keySNMPW, valSNMPW);
+
+		keyTR069W="fw_ipv6_service_w"+i+"_tr069_enable";
+		fvt_paramlist_cat_str(keyTR069W, valTR069W);
+
+		keyWEBW="fw_ipv6_service_w"+i+"_web_enable";
+		fvt_paramlist_cat_str(keyWEBW, valWEBW);
+
+		keyPINGW="fw_ipv6_service_w"+i+"_ping_enable";
+		fvt_paramlist_cat_str(keyPINGW, valPINGW);
+	}
+
+	for(i=0; i<4; i++)
+	{
+		keySSHL="fw_ipv6_service_l"+i+"_ssh_enable";
+		fvt_paramlist_cat_str(keySSHL, valSSHL);
+
+		keyTFTPL="fw_ipv6_service_l"+i+"_tftp_enable";
+		fvt_paramlist_cat_str(keyTFTPL, valTFTPL);
+
+		keyWEBL="fw_ipv6_service_l"+i+"_web_enable";
+		fvt_paramlist_cat_str(keyWEBL, valWEBL);
+
+		keySNMPL="fw_ipv6_service_l"+i+"_snmp_enable";
+		fvt_paramlist_cat_str(keySNMPL, valSNMPL);
+
+		keyTR069L="fw_ipv6_service_l"+i+"_tr069_enable";
+		fvt_paramlist_cat_str(keyTR069L, valTR069L);
+	}
+}
+
+function submit_telnet_enable()
+{
+	var keyW="";
+	var keyL="";
+	var valW=fvt_form_obj_get("MCL_ipv6_form", "remoteTelnetEnableW");
+	var valL=fvt_form_obj_get("MCL_ipv6_form", "remoteTelnetEnableL");
+	var i=0;
+
+	for(i=0; i<maxWan; i++)
+	{
+		keyW="fw_ipv6_service_w"+i+"_telnet_enable";
+		fvt_paramlist_cat_str(keyW, valW);
+	}
+
+	for(i=0; i<4; i++)
+	{
+		keyL="fw_ipv6_service_l"+i+"_telnet_enable";
+		fvt_paramlist_cat_str(keyL, valL);
+	}
+}
+
+function fvt_form_init(form_name){
+	var i;
+	var ip;
+	if (form_name=='MCL_ipv6_form' || form_name=='*')
+	{
+		fvt_form_obj_set("MCL_ipv6_form", "MCLPolicy", fvt_meta_config("fw_ipv6_remotemng_accept_any"));
+		for(i=0;i<mcl_max;i++)
+		{
+			ip = fvt_meta_config("fw_ipv6_remotemng_accept"+i+"_ip").split("/")
+			fvt_form_obj_set("MCL_ipv6_form", "mclIP"+i, ip[0]);
+		}
+		change_disable();
+		fvt_form_obj_set("MCL_ipv6_form", "remoteTelnetEnableW", fvt_meta_config('fw_ipv6_service_w0_telnet_enable'));
+		fvt_form_obj_set("MCL_ipv6_form", "remoteTelnetEnableL", fvt_meta_config('fw_ipv6_service_l0_telnet_enable'));
+		fvt_form_obj_set("MCL_ipv6_form", "remoteSSHEnableW", fvt_meta_config('fw_ipv6_service_w0_ssh_enable'));
+		fvt_form_obj_set("MCL_ipv6_form", "remoteSSHEnableL", fvt_meta_config('fw_ipv6_service_l0_ssh_enable'));
+		fvt_form_obj_set("MCL_ipv6_form", "TFTPEnableW", fvt_meta_config('fw_ipv6_service_w0_tftp_enable'));
+		fvt_form_obj_set("MCL_ipv6_form", "TFTPEnableL", fvt_meta_config('fw_ipv6_service_l0_tftp_enable'));
+		fvt_form_obj_set("MCL_ipv6_form", "SNMPEnableW", fvt_meta_config('fw_ipv6_service_w0_snmp_enable'));
+		fvt_form_obj_set("MCL_ipv6_form", "SNMPEnableL", fvt_meta_config('fw_ipv6_service_l0_snmp_enable'));
+		fvt_form_obj_set("MCL_ipv6_form", "TR069EnableW", fvt_meta_config('fw_ipv6_service_w0_tr069_enable'));
+		fvt_form_obj_set("MCL_ipv6_form", "TR069EnableL", fvt_meta_config('fw_ipv6_service_l0_tr069_enable'));
+		fvt_form_obj_set("MCL_ipv6_form", "WEBEnableW", fvt_meta_config('fw_ipv6_service_w0_web_enable'));
+		fvt_form_obj_set("MCL_ipv6_form", "WEBEnableL", fvt_meta_config('fw_ipv6_service_l0_web_enable'));
+		fvt_form_obj_set("MCL_ipv6_form", "PINGEnableW", fvt_meta_config('fw_ipv6_service_w0_ping_enable'));
+	}
+	if ( Have_TR069==1 )
+	{
+		document.getElementById('tb_tr069W').style.display = 'table-row';
+		document.getElementById('tb_tr069L').style.display = 'table-row';
+	}
+}
+
+function fvt_form_submit(form_name){
+	var i;
+	var prefix;
+	var mclip
+	fvt_paramlist_clear();
+	if (form_name=='MCL_ipv6_form' || form_name=='*') {
+		fvt_paramlist_cat_str("kv_remote_ip_k", fvt_meta_config('kv_remote_ip'));
+		fvt_paramlist_cat_str("fw_ipv6_remotemng_accept_any", fvt_form_obj_get("MCL_ipv6_form", "MCLPolicy"));
+		for(i=0;i<mcl_max;i++)
+		{
+			prefix = document.getElementById("id_MclNetprefix"+i).value;
+			mclip =  fvt_form_obj_get("MCL_ipv6_form", "mclIP"+i);
+			if( mclip != "")
+				mclip+=("/"+prefix);
+			fvt_paramlist_cat_str("fw_ipv6_remotemng_accept"+i+"_ip", mclip);
+		}
+		submit_ssh_enable();
+		submit_telnet_enable();
+	}
+	fvt_paramlist_presubmit('MCL_ipv6_form');
+}
+
+function show_netprefix(i, IP_Netprefix, show)
+{
+	if(IP_Netprefix == 0 || IP_Netprefix == undefined) IP_Netprefix = 128;
+
+	if (show == 1)
+		document.write("<input name='MclNetprefix"+i+"' id='id_MclNetprefix"+i+"' size='3' maxlength='3' value='"+IP_Netprefix+"'>");
+	else
+		document.write("<input name='MclNetprefix"+i+"' id='id_MclNetprefix"+i+"' size='3' maxlength='3' value='"+IP_Netprefix+"'>");
+}
+
+function list_mcl_ipv6()
+{
+	var i;
+	for(i=0;i<mcl_max;i++)
+	{
+		var mclIP = fvt_meta_config("fw_ipv6_remotemng_accept"+i+"_ip");
+		var prefix;
+		if(mclIP !="")
+		{
+			mcl_ip = mclIP.split("/");
+			var prefix = parseInt(mcl_ip[1],10);
+			var mclv6ip = mcl_ip[0];
+		}
+		else
+		{
+			mclv6ip ="";
+			prefix = 128;
+		}
+
+		document.write("<tr>");
+		document.write("<td class='width_lanset1'>Accept IP "+(i+1)+"&nbsp;</td>");
+		document.write("<td><div>");
+		document.write("<input name='mclIP"+i+"' id='id_mclIP"+i+"' size='39' maxlength='39' value='"+mclv6ip+"'>");
+		document.write("</div></td>");
+		document.write("<td>&nbsp;</td>");
+		document.write("<td><div>");
+		show_netprefix(i,prefix,1);
+		document.write("</div></td>");
+
+		document.write("</tr>");
+	}
+}
+
+// check whether the str is a right IPv6 address
+function checkIPv6(str)
+{
+	var idx = str.indexOf("::");
+	// there is no "::" in the ip address
+	if (idx == -1)
+	{
+		var items = str.split(":");
+		if (items.length != 8)
+		{
+			return false;
+		}
+		else
+		{
+			for (i in items)
+			{
+				if (!isHex(items[i]))
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+	else
+	{
+		// at least, there are two "::" in the ip address
+		if (idx != str.lastIndexOf("::"))
+		{
+			return false;
+		}
+		else
+		{
+			var items = str.split("::");
+			var items0 = items[0].split(":");
+			var items1 = items[1].split(":");
+			if ((items0.length + items1.length) > 7)
+			{
+				return false;
+			}
+			else
+			{
+				for (i in items0)
+				{
+					if (!isHex(items0[i])) {return false;}
+				}
+				for (i in items1)
+				{
+					if (!isHex(items1[i])) {return false;}
+				}
+				return true;
+			}
+		}
+	}
+}
+
+// check whether every char of the str is a Hex char(0~9,a~f,A~F)
+function isHex(str)
+{
+	if(str.length == 0 || str.length > 4) {return false;}
+	str = str.toLowerCase();
+	var ch;
+	for(var i=0; i< str.length; i++)
+	{
+		ch = str.charAt(i);
+		if(!(ch >= '0' && ch <= '9') && !(ch >= 'a' && ch <= 'f')) {return false;}
+	}
+	return true;
+}
+
+</script>
+</head>
+
+<body align="left" onload="fvt_form_init('MCL_ipv6_form');">
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<form id="MCL_ipv6_form" name="MCL_ipv6_form" method="post">
+	<fieldset>
+		<div class="lv1_title">Firewall Setup&nbsp;&gt;&nbsp;IPV6 MCL</div>
+	</fieldset>
+	<br>
+	<div class="div1_topbottom lv1_new rowh" ctrlflip="right" ctrlid="297">Allow Remote Management from WAN</div>
+	<div class="div1_indent lv2_new">
+		<table>
+			<tr>
+				<td class="width_systemset3"><div ctrlflip="right" ctrlid="298">Telnet</div></td>
+				<td><select ar='1' ctrlflip="etc" id="remoteTelnetEnableW" name="remoteTelnetEnableW" onchange="" class="">
+					<option value="0">Disable</option>
+					<option value="1">Enable</option>
+				</select></td>
+			</tr>
+			<tr>
+				<td class="width_systemset3"><div ctrlflip="right" ctrlid="298">SSH</div></td>
+				<td><select ar='1' ctrlflip="etc" id="remoteSSHEnableW" name="remoteSSHEnableW" onchange="" class="">
+					<option value="0">Disable</option>
+					<option value="1">Enable</option>
+				</select></td>
+			</tr>
+			<tr>
+				<td class="width_systemset3"><div ctrlflip="right" ctrlid="298">TFTP</div></td>
+				<td><select ar='1' ctrlflip="etc" id="TFTPEnableW" name="TFTPEnableW" onchange="" class="">
+					<option value="0">Disable</option>
+					<option value="1">Enable</option>
+				</select></td>
+			</tr>
+			<tr>
+				<td class="width_systemset3"><div ctrlflip="right" ctrlid="298">WEB</div></td>
+				<td><select ar='1' ctrlflip="etc" id="WEBEnableW" name="WEBEnableW" onchange="" class="">
+					<option value="0">Disable</option>
+					<option value="1">Enable</option>
+				</select></td>
+			</tr>
+			<tr>
+				<td class="width_systemset3"><div ctrlflip="right" ctrlid="298">SNMP</div></td>
+				<td><select ar='1' ctrlflip="etc" id="SNMPEnableW" name="SNMPEnableW" onchange="" class="">
+					<option value="0">Disable</option>
+					<option value="1">Enable</option>
+				</select></td>
+			</tr>
+			<tr id="tb_tr069W" style="display:none">
+				<td class="width_systemset3"><div ctrlflip="right" ctrlid="298">TR069</div></td>
+				<td><select ar='1' ctrlflip="etc" id="TR069EnableW" name="TR069EnableW" onchange="" class="">
+					<option value="0">Disable</option>
+					<option value="1">Enable</option>
+				</select></td>
+			</tr>
+			<tr>
+				<td class="width_systemset3"><div ctrlflip="right" ctrlid="298">PING</div></td>
+				<td><select ar='1' ctrlflip="etc" id="PINGEnableW" name="PINGEnableW" onchange="" class="">
+					<option value="0">Disable</option>
+					<option value="1">Enable</option>
+				</select></td>
+			</tr>
+		</table>
+	</div>
+	<div id="id_wanips" class="div2_indent lv2_new">
+		<table>
+			<tr>
+				<td colspan="2" width="500"><hr noshade="noshade" style="border:1px #AAA dotted;"></td>
+			</tr>
+			<tr>
+				<td><div class="lv1_new rowh">Only the WAN IP Listed can Access</div></td>
+				<td><select name="MCLPolicy" id="MCLPolicy" class="width_select80" onclick="change_disable();">
+					<option value="1">Disable</option>
+					<option value="0">Enable</option>
+				</select></td>
+			</tr>
+		</table>
+		<table>
+			<tr>
+				<td></td>
+				<td>IPv6 Address</td>
+				<td>/</td>
+				<td>prefix</td>
+			</tr>
+			<script language="javascript" type="text/javascript">
+				list_mcl_ipv6();
+			</script>
+			<tr><td>&nbsp;</td></tr>
+		</table>
+	</div>
+	<div><hr class="hr2"></div>
+	<br>
+	<div class="div1_topbottom lv1_new rowh" ctrlflip="right" ctrlid="297">Allow Local Management from LAN</div>
+	<div class="div1_indent lv2_new">
+		<table>
+			<tr>
+				<td class="width_systemset3"><div ctrlflip="right" ctrlid="298">Telnet</div></td>
+				<td><select ar='1' ctrlflip="etc" id="remoteTelnetEnableL" name="remoteTelnetEnableL" onchange="" class="">
+					<option value="0">Disable</option>
+					<option value="1">Enable</option>
+				</select></td>
+			</tr>
+			<tr>
+				<td class="width_systemset3"><div ctrlflip="right" ctrlid="298">SSH</div></td>
+				<td><select ar='1' ctrlflip="etc" id="remoteSSHEnableL" name="remoteSSHEnableL" onchange="" class="">
+					<option value="0">Disable</option>
+					<option value="1">Enable</option>
+				</select></td>
+			</tr>
+			<tr>
+				<td class="width_systemset3"><div ctrlflip="right" ctrlid="298">TFTP</div></td>
+				<td><select ar='1' ctrlflip="etc" id="TFTPEnableL" name="TFTPEnableL" onchange="" class="">
+					<option value="0">Disable</option>
+					<option value="1">Enable</option>
+				</select></td>
+			</tr>
+			<tr>
+				<td class="width_systemset3"><div ctrlflip="right" ctrlid="298">WEB</div></td>
+				<td><select ar='1' ctrlflip="etc" id="WEBEnableL" name="WEBEnableL" onchange="" class="">
+					<option value="0">Disable</option>
+					<option value="1">Enable</option>
+				</select></td>
+			</tr>
+			<tr>
+				<td class="width_systemset3"><div ctrlflip="right" ctrlid="298">SNMP</div></td>
+				<td><select ar='1' ctrlflip="etc" id="SNMPEnableL" name="SNMPEnableL" onchange="" class="">
+					<option value="0">Disable</option>
+					<option value="1">Enable</option>
+				</select></td>
+			</tr>
+			<tr id="tb_tr069L" style="display:none">
+				<td class="width_systemset3"><div ctrlflip="right" ctrlid="298">TR069</div></td>
+				<td><select ar='1' ctrlflip="etc" id="TR069EnableL" name="TR069EnableL" onchange="" class="">
+					<option value="0">Disable</option>
+					<option value="1">Enable</option>
+				</select></td>
+			</tr>
+		</table>
+	</div>
+	<div><hr class="hr2"></div>
+	<div>
+		<div>
+		<table class="utiltable" ><tbody>
+			<tr id="id_apply_tr"><td></td><td></td>
+			<td><input type="button" onclick="MCLSetting()" id="add_applybtn" name="applybtn" value="Apply Changes" style="padding:0px 2px;width:auto;height:20px;"><td>
+			</tr>
+			<tr id="id_wait_progress" style="display:none">
+				<td></td><td></td>
+				<td>
+					<img src="../images/progress1.gif">
+				</td>
+			</tr>
+		</tbody></table>
+		</div>
+	</div>
+</form>
+</td></tr>
+</tbody></table>
+</div>
+
+<br>
+</body>
+</html>

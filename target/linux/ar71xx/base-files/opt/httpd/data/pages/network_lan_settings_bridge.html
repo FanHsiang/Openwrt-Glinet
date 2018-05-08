@@ -1,0 +1,230 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+
+
+<script language="javascript" type="text/javascript">
+
+
+function valueMatch(s1, s2, match_return)
+{
+	if(s1 == s2)
+		return match_return;
+	else
+		return "";
+}
+
+function setValue(val)
+{
+	document.getElementById("mm_"+val).value = 
+		(document.getElementById("id_"+val).checked)?"1":"0";
+	//(document.getElementById("id_"+val).checked)?"on":"off";
+}
+
+function setPrefixValue(val)
+{
+	if (document.getElementById("id_UserSet").checked)
+	{
+		document.getElementById("mm_"+val).value =0;
+		document.getElementById("id_USvalue").disabled=false;
+	}
+	else if (document.getElementById("id_Dhcpv6").checked)
+	{
+		document.getElementById("mm_"+val).value =1;
+		document.getElementById("id_USvalue").disabled=true;
+	}
+	else
+	{	
+		document.getElementById("mm_"+val).value =2;
+		document.getElementById("id_USvalue").disabled=true;
+	}
+}
+
+function changedhcpIP(index)
+{
+	document.getElementById("id_DHCPSIPStart"+index).value = document.getElementById("id_LanIPAddr"+index).value;
+	document.getElementById("id_DHCPSIPEnd"+index).value = document.getElementById("id_LanIPAddr"+index).value;
+}
+
+function check_process()
+{    
+	var process="Success";
+	if (process=="Existed")
+		warn_wait();
+		//alert("Please wait!!Another client is upgading firmware.");
+}
+
+function isBridgeMode()
+{  
+	for (i=0; i< document.lansetting_form.elements.length; i++)
+	{ 
+		if(document.lansetting_form.elements[i].name == "DHCPSEnable")
+			DHCPenable = i;
+	}
+	if ((ptm_num=="0")&&(atm_num=="0"))
+	{
+		for (i=DHCPenable;i<document.lansetting_form.elements.length-1;i++)
+			document.lansetting_form.elements[i].disabled=true;
+	}
+
+}
+
+
+
+
+
+
+function saveChanges() 
+{	
+	var msg;
+	var no;	
+	var i;
+	var j;
+	
+	merge_ip("id_LanIPAddr","id_LanIPAddr1","id_LanIPAddr2","id_LanIPAddr3","id_LanIPAddr4");
+	merge_ip("id_LanNetmask","id_LanNetmask1","id_LanNetmask2","id_LanNetmask3","id_LanNetmask4");
+	
+	if (document.lansetting_form.LanIPAddr.value=="")
+	{
+		msg="IP Address";
+		no="";
+		warn_invalid(msg);		
+		//alert(msg +" " +no + " is invalid");
+		return false;
+	}
+	if (document.lansetting_form.LanIPAddr.value.match(/192.168.[2][.]/g) )
+	{
+		alert("192.168.2.X section is reserved for system!");
+		document.getElementById("id_LanIPAddr3").value="";
+		return false;
+	}
+
+	if ((document.lansetting_form.LanNetmask.value == "")||(!check_netmask(document.lansetting_form.LanNetmask.value)))
+	{ 
+		warn_invalid("Subnet Mask");		
+	 	//alert("Subnet Mask is invalid!"); 
+		return false ;
+	}
+
+ 	if (!check_ip(document.lansetting_form.LanIPAddr.value,document.lansetting_form.LanNetmask.value))
+	{
+			msg="IP Address";
+			no="";
+			warn_invalid(msg);	
+			//alert(msg +" " +no + " is invalid");
+			return false;
+	}
+
+	fvt_form_submit('lansetting_form');
+	document.lansetting_form.submit();
+	return true; 
+		
+} 
+
+
+
+
+
+function fvt_form_init(form_name) 
+{
+	if (form_name=='lansetting_form' || form_name=='*') {
+		fvt_form_obj_set("lansetting_form", "LanIPAddr", fvt_meta_config('lan0_ip'));		//hidden
+		fvt_form_obj_set("lansetting_form", "LanNetmask", fvt_meta_config('lan0_netmask'));		//hidden
+	}
+}
+
+function fvt_form_submit(form_name) 	{
+	fvt_paramlist_clear();
+	if (form_name=='lansetting_form' || form_name=='*') {
+		if(fvt_form_obj_get("lansetting_form", "LanIPAddr")!=fvt_meta_config("lan0_ip") ||
+			fvt_form_obj_get("lansetting_form", "LanNetmask")!=fvt_meta_config("lan0_netmask"))
+		{
+			if (confirm("Modification of IP Address or Subnet Mask will result in the rebooting of CPE,OK?"))
+			{
+				fvt_paramlist_cat_str('lan0_ip', fvt_form_obj_get("lansetting_form", "LanIPAddr"));		//hidden
+				fvt_paramlist_cat_str('lan0_netmask', fvt_form_obj_get("lansetting_form", "LanNetmask"));		//hidden
+				document.getElementById('lansetting_form').action="wwwctrl.cgi?action=wait_restart";
+				document.getElementById('lansetting_form').target = "contentfrm";
+				fvt_paramlist_cat_str('reboot', "1");		//hidden
+			}
+		}
+	}
+	fvt_paramlist_presubmit(form_name);
+}
+
+//-->
+</script>
+</head>
+
+<body align="left" onload="fvt_form_init('lansetting_form'); ">
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<form id="lansetting_form" name="lansetting_form" method="post" action=>
+<fieldset>
+		<div class="lv1_title">
+		Advanced Setup&nbsp;&gt;&nbsp;LAN Settings</div>
+	</fieldset>
+<div class="div1_indent lv2_new">
+	<div><hr class="hr2"></div>
+<!--lan ip and mask-->
+	  <table><tbody>
+		<tr>
+			<input name="lan_gateway" value="0.0.0.0" type="hidden">
+			<input name="LanIPAddr" id="id_LanIPAddr" type="hidden">
+			<td class="width_lanset1"><div ctrlflip="right" ctrlid="32">IP Address</div></td>
+			<script language="javascript" type="text/javascript">
+				var IP_Address = fvt_meta_config('lan0_ip');
+				var IP_Address_split = IP_Address.split(".");
+				document.write("<td ctrlflip='etc'><div dir=\"ltr\">");
+				document.write("<input id=\"id_LanIPAddr1\" class=\"width_ip\" size=\"3\" maxlength=\"3\" value='"+IP_Address_split[0]+"' type=\"text\"> . ");				
+				document.write("<input id=\"id_LanIPAddr2\" class=\"width_ip\" size=\"3\" maxlength=\"3\" value='"+IP_Address_split[1]+"' type=\"text\"> . ");
+				document.write("<input id=\"id_LanIPAddr3\" class=\"width_ip\" size=\"3\" maxlength=\"3\" value='"+IP_Address_split[2]+"' type=\"text\"> . ");
+				document.write("<input id=\"id_LanIPAddr4\" class=\"width_ip\" size=\"3\" maxlength=\"3\" value='"+IP_Address_split[3]+"' type=\"text\">");
+				document.write("</div></td>");
+			</script>
+		</tr>
+		<tr>
+			<input name="LanNetmask" id="id_LanNetmask" type="hidden">
+			<td nowrap=""><div ctrlflip="right" ctrlid="69">Subnet Mask</div></td>			
+			<script language="javascript" type="text/javascript">
+				var Sub_Mask = fvt_meta_config('lan0_netmask');
+				var Sub_Mask_split = Sub_Mask.split(".");
+				document.write("<td ctrlflip='etc'><div dir=\"ltr\">");
+				document.write("<input id=\"id_LanNetmask1\" class=\"width_ip\" size=\"3\" maxlength=\"3\" value='"+Sub_Mask_split[0]+"' type=\"text\"> . ");				
+				document.write("<input id=\"id_LanNetmask2\" class=\"width_ip\" size=\"3\" maxlength=\"3\" value='"+Sub_Mask_split[1]+"' type=\"text\"> . ");
+				document.write("<input id=\"id_LanNetmask3\" class=\"width_ip\" size=\"3\" maxlength=\"3\" value='"+Sub_Mask_split[2]+"' type=\"text\"> . ");
+				document.write("<input id=\"id_LanNetmask4\" class=\"width_ip\" size=\"3\" maxlength=\"3\" value='"+Sub_Mask_split[3]+"' type=\"text\">");
+				document.write("</div></td>");
+			</script>				
+		</tr>	
+	  </tbody></table>
+
+
+	
+
+	
+	
+  <div class="top_cwmp2">
+	<table><tbody>
+		<tr>				
+			<td class="button_center">
+				<input ctrlflip="etc" type="button" onclick="saveChanges()" name="applybtn"  value="Apply Changes" class="width_apply">
+			</td>
+		</tr>
+	</tbody></table>
+ </div>
+
+</form>
+</td></tr>
+</tbody></table>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,3054 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+<script language="javascript" type="text/javascript" src="../js/md5.js"></script>
+<script language="javascript" type="text/javascript" src="../js/rc4.js"></script>
+
+<script language="javascript" type="text/javascript">
+
+var NavLang=GetNavLang();
+if (NavLang == "ZH")
+{
+var vOpen = "開放系統";
+var vShared = "共用金鑰";
+var vWlanpw = "<br>\(8~63個ASCII字元. 預設值為 \"00000000\"\)"
+var vWlanweppw = "\(預設值為 \"1234567890\"\)"
+var vradiuskey = "\(預設值為 \"123456\"\)"
+}
+else
+{
+var vOpen = "OPEN";
+var vShared = "SHARED";
+var vWlanpw = "<br>\(8~63 ASCII characters, default: \"00000000\"\)"
+var vWlanweppw = "\(default: \"1234567890\"\)"
+var vradiuskey = "\(default: \"123456\"\)"
+}
+
+var rc4Key = "27885vt8118";
+var ency_set = 1;
+var wireless_acmodule_enable = fvt_meta_config('wlanac_enable');
+var ACSSIDNum = fvt_meta_config('wlanac_vap_num');
+var WIFIACWdsEnable = fvt_meta_config('wlanac_wds_enable');
+//if ( fvt_meta_config('system_modelname') == "I-040GW")
+//	{var ShowWPA=1;}
+//else
+	{var ShowWPA=0;}
+var ShowWEP=1;
+//0:NONE  1:WEP	  2:TKIP   3:AES
+var security_flag=0;
+var security_flag2=0;
+var security_flag3=0;
+var security_flag4=0;
+var security_flag5=0;
+var security_flag6=0;
+var security_flag7=0;
+var security_flag8=0;
+
+ //0:Open	 1:SHARED	 2:WPAPSK	 3:WPA2PSK
+var authtype_flag=0;
+var authtype_flag2=0;
+var authtype_flag3=0;
+var authtype_flag4=0;
+var authtype_flag5=0;
+var authtype_flag6=0;
+var authtype_flag7=0;
+var authtype_flag8=0;
+
+ipm1=' position is invalid.';
+ipm2=' position is invalid.';
+
+position1=' at first';
+position2=' at second';
+position3=' at third';
+position4=' at fourth';
+
+function check_process()
+{
+	var process="Success";
+	if (process=="Existed")
+		warn_wait();
+		//alert("Please wait!!Another client is upgading firmware.");
+}
+
+var wan_max = 8;
+var lan_max = 8;
+function faceinter()
+{
+	var ifname;
+	for (var k=0;k<wan_max;k++)
+	{
+		if(fvt_meta_config("wan"+k+"_if_name") != '')
+		{
+			ifname = fvt_meta_config("wan"+k+"_if_name");
+			ifinter = fvt_meta_config("dev_wan"+k+"_interface");
+			document.write("<option value='"+ifinter+"'>"+ifinter+"("+ifname+")</option>");
+		}
+	}
+	for (var l=0;l<lan_max;l++)
+	{
+		if(fvt_meta_config("dev_lan"+l+"_interface") != '')
+		{
+			//ifname = fvt_meta_config("wan"+l+"_if_name");
+			ifinter = fvt_meta_config("dev_lan"+l+"_interface");
+			document.write("<option value='"+ifinter+"'>"+ifinter+"</option>");
+		}
+	}
+}
+
+
+function checkWdsEnable()
+{
+	if (WIFIACWdsEnable == "1" && ACSSIDNum=="1")
+	{
+		document.getElementsByName("WIFIACAuthType1")[5].disabled = true;
+		document.getElementsByName("WIFIACAuthType1")[6].disabled = true;
+	}
+}
+
+/*
+function disable_WPS(val)
+{
+	if (ACSSIDNum > 1)
+	{
+		document.getElementById("id_WPSRadio1").disabled=true;
+		document.getElementById("id_WPSRadio2").disabled=true;
+		document.getElementById("id_WPSRadio3").disabled=true;
+		document.getElementById("id_WPSBtn").disabled=true;
+		return;
+	}
+	changeWPS();
+	//When use 802.1x , WPS must disable else client can't associate AP.
+	document.getElementById("id_WPSRadio1").disabled=val;
+	document.getElementById("id_WPSRadio2").disabled=val;
+	document.getElementById("id_WPSRadio3").disabled=val;
+	document.getElementById("id_WPSBtn").disabled=val;
+}
+*/
+
+function checkRadius(val)
+{
+		var item1=document.getElementById("id_WIFIACRadiusServer"+val);
+		var item2=document.getElementById("id_WIFIACRadiusPort"+val);
+		var item3=document.getElementById("id_WIFIACRadiusKey"+val);
+
+		//merge radius server ip to hidden item
+		merge_ip("id_WIFIACRadiusServer"+val, "id_WIFIACRadiusServer"+val+"_item1", "id_WIFIACRadiusServer"+val+"_item2", "id_WIFIACRadiusServer"+val+"_item3", "id_WIFIACRadiusServer"+val+"_item4");
+
+		if (item1.value.length==0 && item2.value.length==0 && item3.value.length==0)
+		{
+			warn_invalid("8021x Setting");
+			//alert("8021x Setting is invalid!!");
+			return false;
+		}
+		if (item3.value.length==0)
+		{
+			var item ="Radius Key";
+			warn_invalid(item);
+			//alert(item + " is invalid!!");
+			return false;
+		}
+		if ((item2.value.length==0)||(!check_port(item2.value)))
+		{
+			var item ="Radius Port"
+			warn_int_between(item,1,65535);
+			//alert("The Radius port should be an integer between 1 and 65535");
+			return false;
+		}
+		if ((item1.value.length==0)||(!check_ip(item1.value)))
+		{
+			var item ="Radius Server"
+			warn_invalid(item);
+			//alert(item + " is invalid!!");
+			return false;
+		}
+
+	return true;
+}
+
+function wifi_init()
+{
+	if (wireless_acmodule_enable == "0")					//all disable
+	{
+		document.wifiacsetup_form.applybtn.disabled=true;
+	}
+	else //all enable first
+	{
+		document.wifiacsetup_form.applybtn.disabled=false;
+	}
+	checkMultiSSID();
+	checkWdsEnable();
+	for (var i=1; i <= ACSSIDNum;i++){
+		var item;
+			if (i == 1)
+				item='';
+			if (i == 2)
+				item='vap0_';
+			if (i == 3)
+				item='vap1_';
+			if (i == 4)
+				item='vap2_';
+		Authen(i);
+		if(fvt_meta_config("wlanac_"+item+"security_type")=='NONE')
+			acencryptNone(i);
+		if(fvt_meta_config("wlanac_"+item+"security_type")=='WEP')
+			acencryptWep(i);
+		if(fvt_meta_config("wlanac_"+item+"security_type")=='TKIP')
+			acencryptTkip(i);
+		if(fvt_meta_config("wlanac_"+item+"security_type")=='AES')
+			acencryptAes(i);
+		if(fvt_meta_config("wlanac_"+item+"security_type")=='TKIPAES')
+			acencryptTkipAes(i);
+		//genPassphraseKey(i);
+	}
+	//changeWPS();
+}
+
+function set_security_flag(index,tag)
+{
+	switch (tag) {
+		case 1:
+			security_flag=index;
+			break;
+		case 2:
+			security_flag2=index;
+			break;
+		case 3:
+			security_flag3=index;
+			break;
+		case 4:
+			security_flag4=index;
+			break;
+		case 5:
+			security_flag5=index;
+			break;
+		case 6:
+			security_flag6=index;
+			break;
+		case 7:
+			security_flag7=index;
+			break;
+		case 8:
+			security_flag8=index;
+			break;
+	}
+}
+
+function valueMatch(s1, s2, match_return)
+{
+	if(s1 == s2)
+		return match_return;
+	else
+		return "";
+}
+
+function set_auth_flag(index,tag)
+{
+	switch (tag) {
+		case 1:
+			authtype_flag=index;
+			break;
+		case 2:
+			authtype_flag2=index;
+			break;
+		case 3:
+			authtype_flag3=index;
+			break;
+		case 4:
+			authtype_flag4=index;
+			break;
+		case 5:
+			authtype_flag5=index;
+			break;
+		case 6:
+			authtype_flag6=index;
+			break;
+		case 7:
+			authtype_flag7=index;
+			break;
+		case 8:
+			authtype_flag8=index;
+			break;
+
+	}
+}
+
+function acencryptNone(val)
+{
+	set_security_flag(0,val);
+	document.getElementById("id_WIFIACWPAPSK" + val).disabled=true;
+	document.getElementById("id_WIFIACWEPKeyIndex" + val).disabled=true;
+	document.getElementById("id_WIFIACWEPKey1_S" + val).disabled=true;
+	document.getElementById("id_WIFIACWEPKey2_S" + val).disabled=true;
+	document.getElementById("id_WIFIACWEPKey3_S" + val).disabled=true;
+	document.getElementById("id_WIFIACWEPKey4_S" + val).disabled=true;
+	document.getElementById("id_weplLength" + val).disabled=true;
+	document.getElementById("id_Passphrase" + val).disabled=true;
+	document.getElementById("id_genBtn" + val).disabled=true;
+}
+
+function acencryptWep(val)
+{
+	set_security_flag(1,val);
+	document.getElementById("id_WIFIACWPAPSK" + val).disabled=true;
+	document.getElementById("id_WIFIACWEPKeyIndex" + val).disabled=false;
+	document.getElementById("id_WIFIACWEPKey1_S" + val).disabled=false;
+	document.getElementById("id_WIFIACWEPKey2_S" + val).disabled=false;
+	document.getElementById("id_WIFIACWEPKey3_S" + val).disabled=false;
+	document.getElementById("id_WIFIACWEPKey4_S" + val).disabled=false;
+	document.getElementById("id_weplLength" + val).disabled=false;
+	document.getElementById("id_Passphrase" + val).disabled=false;
+	document.getElementById("id_genBtn" + val).disabled=false;
+	/*
+	if (val==1 && authtype_flag==1)
+	{
+		disable_WPS(true);
+	}
+	*/
+}
+
+function acencryptTkip(val)
+{
+	set_security_flag(2,val);
+	document.getElementById("id_WIFIACWPAPSK" + val).disabled=false;
+	document.getElementById("id_WIFIACWEPKeyIndex" + val).disabled=true;
+	document.getElementById("id_WIFIACWEPKey1_S" + val).disabled=true;
+	document.getElementById("id_WIFIACWEPKey2_S" + val).disabled=true;
+	document.getElementById("id_WIFIACWEPKey3_S" + val).disabled=true;
+	document.getElementById("id_WIFIACWEPKey4_S" + val).disabled=true;
+	document.getElementById("id_weplLength" + val).disabled=true;
+	document.getElementById("id_Passphrase" + val).disabled=true;
+	document.getElementById("id_genBtn" + val).disabled=true;
+	if((val==1 && authtype_flag>4)||(val==2 && authtype_flag2>4)||(val==3 && authtype_flag3>4)||(val==4 && authtype_flag4>4))
+	{
+	  document.getElementById("id_WIFIACRadiusWanif"+val).disabled=false;
+	  document.getElementById("id_WIFIACRadiusServer"+val+"_item1").disabled=false;
+	  document.getElementById("id_WIFIACRadiusServer"+val+"_item2").disabled=false;
+	  document.getElementById("id_WIFIACRadiusServer"+val+"_item3").disabled=false;
+	  document.getElementById("id_WIFIACRadiusServer"+val+"_item4").disabled=false;
+	  document.getElementById("id_WIFIACRadiusServer" + val).disabled=false;
+	  document.getElementById("id_WIFIACRadiusPort" + val).disabled=false;
+	  document.getElementById("id_WIFIACRadiusKey" + val).disabled=false;
+	  document.getElementById("id_WIFIACWPAPSK" + val).disabled=true;
+	 // disable_WPS(true);
+	}
+}
+
+function acencryptAes(val)
+{
+	set_security_flag(3,val);
+	document.getElementById("id_WIFIACWPAPSK" + val).disabled=false;
+	document.getElementById("id_WIFIACWEPKeyIndex" + val).disabled=true;
+	document.getElementById("id_WIFIACWEPKey1_S" + val).disabled=true;
+	document.getElementById("id_WIFIACWEPKey2_S" + val).disabled=true;
+	document.getElementById("id_WIFIACWEPKey3_S" + val).disabled=true;
+	document.getElementById("id_WIFIACWEPKey4_S" + val).disabled=true;
+	document.getElementById("id_weplLength" + val).disabled=true;
+	document.getElementById("id_Passphrase" + val).disabled=true;
+	document.getElementById("id_genBtn" + val).disabled=true;
+	if((val==1 && authtype_flag>4)||(val==2 && authtype_flag2>4)||(val==3 && authtype_flag3>4)||(val==4 && authtype_flag4>4))
+	{
+	  document.getElementById("id_WIFIACRadiusWanif"+val).disabled=false;
+	  document.getElementById("id_WIFIACRadiusServer"+val+"_item1").disabled=false;
+	  document.getElementById("id_WIFIACRadiusServer"+val+"_item2").disabled=false;
+	  document.getElementById("id_WIFIACRadiusServer"+val+"_item3").disabled=false;
+	  document.getElementById("id_WIFIACRadiusServer"+val+"_item4").disabled=false;
+	  document.getElementById("id_WIFIACRadiusServer" + val).disabled=false;
+	  document.getElementById("id_WIFIACRadiusPort" + val).disabled=false;
+	  document.getElementById("id_WIFIACRadiusKey" + val).disabled=false;
+	  document.getElementById("id_WIFIACWPAPSK" + val).disabled=true;
+	  //disable_WPS(true);
+	}
+}
+
+function acencryptTkipAes(val)
+{
+		set_security_flag(4,val);
+		document.getElementById("id_WIFIACWPAPSK" + val).disabled=false;
+		document.getElementById("id_WIFIACWEPKeyIndex" + val).disabled=true;
+		document.getElementById("id_WIFIACWEPKey1_S" + val).disabled=true;
+		document.getElementById("id_WIFIACWEPKey2_S" + val).disabled=true;
+		document.getElementById("id_WIFIACWEPKey3_S" + val).disabled=true;
+		document.getElementById("id_WIFIACWEPKey4_S" + val).disabled=true;
+		document.getElementById("id_weplLength" + val).disabled=true;
+		document.getElementById("id_Passphrase" + val).disabled=true;
+		document.getElementById("id_genBtn" + val).disabled=true;
+	if((val==1 && authtype_flag>4)||(val==2 && authtype_flag2>4)||(val==3 && authtype_flag3>4)||(val==4 && authtype_flag4>4))
+	{
+	  document.getElementById("id_WIFIACRadiusWanif"+val).disabled=false;
+	  document.getElementById("id_WIFIACRadiusServer"+val+"_item1").disabled=false;
+	  document.getElementById("id_WIFIACRadiusServer"+val+"_item2").disabled=false;
+	  document.getElementById("id_WIFIACRadiusServer"+val+"_item3").disabled=false;
+	  document.getElementById("id_WIFIACRadiusServer"+val+"_item4").disabled=false;
+	  document.getElementById("id_WIFIACRadiusServer" + val).disabled=false;
+	  document.getElementById("id_WIFIACRadiusPort" + val).disabled=false;
+	  document.getElementById("id_WIFIACRadiusKey" + val).disabled=false;
+	  document.getElementById("id_WIFIACWPAPSK" + val).disabled=true;
+	  //disable_WPS(true);
+	}
+}
+
+function Authen(val)
+{
+	var item1=document.getElementById("id_WIFIACAuthType" + val).value;
+	var item2=document.getElementsByName("WIFIACEncrypType" + val);
+	var acnvram;
+	/*
+	for(var i=0;i<item1.length;i++)
+	{
+		if(item1[i].checked)
+		{
+			acnvram=item1[i].value;
+			break;
+		}
+	}*/
+	acnvram=item1;
+	document.getElementById("id_acsercurityNon" + val).disabled= true;
+	document.getElementById("id_acsercurityWep" + val).disabled= true;
+	document.getElementById("id_acsercurityTkip" + val).disabled= true;
+	document.getElementById("id_acsercurityAes" + val).disabled= true;
+	document.getElementById("id_acsercurityTkipAes" + val).disabled= true;
+
+	document.getElementById("id_WIFIACRadiusWanif"+val).disabled=true;
+	document.getElementById("id_WIFIACRadiusServer"+val+"_item1").disabled=true;
+	document.getElementById("id_WIFIACRadiusServer"+val+"_item2").disabled=true;
+	document.getElementById("id_WIFIACRadiusServer"+val+"_item3").disabled=true;
+	document.getElementById("id_WIFIACRadiusServer"+val+"_item4").disabled=true;
+	document.getElementById("id_WIFIACRadiusServer"+val).disabled=true;
+	document.getElementById("id_WIFIACRadiusPort"+val).disabled=true;
+	document.getElementById("id_WIFIACRadiusKey"+val).disabled=true;
+
+	document.getElementById("id_802_11w_" + val).style.display="none";
+	document.getElementById("id_sha256_" + val).style.display="none";
+		//disable_WPS(false);
+
+	if (item1=="OPEN")
+	{
+		document.getElementById("id_acsercurityNon" + val).disabled= false;
+		document.getElementById("id_acsercurityWep" + val).disabled= false;
+		//document.getElementById("id_acsercurityNon" + val).checked= true;
+		//document.getElementById("id_acsercurityWep" + val).value =
+		//item2[0].checked=1;
+		set_auth_flag(0,val);
+		//acencryptNone(val);
+	}
+
+	if (item1=="SHARED")
+	{
+		document.getElementById("id_acsercurityWep" + val).disabled= false;
+		//document.getElementById("id_acsercurityWep" + val).checked= true;
+		//item2[1].checked=1;
+		set_auth_flag(1,val);
+		/*
+		if (val==1)
+		{
+			disable_WPS(true);
+		}
+		*/
+	}
+	if (item1=="WPAPSK")
+	{
+		document.getElementById("id_acsercurityTkip" + val).disabled= false;
+		document.getElementById("id_acsercurityAes" + val).disabled= false;
+		document.getElementById("id_acsercurityTkipAes" + val).disabled= false;
+		//document.getElementById("id_acsercurityTkip" + val).checked= true;
+		//item2[2].checked=1;
+		set_auth_flag(2,val);
+	}
+	if (item1=="WPA2PSK")
+	{
+		document.getElementById("id_acsercurityTkip" + val).disabled= false;
+		document.getElementById("id_acsercurityAes" + val).disabled= false;
+		document.getElementById("id_acsercurityTkipAes" + val).disabled= false;
+		//document.getElementById("id_acsercurityAes" + val).checked= true;
+		//item2[2].checked=1;
+		document.getElementById("id_802_11w_" + val).style.display="table-row";
+		document.getElementById("id_sha256_" + val).style.display="table-row";
+		document.getElementById("id_IEEE_80211w_req" + val).disabled=false;
+		set_auth_flag(3,val);
+	}
+	if (item1=="WPAPSKWPA2PSK")
+	{
+		document.getElementById("id_acsercurityTkip" + val).disabled= false;
+		document.getElementById("id_acsercurityAes" + val).disabled= false;
+		document.getElementById("id_acsercurityTkipAes" + val).disabled= false;
+		//document.getElementById("id_acsercurityTkipAes" + val).checked= true;
+		//item2[2].checked=1;
+		set_auth_flag(4,val);
+	}
+	if (item1=="WPA")
+	{
+		document.getElementById("id_acsercurityTkip" + val).disabled= false;
+		document.getElementById("id_acsercurityAes" + val).disabled= false;
+		document.getElementById("id_acsercurityTkipAes" + val).disabled= false;
+		//	document.getElementById("id_acsercurityAes" + val).checked= true;
+		//item2[2].checked=1;
+		set_auth_flag(5,val);
+		//disable_WPS(true);
+	}
+	if (item1=="WPA2" || item1=="WPAWPA2")
+	{
+		document.getElementById("id_acsercurityTkip" + val).disabled= false;
+		document.getElementById("id_acsercurityAes" + val).disabled= false;
+		document.getElementById("id_acsercurityTkipAes" + val).disabled= false;
+		//document.getElementById("id_acsercurityAes" + val).checked= true;
+		//item2[2].checked=1;
+		if (item1=="WPA2")
+		{
+			document.getElementById("id_802_11w_" + val).style.display="table-row";
+			//document.getElementById("id_sha256_" + val).style.display="table-row";
+		}
+		document.getElementById("id_IEEE_80211w_req" + val).disabled=true;
+		set_auth_flag(6,val);
+		//disable_WPS(true);
+	}
+
+	// disabled WPS button by acnvram
+	if (acnvram=="SHARED" || acnvram=="WPA" || acnvram=="WPA2" || acnvram=="WPAWPA2")
+		//disable_WPS(true);
+
+	if (item2[0].checked)
+		acencryptNone(val);
+
+	if (item2[1].checked)
+		acencryptWep(val);
+
+	if (item2[2].checked)
+		acencryptTkip(val);
+
+	if (item2[3].checked)
+		acencryptAes(val);
+
+	if (item2[4].checked)
+		acencryptTkipAes(val);
+}
+
+function change_auth(val)
+{
+	var item1=document.getElementById("id_WIFIACAuthType" + val).value;
+	var item2=document.getElementsByName("WIFIACEncrypType" + val);
+
+	if (item1=="OPEN")
+	{
+		document.getElementById("id_acsercurityNon" + val).checked= true;
+		set_auth_flag(0,val);
+		acencryptNone(val);
+	}
+
+	if (item1=="SHARED")
+	{
+		document.getElementById("id_acsercurityWep" + val).checked= true;
+		set_auth_flag(1,val);
+	}
+	if (item1=="WPAPSK")
+	{
+		document.getElementById("id_acsercurityTkip" + val).checked= true;
+		set_auth_flag(2,val);
+	}
+	if (item1=="WPA2PSK")
+	{
+		document.getElementById("id_acsercurityAes" + val).checked= true;
+		set_auth_flag(3,val);
+	}
+	if (item1=="WPAPSKWPA2PSK")
+	{
+		document.getElementById("id_acsercurityTkipAes" + val).checked= true;
+		set_auth_flag(4,val);
+	}
+	if (item1=="WPA")
+	{
+		document.getElementById("id_acsercurityAes" + val).checked= true;
+		set_auth_flag(5,val);
+	}
+	if (item1=="WPA2" || item1=="WPAWPA2")
+	{
+		document.getElementById("id_acsercurityAes" + val).checked= true;
+		set_auth_flag(6,val);
+	}
+
+	if (item1=="WPA2" || item1=="WPA2PSK")
+	{
+		document.getElementById("id_IEEE_80211w_cap" + val).checked=true;
+		document.getElementById("id_SHA256_dis" + val).checked=true;
+	}
+	else
+	{
+		//document.getElementById("id_IEEE_80211w_none" + val).checked=true;
+		document.getElementById("id_IEEE_80211w_cap" + val).checked=true;
+		document.getElementById("id_SHA256_dis" + val).checked=true;
+	}
+
+	if (item2[0].checked)
+		acencryptNone(val);
+
+	if (item2[1].checked)
+		acencryptWep(val);
+
+	if (item2[2].checked)
+		acencryptTkip(val);
+
+	if (item2[3].checked)
+		acencryptAes(val);
+
+	if (item2[4].checked)
+		acencryptTkipAes(val);
+}
+
+function commonItemEnable(index,val)
+{
+	document.getElementsByName("WIFIACAuthType" + index).disabled = val;
+	document.getElementsByName("WIFIACAuthType" + index).disabled = val;
+	document.getElementsByName("WIFIACAuthType" + index).disabled = val;
+	document.getElementsByName("WIFIACAuthType" + index).disabled = val;
+	document.getElementsByName("WIFIACEncrypType" + index)[0].disabled = val;
+	document.getElementsByName("WIFIACEncrypType" + index)[1].disabled = val;
+	document.getElementsByName("WIFIACEncrypType" + index)[2].disabled = val;
+	document.getElementsByName("WIFIACEncrypType" + index)[3].disabled = val;
+	document.getElementById("id_WIFIACWEPKeyIndex" + index).disabled=val;
+	document.getElementById("id_WIFIACWEPKey1_S" + index).disabled=val;
+	document.getElementById("id_WIFIACWEPKey2_S" + index).disabled=val;
+	document.getElementById("id_WIFIACWEPKey3_S" + index).disabled=val;
+	document.getElementById("id_WIFIACWEPKey4_S" + index).disabled=val;
+	document.getElementById("id_weplLength" + index).disabled=val;
+	document.getElementById("id_Passphrase" + index).disabled=val;
+	document.getElementById("id_genBtn" + index).disabled=val;
+	document.getElementById("id_WIFIACWPAPSK" + index).disabled=val;
+}
+
+function checkMultiSSID()
+{
+	var table2=document.getElementById('wifi_table2');
+	var table3=document.getElementById('wifi_table3');
+	var table4=document.getElementById('wifi_table4');
+	/*var table5=document.getElementById('wifi_table5');
+	var table6=document.getElementById('wifi_table6');
+	var table7=document.getElementById('wifi_table7');
+	var table8=document.getElementById('wifi_table8');*/
+
+	//document.getElementById("id_WPSPinCode1").disabled=true;
+
+	if ((ACSSIDNum=="1"))
+	{
+		commonItemEnable(2,true);
+		commonItemEnable(3,true);
+		commonItemEnable(4,true);
+		/*commonItemEnable(5,true);
+		commonItemEnable(6,true);
+		commonItemEnable(7,true);
+		commonItemEnable(8,true);*/
+		table2.style.display="none";
+		table3.style.display="none";
+		table4.style.display="none";
+		/*table5.style.display="none";
+		table6.style.display="none";
+		table7.style.display="none";
+		table8.style.display="none";*/
+		Authen(1);
+	}
+	else if ((ACSSIDNum=="2"))
+	{
+		commonItemEnable(2,false);
+		commonItemEnable(3,true);
+		commonItemEnable(4,true);
+		/*commonItemEnable(5,true);
+		commonItemEnable(6,true);
+		commonItemEnable(7,true);
+		commonItemEnable(8,true);*/
+		table2.style.display="";
+		table3.style.display="none";
+		table4.style.display="none";
+		/*table5.style.display="none";
+		table6.style.display="none";
+		table7.style.display="none";
+		table8.style.display="none";*/
+		Authen(1);
+		Authen(2);
+	}
+	else if ((ACSSIDNum=="3"))
+	{
+		commonItemEnable(2,false);
+		commonItemEnable(3,false);
+		commonItemEnable(4,true);
+		/*commonItemEnable(5,true);
+		commonItemEnable(6,true);
+		commonItemEnable(7,true);
+		commonItemEnable(8,true);*/
+		table2.style.display="";
+		table3.style.display="";
+		table4.style.display="none";
+		/*table5.style.display="none";
+		table6.style.display="none";
+		table7.style.display="none";
+		table8.style.display="none";*/
+		Authen(1);
+		Authen(2);
+		Authen(3);
+	}
+	else if ((ACSSIDNum=="4"))
+	{
+		commonItemEnable(2,false);
+		commonItemEnable(3,false);
+		commonItemEnable(4,false);
+		/*commonItemEnable(5,true);
+		commonItemEnable(6,true);
+		commonItemEnable(7,true);
+		commonItemEnable(8,true);*/
+		table2.style.display="";
+		table3.style.display="";
+		table4.style.display="";
+		/*table5.style.display="none";
+		table6.style.display="none";
+		table7.style.display="none";
+		table8.style.display="none";*/
+		Authen(1);
+		Authen(2);
+		Authen(3);
+		Authen(4);
+	}
+	/*else
+	{
+		commonItemEnable(2,false);
+		commonItemEnable(3,false);
+		commonItemEnable(4,false);
+		commonItemEnable(5,false);
+		commonItemEnable(6,false);
+		commonItemEnable(7,false);
+		commonItemEnable(8,false);
+		table2.style.display="";
+		table3.style.display="";
+		table4.style.display="";
+		table5.style.display="";
+		table6.style.display="";
+		table7.style.display="";
+		table8.style.display="";
+		Authen(1);
+		Authen(2);
+		Authen(3);
+		Authen(4);
+		Authen(5);
+		Authen(6);
+		Authen(7);
+		Authen(8);
+	}*/
+}
+
+function checkSpecSymbol(s,index)
+{
+ for(i=0;i<s.length;i++)
+ {
+  c=s.charAt(i);
+  if ( (s.charCodeAt(i)>126)||(s.charCodeAt(i)<33) ) // 32:SP, 127:DEL
+		return false;
+  if (index=1)
+  {
+	if((c==';')||(c=='\\'))
+		return false;
+  }
+  else
+  {
+	if(c==';')
+		return false;
+  }
+ }
+ return true;
+}
+
+function check_integer(a)
+{
+	var i;
+	var c;
+	if (a.length==0)
+	{
+		if ((a>='0')&&(a<='9'))
+			return true;
+		else
+			return false;
+	}
+	else
+	{
+		for (i=0; i<a.length; i++)
+		{
+			c=a.charAt(i);
+
+			if ((c>='0')&&(c<='9'))
+				continue;
+			else
+				return false;
+		}
+	}
+	return true;
+}
+
+function check_range(a, min, max, item)
+{
+	if (!isBlank(a))
+	{
+		if (isNaN(a)||(a<min)||(a>max)||(!check_integer(a)))
+		{
+			warn_int_between(item,1,65535);
+			//alert(item+" should be an integer between "+min+" and "+max);
+			return false;
+		}
+	}
+	return true;
+}
+
+function check_ip_format(ip, first, forth, item)
+{
+	var i;
+	var n;
+	var m;
+	var j=0;  //for counting which DNS it is.
+
+	if (!isBlank(ip))
+	{
+		n = ip.split('.');
+		if (n.length == 4)
+		{
+			if ((first==1)&&(forth==0))/* for subnet mask*/
+			{
+				if((isNaN(n[0]))||(n[0]!=255)||isBlank(n[0]))
+				{
+					warn_mask();
+					//alert("Subnet Mask at first position must be 255!");
+					return false;
+				}
+			}
+			else
+			{
+				if (n[0]==127)
+				{
+					warn_invalid(127);
+					//alert("127 is invalid");
+					return false;
+				}
+				else if((isNaN(n[0]))||(n[0]<first)||(n[0]>=224)||isBlank(n[0]))
+				{
+					warn_invalid(item);
+					//alert(item + " is invalid!!");
+					return false;
+				}
+			}
+
+			if((isNaN(n[1]))||(n[1]<0)||(n[1]>255)||isBlank(n[1]))
+			{
+					warn_invalid(item);
+					//alert(item + " is invalid!!");
+					return false;
+			}
+			if((isNaN(n[2]))||(n[2]<0)||(n[2]>255)||isBlank(n[2]))
+			{
+					warn_invalid(item);
+					//alert(item + " is invalid!!");
+					return false;
+			}
+			if((isNaN(n[3]))||(n[3]<forth)||(n[3]>255)||isBlank(n[3]))
+			{
+					warn_invalid(item);
+					//alert(item + " is invalid!!");
+					return false;
+			}
+		}
+		else
+		{
+				warn_invalid(item);
+				//alert(item + " is invalid!!");
+				return false;
+		}
+	}
+	return true;
+}
+
+function wifiac_set1()
+{
+	var temp=new Array(4);
+	var temp_preshared;
+	temp[0] = document.getElementById("id_WIFIACWEPKey1_S1").value;
+	temp[1] = document.getElementById("id_WIFIACWEPKey2_S1").value;
+	temp[2] = document.getElementById("id_WIFIACWEPKey3_S1").value;
+	temp[3] = document.getElementById("id_WIFIACWEPKey4_S1").value;
+	temp_preshared = document.getElementById("id_WIFIACWPAPSK1").value;
+	//alert("security_flag="+security_flag);
+	if ((authtype_flag==0)&&((security_flag==2)||(security_flag==3)||(security_flag==4)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID1");
+		//alert("Authentication and Security Type don't match!!");
+		return false;
+	}
+	if ((authtype_flag==1)&&((security_flag==2)||(security_flag==3)||(security_flag==0)||(security_flag==4)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID1");
+		//alert("Authentication and Security Type don't match!!");
+		return false;
+	}
+	if (((authtype_flag==2)||(authtype_flag==3)||(authtype_flag==4))&&
+			((security_flag==0)||(security_flag==1)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID1");
+		//alert("Authentication and Security Type don't match!!");
+		return false;
+	}
+	if (((authtype_flag==5)||(authtype_flag==6))&&
+						((security_flag==0)||(security_flag==1)))
+   {
+			warn_wifi_not_match2("Authentication","Security Type","SSID1");
+			//alert("Authentication and Security Type don't match!!");
+			return false;
+   }
+   if(document.getElementById("id_Passphrase1").disabled==false && document.wifiacsetup_form.WIFIWEPPassphraseKey1.value.length==0)
+	{
+		warn_not_empty2("Passphrase Key","SSID1");
+		return false;
+	}
+	if(security_flag==1)
+	{
+		var i;
+		for (i=0;i<4;i++)
+		{
+			if (document.getElementById("id_weplLength1").value == 0) // WEP-OPEN
+				continue;
+			else if (temp[i].length== 0)
+			{
+				if (document.wifiacsetup_form.WIFIACWEPKeyIndex1.value==(i+1))
+				{
+					warn_invalid2("Key"+(i+1),"SSID1");
+					//alert("WEP Key" + (i+1) + " is invalid!!");
+					return false;
+				}
+				else
+					continue;
+			}
+			else if(((temp[i].length== 5)||(temp[i].length== 10))&&(checkSpecSymbol(temp[i],0)))/*ASCII*/
+			{
+				if(document.getElementById("id_weplLength1").value=="64")
+					continue;
+				else
+				{
+					warn_invalid2("Key"+(i+1),"SSID1");
+					return false;
+				}
+
+			}
+			else if ((temp[i].length== 13)||(temp[i].length== 26))/*HEX*/
+			{
+				if(document.getElementById("id_weplLength1").value=="128")
+				{
+					for (j=0;(j<temp[i].length);j++)
+					{
+						c=temp[i].charAt(j);
+
+						if((c != '0') && (c != '1')&& (c != '2')&& (c != '3')&& (c != '4')&& (c != '5')&& (c != '6')
+							&& (c != '7')&& (c != '8')&& (c!= '9')&& (c != 'a')&& (c != 'b')&& (c != 'c')
+							&& (c != 'd')&& (c != 'e')&& (c != 'f')&& (c != 'A')&& (c != 'B')
+							&& (c != 'C')&& (c != 'D')&& (c != 'E')&& (c != 'F'))
+						{
+							warn_invalid2("Key"+(i+1),"SSID1");
+							//alert("WEP Key" + (i+1) + " is invalid!!");
+							return false;
+						}
+					}
+				}
+				else
+				{
+					warn_invalid2("Key"+(i+1),"SSID1");
+					return false;
+				}
+			}
+			else
+			{
+				warn_invalid2("Key"+(i+1),"SSID1");
+				//alert("WEP Key" + (i+1) + " is invalid!!");
+				return false;
+			}
+		}
+	}
+
+	if(((security_flag==2)||(security_flag==3)||(security_flag==4))&& !((authtype_flag==5)||(authtype_flag==6)))
+	{
+		if (temp_preshared.length==0)
+		{
+			warn_not_empty2("Preshared Key",'SSID1');
+			//alert("Preshared Key is empty!!");
+			return false;
+		}
+		else if ((8>temp_preshared.length)||(temp_preshared.length>63)||!((temp_preshared.length!=0)&&
+			(checkSpecSymbol(temp_preshared,0)&&isChinese(temp_preshared)==0)))
+		{
+			var item="Preshared Key";
+			warn_invalid2("Preshared Key","SSID1");
+			//alert(item + " is invalid!!");
+			return false;
+		}
+	}
+
+	if ((authtype_flag==5)||(authtype_flag==6))
+	{
+		if (!checkRadius(1))
+			return false;
+	}
+	return true;
+}
+
+// for wifi2
+function wifiac_set2()
+{
+	var temp=new Array(4);
+	var temp_preshared;
+	temp[0] = document.getElementById("id_WIFIACWEPKey1_S2").value;
+	temp[1] = document.getElementById("id_WIFIACWEPKey2_S2").value;
+	temp[2] = document.getElementById("id_WIFIACWEPKey3_S2").value;
+	temp[3] = document.getElementById("id_WIFIACWEPKey4_S2").value;
+	temp_preshared = document.getElementById("id_WIFIACWPAPSK2").value;
+
+	if ((authtype_flag2==0)&&((security_flag2==2)||(security_flag2==3)||(security_flag2==4)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID2");
+		//alert("SSID2 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if ((authtype_flag2==1)&&((security_flag2==2)||(security_flag2==3)||(security_flag2==0)||(security_flag2==4)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID2");
+		//alert("SSID2 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if (((authtype_flag2==2)||(authtype_flag2==3)||(authtype_flag2==4))&&((security_flag2==0)||(security_flag2==1)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID2");
+		//alert("SSID2 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if(document.getElementById("id_Passphrase2").disabled==false && document.wifiacsetup_form.WIFIWEPPassphraseKey2.value.length==0)
+	{
+		warn_not_empty2("Passphrase Key","SSID2");
+		return false;
+	}
+
+	if(security_flag2==1)
+	{
+		var i;
+		for (i=0;i<4;i++)
+		{
+			if (document.getElementById("id_weplLength2").value == 0) // WEP-OPEN
+				continue;
+			else if (temp[i].length== 0)
+			{
+				if (document.wifiacsetup_form.WIFIACWEPKeyIndex2.value==(i+1))
+				{
+					warn_invalid2("Key"+(i+1),"SSID2");
+					//alert("SSID2 WEP Key" + (i+1) + " is invalid!!");
+					return false;
+				}
+				else
+					continue;
+			}
+			else if(((temp[i].length== 5)||(temp[i].length== 10))&&(checkSpecSymbol(temp[i],0)))/*ASCII*/
+			{
+				if(document.getElementById("id_weplLength2").value=="64")
+					continue;
+				else
+				{
+					warn_invalid2("Key"+(i+1),"SSID2");
+					return false;
+				}
+
+			}
+			else if ((temp[i].length== 13)||(temp[i].length== 26))/*HEX*/
+			{
+				if(document.getElementById("id_weplLength2").value=="128")
+				{
+					for (j=0;(j<temp[i].length);j++)
+					{
+						c=temp[i].charAt(j);
+
+						if((c != '0') && (c != '1')&& (c != '2')&& (c != '3')&& (c != '4')&& (c != '5')&& (c != '6')
+							&& (c != '7')&& (c != '8')&& (c!= '9')&& (c != 'a')&& (c != 'b')&& (c != 'c')
+							&& (c != 'd')&& (c != 'e')&& (c != 'f')&& (c != 'A')&& (c != 'B')
+							&& (c != 'C')&& (c != 'D')&& (c != 'E')&& (c != 'F'))
+						{
+							warn_invalid2("Key"+(i+1),"SSID2");
+							//alert("SSID2 WEP Key" + (i+1) + " is invalid!!");
+							return false;
+						}
+					}
+				}
+				else
+				{
+					warn_invalid2("Key"+(i+1),"SSID2");
+					return false;
+				}
+			}
+			else
+			{
+				warn_invalid2("Key"+(i+1),"SSID2");
+				//alert("SSID2 WEP Key" + (i+1) + " is invalid!!");
+				return false;
+			}
+		}
+	}
+
+	if((security_flag2==2)||(security_flag2==3)||(security_flag2==4))
+	{
+		if (temp_preshared.length==0)
+		{
+			warn_not_empty2("Preshared Key","SSID2");
+			//alert("SSID2 Preshared Key is empty!!");
+			return false;
+		}
+		else if ((8>temp_preshared.length)||(temp_preshared.length>63)||!((temp_preshared.length!=0)&&(checkSpecSymbol(temp_preshared,0))
+			&&isChinese(temp_preshared)==0))
+		{
+			warn_invalid2("Preshared Key","SSID2");
+			//alert("SSID2 Preshared Key is invalid!!");
+			return false;
+		}
+	}
+	if ((authtype_flag2==5)||(authtype_flag2==6))
+	{
+		if (!checkRadius(2))
+			return false;
+	}
+	return true;
+}
+
+// for wifi3
+function wifiac_set3()
+{
+	var temp=new Array(4);
+	var temp_preshared;
+	temp[0] = document.getElementById("id_WIFIACWEPKey1_S3").value;
+	temp[1] = document.getElementById("id_WIFIACWEPKey2_S3").value;
+	temp[2] = document.getElementById("id_WIFIACWEPKey3_S3").value;
+	temp[3] = document.getElementById("id_WIFIACWEPKey4_S3").value;
+	temp_preshared = document.getElementById("id_WIFIACWPAPSK3").value;
+
+	if ((authtype_flag3==0)&&((security_flag3==2)||(security_flag3==3)||(security_flag3==4)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID3");
+		//alert("SSID3 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if ((authtype_flag3==1)&&((security_flag3==2)||(security_flag3==3)||(security_flag3==0)||(security_flag3==4)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID3");
+		//alert("SSID3 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if (((authtype_flag3==2)||(authtype_flag3==3)||(authtype_flag3==4))&&((security_flag3==0)||(security_flag3==1)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID3");
+		//alert("SSID3 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if(document.getElementById("id_Passphrase3").disabled==false && document.wifiacsetup_form.WIFIWEPPassphraseKey3.value.length==0)
+	{
+		warn_not_empty2("Passphrase Key","SSID3");
+		return false;
+	}
+
+	if(security_flag3==1)
+	{
+		var i;
+		for (i=0;i<4;i++)
+		{
+			if (document.getElementById("id_weplLength3").value == 0) // WEP-OPEN
+				continue;
+			else if (temp[i].length== 0)
+			{
+				if (document.wifiacsetup_form.WIFIACWEPKeyIndex3.value==(i+1))
+				{
+					warn_invalid2("Key"+(i+1),"SSID3");
+					//alert("SSID3 WEP Key" + (i+1) + " is invalid!!");
+					return false;
+				}
+				else
+					continue;
+			}
+			else if(((temp[i].length== 5)||(temp[i].length== 10))&&(checkSpecSymbol(temp[i],0)))/*ASCII*/
+			{
+				if(document.getElementById("id_weplLength3").value=="64")
+					continue;
+				else
+				{
+					warn_invalid2("Key"+(i+1),"SSID3");
+					return false;
+				}
+			}
+			else if ((temp[i].length== 13)||(temp[i].length== 26))/*HEX*/
+			{
+				if(document.getElementById("id_weplLength3").value=="128")
+				{
+					for (j=0;(j<temp[i].length);j++)
+					{
+						c=temp[i].charAt(j);
+
+						if((c != '0') && (c != '1')&& (c != '2')&& (c != '3')&& (c != '4')&& (c != '5')&& (c != '6')
+							&& (c != '7')&& (c != '8')&& (c!= '9')&& (c != 'a')&& (c != 'b')&& (c != 'c')
+							&& (c != 'd')&& (c != 'e')&& (c != 'f')&& (c != 'A')&& (c != 'B')
+							&& (c != 'C')&& (c != 'D')&& (c != 'E')&& (c != 'F'))
+						{
+							warn_invalid2("Key"+(i+1),"SSID3");
+							//alert("SSID3 WEP Key" + (i+1) + " is invalid!!");
+							return false;
+						}
+					}
+				}
+				else
+				{
+					warn_invalid2("Key"+(i+1),"SSID3");
+					return false;
+				}
+			}
+			else
+			{
+				warn_invalid2("Key"+(i+1),"SSID3");
+				//alert("SSID3 WEP Key" + (i+1) + " is invalid!!");
+				return false;
+			}
+		}
+	}
+
+	if((security_flag3==2)||(security_flag3==3)||(security_flag3==4))
+	{
+		if (temp_preshared.length==0)
+		{
+			warn_not_empty2("Preshared Key","SSID3");
+			//alert("SSID3 Preshared Key is empty!!");
+			return false;
+		}
+		else if ((8>temp_preshared.length)||(temp_preshared.length>63)||!((temp_preshared.length!=0)&&(checkSpecSymbol(temp_preshared,0))
+			&&isChinese(temp_preshared)==0))
+		{
+			warn_not_empty2("Preshared Key","SSID3");
+			//alert("SSID3 Preshared Key is empty!!");
+			return false;
+		}
+	}
+	if ((authtype_flag3==5)||(authtype_flag3==6))
+	{
+		if (!checkRadius(3))
+			return false;
+	}
+	return true;
+}
+
+// for wifi4
+function wifiac_set4()
+{
+	var temp=new Array(4);
+	var temp_preshared;
+	temp[0] = document.getElementById("id_WIFIACWEPKey1_S4").value;
+	temp[1] = document.getElementById("id_WIFIACWEPKey2_S4").value;
+	temp[2] = document.getElementById("id_WIFIACWEPKey3_S4").value;
+	temp[3] = document.getElementById("id_WIFIACWEPKey4_S4").value;
+	temp_preshared = document.getElementById("id_WIFIACWPAPSK4").value;
+
+	if ((authtype_flag4==0)&&((security_flag4==2)||(security_flag4==3)||(security_flag4==4)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID4");
+		//alert("SSID4 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if ((authtype_flag4==1)&&((security_flag4==2)||(security_flag4==3)||(security_flag4==0)||(security_flag4==4)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID4");
+		//alert("SSID4 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if (((authtype_flag4==2)||(authtype_flag4==3)||(authtype_flag4==4))&&((security_flag4==0)||(security_flag4==1)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID4");
+		//alert("SSID4 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if(document.getElementById("id_Passphrase4").disabled==false && document.wifiacsetup_form.WIFIWEPPassphraseKey4.value.length==0)
+	{
+		warn_not_empty2("Passphrase Key","SSID4");
+		return false;
+	}
+	if(security_flag4==1)
+	{
+		var i;
+		for (i=0;i<4;i++)
+		{
+			if (document.getElementById("id_weplLength4").value == 0) // WEP-OPEN
+				continue;
+			else if (temp[i].length== 0)
+			{
+				if (document.wifiacsetup_form.WIFIACWEPKeyIndex4.value==(i+1))
+				{
+					warn_invalid2("Key"+(i+1),"SSID4");
+					//alert("SSID4 WEP Key" + (i+1) + " is invalid!!");
+					return false;
+				}
+				else
+					continue;
+			}
+			else if(((temp[i].length== 5)||(temp[i].length== 10))&&(checkSpecSymbol(temp[i],0)))/*ASCII*/
+			{
+				if(document.getElementById("id_weplLength4").value=="64")
+					continue;
+				else
+				{
+					warn_invalid2("Key"+(i+1),"SSID4");
+					return false;
+				}
+			}
+			else if ((temp[i].length== 13)||(temp[i].length== 26))/*HEX*/
+			{
+				if(document.getElementById("id_weplLength4").value=="128")
+				{
+					for (j=0;(j<temp[i].length);j++)
+					{
+						c=temp[i].charAt(j);
+
+						if((c != '0') && (c != '1')&& (c != '2')&& (c != '3')&& (c != '4')&& (c != '5')&& (c != '6')
+							&& (c != '7')&& (c != '8')&& (c!= '9')&& (c != 'a')&& (c != 'b')&& (c != 'c')
+							&& (c != 'd')&& (c != 'e')&& (c != 'f')&& (c != 'A')&& (c != 'B')
+							&& (c != 'C')&& (c != 'D')&& (c != 'E')&& (c != 'F'))
+						{
+							warn_invalid2("Key"+(i+1),"SSID4");
+							//alert("SSID4 WEP Key" + (i+1) + " is invalid!!");
+							return false;
+						}
+					}
+				}
+				else
+				{
+					warn_invalid2("Key"+(i+1),"SSID4");
+					return false;
+				}
+			}
+			else
+			{
+				warn_invalid2("Key"+(i+1),"SSID4");
+				//alert("SSID4 WEP Key" + (i+1) + " is invalid!!");
+				return false;
+			}
+		}
+	}
+
+	if((security_flag4==2)||(security_flag4==3)||(security_flag4==4))
+	{
+		if (temp_preshared.length==0)
+		{
+			warn_not_empty2("Preshared Key","SSID4");
+			//alert("SSID4 Preshared Key is empty!!");
+			return false;
+		}
+		else if ((8>temp_preshared.length)||(temp_preshared.length>63)||!((temp_preshared.length!=0)&&(checkSpecSymbol(temp_preshared,0))
+			&&isChinese(temp_preshared)==0))
+		{
+			warn_not_empty2("Preshared Key","SSID4");
+			//alert("SSID4 Preshared Key is empty!!");
+			return false;
+		}
+	}
+	if ((authtype_flag4==5)||(authtype_flag4==6))
+	{
+		if (!checkRadius(4))
+			return false;
+	}
+	return true;
+}
+
+// for wifi5
+function wifiac_set5()
+{
+	var temp=new Array(4);
+	var temp_preshared;
+	temp[0] = document.getElementById("id_WIFIACWEPKey1_S5").value;
+	temp[1] = document.getElementById("id_WIFIACWEPKey2_S5").value;
+	temp[2] = document.getElementById("id_WIFIACWEPKey3_S5").value;
+	temp[3] = document.getElementById("id_WIFIACWEPKey4_S5").value;
+	temp_preshared = document.getElementById("id_WIFIACWPAPSK5").value;
+
+	if ((authtype_flag5==0)&&((security_flag5==2)||(security_flag5==3)||(security_flag5==4)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID5");
+		//alert("SSID5 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if ((authtype_flag5==1)&&((security_flag5==2)||(security_flag5==3)||(security_flag5==0)||(security_flag5==4)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID5");
+		//alert("SSID5 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if (((authtype_flag5==2)||(authtype_flag5==3)||(authtype_flag5==4))&&((security_flag5==0)||(security_flag5==1)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID5");
+		//alert("SSID5 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if(document.getElementById("id_Passphrase5").disabled==false && document.wifiacsetup_form.WIFIWEPPassphraseKey5.value.length==0)
+	{
+		warn_not_empty2("Passphrase Key","SSID5");
+		return false;
+	}
+	if(security_flag5==1)
+	{
+		var i;
+		for (i=0;i<4;i++)
+		{
+			if (document.getElementById("id_weplLength5").value == 0) // WEP-OPEN
+				continue;
+			else if (temp[i].length== 0)
+			{
+				if (document.wifiacsetup_form.WIFIACWEPKeyIndex5.value==(i+1))
+				{
+					warn_invalid2("Key"+(i+1),"SSID5");
+					//alert("SSID5 WEP Key" + (i+1) + " is invalid!!");
+					return false;
+				}
+				else
+					continue;
+			}
+			else if(((temp[i].length== 5)||(temp[i].length== 10))&&(checkSpecSymbol(temp[i],0)))/*ASCII*/
+			{
+				if(document.getElementById("id_weplLength5").value=="64")
+					continue;
+				else
+				{
+					warn_invalid2("Key"+(i+1),"SSID5");
+					return false;
+				}
+			}
+			else if ((temp[i].length== 13)||(temp[i].length== 26))/*HEX*/
+			{
+				if(document.getElementById("id_weplLength5").value=="128")
+				{
+					for (j=0;(j<temp[i].length);j++)
+					{
+						c=temp[i].charAt(j);
+
+						if((c != '0') && (c != '1')&& (c != '2')&& (c != '3')&& (c != '4')&& (c != '5')&& (c != '6')
+							&& (c != '7')&& (c != '8')&& (c!= '9')&& (c != 'a')&& (c != 'b')&& (c != 'c')
+							&& (c != 'd')&& (c != 'e')&& (c != 'f')&& (c != 'A')&& (c != 'B')
+							&& (c != 'C')&& (c != 'D')&& (c != 'E')&& (c != 'F'))
+						{
+							warn_invalid2("Key"+(i+1),"SSID5");
+							//alert("SSID5 WEP Key" + (i+1) + " is invalid!!");
+							return false;
+						}
+					}
+				}
+				else
+				{
+					warn_invalid2("Key"+(i+1),"SSID5");
+					return false;
+				}
+			}
+			else
+			{
+				warn_invalid2("Key"+(i+1),"SSID5");
+				//alert("SSID5 WEP Key" + (i+1) + " is invalid!!");
+				return false;
+			}
+		}
+	}
+
+	if((security_flag5==2)||(security_flag5==3)||(security_flag5==4))
+	{
+		if (temp_preshared.length==0)
+		{
+			warn_not_empty2("Preshared Key","SSID5");
+			//alert("SSID5 Preshared Key is empty!!");
+			return false;
+		}
+		else if ((8>temp_preshared.length)||(temp_preshared.length>63)||!((temp_preshared.length!=0)&&(checkSpecSymbol(temp_preshared,0))
+			&&isChinese(temp_preshared)==0))
+		{
+			warn_not_empty2("Preshared Key","SSID5");
+			//alert("SSID5 Preshared Key is empty!!");
+			return false;
+		}
+	}
+	return true;
+}
+
+// for wifi6
+function wifiac_set6()
+{
+	var temp=new Array(4);
+	var temp_preshared;
+	temp[0] = document.getElementById("id_WIFIACWEPKey1_S6").value;
+	temp[1] = document.getElementById("id_WIFIACWEPKey2_S6").value;
+	temp[2] = document.getElementById("id_WIFIACWEPKey3_S6").value;
+	temp[3] = document.getElementById("id_WIFIACWEPKey4_S6").value;
+	temp_preshared = document.getElementById("id_WIFIACWPAPSK6").value;
+
+	if ((authtype_flag6==0)&&((security_flag6==2)||(security_flag6==3)||(security_flag6==4)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID6");
+		//alert("SSID6 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if ((authtype_flag6==1)&&((security_flag6==2)||(security_flag6==3)||(security_flag6==0)||(security_flag6==4)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID6");
+		//alert("SSID6 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if (((authtype_flag6==2)||(authtype_flag6==3)||(authtype_flag6==4))&&((security_flag6==0)||(security_flag6==1)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID6");
+		//alert("SSID6 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if(document.getElementById("id_Passphrase6").disabled==false && document.wifiacsetup_form.WIFIWEPPassphraseKey6.value.length==0)
+	{
+		warn_not_empty2("Passphrase Key","SSID6");
+		return false;
+	}
+	if(security_flag6==1)
+	{
+		var i;
+		for (i=0;i<4;i++)
+		{
+			if (document.getElementById("id_weplLength6").value == 0) // WEP-OPEN
+				continue;
+			else if (temp[i].length== 0)
+			{
+				if (document.wifiacsetup_form.WIFIACWEPKeyIndex6.value==(i+1))
+				{
+					warn_invalid2("Key"+(i+1),"SSID6");
+					//alert("SSID6 WEP Key" + (i+1) + " is invalid!!");
+					return false;
+				}
+				else
+					continue;
+			}
+			else if(((temp[i].length== 5)||(temp[i].length== 10))&&(checkSpecSymbol(temp[i],0)))/*ASCII*/
+			{
+				if(document.getElementById("id_weplLength6").value=="64")
+					continue;
+				else
+				{
+					warn_invalid2("Key"+(i+1),"SSID6");
+					return false;
+				}
+			}
+			else if ((temp[i].length== 13)||(temp[i].length== 26))/*HEX*/
+			{
+				if(document.getElementById("id_weplLength6").value=="128")
+				{
+					for (j=0;(j<temp[i].length);j++)
+					{
+						c=temp[i].charAt(j);
+
+						if((c != '0') && (c != '1')&& (c != '2')&& (c != '3')&& (c != '4')&& (c != '5')&& (c != '6')
+							&& (c != '7')&& (c != '8')&& (c!= '9')&& (c != 'a')&& (c != 'b')&& (c != 'c')
+							&& (c != 'd')&& (c != 'e')&& (c != 'f')&& (c != 'A')&& (c != 'B')
+							&& (c != 'C')&& (c != 'D')&& (c != 'E')&& (c != 'F'))
+						{
+							warn_invalid2("Key"+(i+1),"SSID6");
+							//alert("SSID6 WEP Key" + (i+1) + " is invalid!!");
+							return false;
+						}
+					}
+				}
+				else
+				{
+					warn_invalid2("Key"+(i+1),"SSID6");
+					return false;
+				}
+			}
+			else
+			{
+				warn_invalid2("Key"+(i+1),"SSID6");
+				//alert("SSID6 WEP Key" + (i+1) + " is invalid!!");
+				return false;
+			}
+		}
+	}
+
+	if((security_flag6==2)||(security_flag6==3)||(security_flag6==4))
+	{
+		if (temp_preshared.length==0)
+		{
+			warn_not_empty2("Preshared Key","SSID6");
+			//alert("SSID6 Preshared Key is empty!!");
+			return false;
+		}
+		else if ((8>temp_preshared.length)||(temp_preshared.length>63)||!((temp_preshared.length!=0)&&(checkSpecSymbol(temp_preshared,0))
+			&&isChinese(temp_preshared)==0))
+		{
+			warn_not_empty2("Preshared Key","SSID6");
+			//alert("SSID6 Preshared Key is empty!!");
+			return false;
+		}
+	}
+	return true;
+}
+
+// for wifi7
+function wifiac_set7()
+{
+	var temp=new Array(4);
+	var temp_preshared;
+	temp[0] = document.getElementById("id_WIFIACWEPKey1_S7").value;
+	temp[1] = document.getElementById("id_WIFIACWEPKey2_S7").value;
+	temp[2] = document.getElementById("id_WIFIACWEPKey3_S7").value;
+	temp[3] = document.getElementById("id_WIFIACWEPKey4_S7").value;
+	temp_preshared = document.getElementById("id_WIFIACWPAPSK7").value;
+
+	if ((authtype_flag7==0)&&((security_flag7==2)||(security_flag7==3)||(security_flag7==4)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID7");
+		//alert("SSID7 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if ((authtype_flag7==1)&&((security_flag7==2)||(security_flag7==3)||(security_flag7==0)||(security_flag7==4)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID7");
+		//alert("SSID7 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if (((authtype_flag7==2)||(authtype_flag7==3)||(authtype_flag7==4))&&((security_flag7==0)||(security_flag7==1)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID7");
+		//alert("SSID7 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if(document.getElementById("id_Passphrase7").disabled==false && document.wifiacsetup_form.WIFIWEPPassphraseKey7.value.length==0)
+	{
+		warn_not_empty2("Passphrase Key","SSID7");
+		return false;
+	}
+	if(security_flag7==1)
+	{
+		var i;
+		for (i=0;i<4;i++)
+		{
+			if (document.getElementById("id_weplLength7").value == 0) // WEP-OPEN
+				continue;
+			else if (temp[i].length== 0)
+			{
+				if (document.wifiacsetup_form.WIFIACWEPKeyIndex7.value==(i+1))
+				{
+					warn_invalid2("Key"+(i+1),"SSID7");
+					//alert("SSID7 WEP Key" + (i+1) + " is invalid!!");
+					return false;
+				}
+				else
+					continue;
+			}
+			else if(((temp[i].length== 5)||(temp[i].length== 10))&&(checkSpecSymbol(temp[i],0)))/*ASCII*/
+			{
+				if(document.getElementById("id_weplLength7").value=="64")
+					continue;
+				else
+				{
+					warn_invalid2("Key"+(i+1),"SSID7");
+					return false;
+				}
+			}
+			else if ((temp[i].length== 13)||(temp[i].length== 26))/*HEX*/
+			{
+				if(document.getElementById("id_weplLength7").value=="128")
+				{
+					for (j=0;(j<temp[i].length);j++)
+					{
+						c=temp[i].charAt(j);
+
+						if((c != '0') && (c != '1')&& (c != '2')&& (c != '3')&& (c != '4')&& (c != '5')&& (c != '6')
+							&& (c != '7')&& (c != '8')&& (c!= '9')&& (c != 'a')&& (c != 'b')&& (c != 'c')
+							&& (c != 'd')&& (c != 'e')&& (c != 'f')&& (c != 'A')&& (c != 'B')
+							&& (c != 'C')&& (c != 'D')&& (c != 'E')&& (c != 'F'))
+						{
+							warn_invalid2("Key"+(i+1),"SSID7");
+							//alert("SSID7 WEP Key" + (i+1) + " is invalid!!");
+							return false;
+						}
+					}
+				}
+				else
+				{
+					warn_invalid2("Key"+(i+1),"SSID7");
+					return false;
+				}
+			}
+			else
+			{
+				warn_invalid2("Key"+(i+1),"SSID7");
+				//alert("SSID7 WEP Key" + (i+1) + " is invalid!!");
+				return false;
+			}
+		}
+	}
+
+	if((security_flag7==2)||(security_flag7==3)||(security_flag7==4))
+	{
+		if (temp_preshared.length==0)
+		{
+			warn_not_empty2("Preshared Key","SSID7");
+			//alert("SSID7 Preshared Key is empty!!");
+			return false;
+		}
+		else if ((8>temp_preshared.length)||(temp_preshared.length>63)||!((temp_preshared.length!=0)&&(checkSpecSymbol(temp_preshared,0))
+			&&isChinese(temp_preshared)==0))
+		{
+			warn_not_empty2("Preshared Key","SSID7");
+			//alert("SSID7 Preshared Key is empty!!");
+			return false;
+		}
+	}
+	return true;
+}
+
+// for wifi8
+function wifiac_set8()
+{
+	var temp=new Array(4);
+	var temp_preshared;
+	temp[0] = document.getElementById("id_WIFIACWEPKey1_S8").value;
+	temp[1] = document.getElementById("id_WIFIACWEPKey2_S8").value;
+	temp[2] = document.getElementById("id_WIFIACWEPKey3_S8").value;
+	temp[3] = document.getElementById("id_WIFIACWEPKey4_S8").value;
+	temp_preshared = document.getElementById("id_WIFIACWPAPSK8").value;
+
+	if ((authtype_flag8==0)&&((security_flag8==2)||(security_flag8==3)||(security_flag8==4)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID8");
+		//alert("SSID8 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if ((authtype_flag8==1)&&((security_flag8==2)||(security_flag8==3)||(security_flag8==0)||(security_flag8==4)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID8");
+		//alert("SSID8 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if (((authtype_flag8==2)||(authtype_flag8==3)||(authtype_flag8==4))&&((security_flag8==0)||(security_flag8==1)))
+	{
+		warn_wifi_not_match2("Authentication","Security Type","SSID8");
+		//alert("SSID8 Authentication and Security Type don't match!!");
+		return false;
+	}
+	if(document.getElementById("id_Passphrase8").disabled==false && document.wifiacsetup_form.WIFIWEPPassphraseKey8.value.length==0)
+	{
+		warn_not_empty2("Passphrase Key","SSID8");
+		return false;
+	}
+	if(security_flag8==1)
+	{
+		var i;
+		for (i=0;i<4;i++)
+		{
+			if (document.getElementById("id_weplLength8").value == 0) // WEP-OPEN
+				continue;
+			else if (temp[i].length== 0)
+			{
+				if (document.wifiacsetup_form.WIFIACWEPKeyIndex8.value==(i+1))
+				{
+					warn_invalid2("Key"+(i+1),"SSID8");
+					//alert("SSID8 WEP Key" + (i+1) + " is invalid!!");
+					return false;
+				}
+				else
+					continue;
+			}
+			else if(((temp[i].length== 5)||(temp[i].length== 10))&&(checkSpecSymbol(temp[i],0)))/*ASCII*/
+			{
+				if(document.getElementById("id_weplLength8").value=="64")
+					continue;
+				else
+				{
+					warn_invalid2("Key"+(i+1),"SSID8");
+					return false;
+				}
+			}
+			else if ((temp[i].length== 13)||(temp[i].length== 26))/*HEX*/
+			{
+				if(document.getElementById("id_weplLength8").value=="128")
+				{
+					for (j=0;(j<temp[i].length);j++)
+					{
+						c=temp[i].charAt(j);
+
+						if((c != '0') && (c != '1')&& (c != '2')&& (c != '3')&& (c != '4')&& (c != '5')&& (c != '6')
+							&& (c != '7')&& (c != '8')&& (c!= '9')&& (c != 'a')&& (c != 'b')&& (c != 'c')
+							&& (c != 'd')&& (c != 'e')&& (c != 'f')&& (c != 'A')&& (c != 'B')
+							&& (c != 'C')&& (c != 'D')&& (c != 'E')&& (c != 'F'))
+						{
+							warn_invalid2("Key"+(i+1),"SSID8");
+							//alert("SSID8 WEP Key" + (i+1) + " is invalid!!");
+							return false;
+						}
+					}
+				}
+				else
+				{
+					warn_invalid2("Key"+(i+1),"SSID8");
+					return false;
+				}
+			}
+			else
+			{
+				warn_invalid_int2("WEP Key",i+1,"SSID8");
+				//alert("SSID8 WEP Key" + (i+1) + " is invalid!!");
+				return false;
+			}
+		}
+	}
+
+	if((security_flag8==2)||(security_flag8==3)||(security_flag8==4))
+	{
+		if (temp_preshared.length==0)
+		{
+			warn_not_empty2("Preshared Key","SSID8");
+			//alert("SSID8 Preshared Key is empty!!");
+			return false;
+		}
+		else if ((8>temp_preshared.length)||(temp_preshared.length>63)||!((temp_preshared.length!=0)&&(checkSpecSymbol(temp_preshared,0))
+			&&isChinese(temp_preshared)==0))
+		{
+			warn_not_empty2("Preshared Key","SSID8");
+			//alert("SSID8 Preshared Key is empty!!");
+			return false;
+		}
+	}
+	return true;
+}
+
+/*
+function changeWPS()
+{
+	var type_item=document.getElementsByName("nosave_WPSType1");
+	var text_item=document.getElementById("id_WPSPinCode1");
+	if (type_item[1].checked)
+		text_item.disabled=false;
+	else
+		text_item.disabled=true;
+}
+*/
+function CheckPin(PIN)
+{
+	var num = 0;
+
+	num += 3*(parseInt((PIN / 10000000) % 10));
+	num += 1*(parseInt((PIN / 1000000) % 10));
+	num += 3*(parseInt((PIN / 100000) % 10));
+	num += 1*(parseInt((PIN / 10000) % 10));
+	num += 3*(parseInt((PIN / 1000) % 10));
+	num += 1*(parseInt((PIN / 100) % 10));
+	num += 3*(parseInt((PIN / 10) % 10));
+	num += 1*(parseInt((PIN / 1) % 10));
+
+  return (0 == (num % 10));
+}
+/*
+function startWPS()
+{
+	var type_item=document.getElementsByName("nosave_WPSType1");
+	var text_item=document.getElementById("id_WPSPinCode1");
+
+	if (type_item[1].checked)
+	{
+		if (((text_item.value.length!=8) && (text_item.value.length!=4)) || !check_integer(text_item.value) || !CheckPin(text_item.value))
+		{
+			warn_invalid("WPS PIN Code");
+			//alert("WPS PIN Code is invalid!!");
+			return false;
+		}
+		document.getElementById("id_WPSStart").value="PIN";
+	}
+	else
+		document.getElementById("id_WPSStart").value="PBC";
+
+	//confirm("If you want to start WPS , the other setting will be saved!!")
+	if (confirm_wifi())
+	{
+		for (i=0; i< document.wifiacsetup_form.elements.length; i++)
+		{
+			document.wifiacsetup_form.elements[i].disabled = true;
+		}
+		text_item.disabled=false;
+		document.getElementById("id_WPSStart").disabled=false;
+		fvt_form_submit('wifiacsetup_form');
+		document.wifiacsetup_form.submit();
+	}
+	else
+	{
+		document.getElementById("id_WPSStart").disabled=true;
+		document.getElementById("id_WPSStart").value="0";
+	}
+
+}
+*/
+function genPassphraseKey(tag)
+{
+	var text_item=document.getElementById("id_Passphrase" + tag);
+	var wep_index_item=document.getElementById("id_WIFIACWEPKeyIndex" + tag);
+	var index=wep_index_item.selectedIndex+1;
+	var wep_text_item=document.getElementById("id_WIFIACWEPKey" + index + "_S" + tag);
+
+	if (text_item.value.length==0 || isBlank(text_item.value))
+	{
+		document.getElementById("id_WIFIACWEPKey1_S" + tag).value='';
+		document.getElementById("id_WIFIACWEPKey2_S" + tag).value='';
+		document.getElementById("id_WIFIACWEPKey3_S" + tag).value='';
+		document.getElementById("id_WIFIACWEPKey4_S" + tag).value='';
+		//var item ="WIFI" + tag + " " + "Passphrase Key";
+		//warn_invalid2("Passphrase Key","SSID"+tag);
+		//alert(item + " is invalid!!");
+		return false;
+	}
+
+	if (document.getElementById("id_weplLength" + tag).value==64)
+	{
+		document.getElementById("id_WIFIACWEPKey1_S" + tag).value=Get64bitkey(text_item.value,1);
+		document.getElementById("id_WIFIACWEPKey2_S" + tag).value=Get64bitkey(text_item.value,2);
+		document.getElementById("id_WIFIACWEPKey3_S" + tag).value=Get64bitkey(text_item.value,3);
+		document.getElementById("id_WIFIACWEPKey4_S" + tag).value=Get64bitkey(text_item.value,4);
+	}
+	else
+	{
+		document.getElementById("id_WIFIACWEPKey1_S" + tag).value=Get128bitkey(text_item.value+1);
+		document.getElementById("id_WIFIACWEPKey2_S" + tag).value=Get128bitkey(text_item.value+2);
+		document.getElementById("id_WIFIACWEPKey3_S" + tag).value=Get128bitkey(text_item.value+3);
+		document.getElementById("id_WIFIACWEPKey4_S" + tag).value=Get128bitkey(text_item.value+4);
+		//wep_text_item.value=Get128bitkey(text_item.value);
+	}
+}
+
+function wifiac_set()
+{
+	if (wireless_acmodule_enable == "1")
+	{
+		if(!wifiac_set1())
+			return;
+
+		if(1<parseInt(ACSSIDNum))
+		{
+			if(!wifiac_set2())
+				return;
+		}
+
+		if(2<parseInt(ACSSIDNum))
+		{
+			if(!wifiac_set3())
+				return;
+
+			if(!wifiac_set4())
+				return;
+		}
+
+		if(4<parseInt(ACSSIDNum))
+		{
+			if(!wifiac_set5())
+				return;
+
+			if(!wifiac_set6())
+				return;
+
+			if(!wifiac_set7())
+				return;
+
+			if(!wifiac_set8())
+				return;
+
+		}
+
+		fvt_form_submit('wifiacsetup_form');
+		document.getElementById('id_wait_progress').style.display="";
+		document.wifiacsetup_form.submit();
+	}
+}
+
+function fvt_form_init(form_name)
+{
+	if (form_name=='wifiacsetup_form' || form_name=='*') {
+		//fvt_form_obj_set("wifiacsetup_form", "nosave_WPSType1", fvt_meta_config('wlanac_wps_type'));
+		//fvt_form_obj_set("wifiacsetup_form", "nosave_WPSPinCode1", fvt_meta_config('wlanac_wps_pin_code'));
+		for(var i =1 ; i<= ACSSIDNum;i++)
+		{
+			var item;
+			if (i == 1)
+				item='';
+			if (i == 2)
+				item='vap0_';
+			if (i == 3)
+				item='vap1_';
+			if (i == 4)
+				item='vap2_';
+			fvt_form_obj_set("wifiacsetup_form", "WIFIACAuthType"+i, fvt_meta_config("wlanac_"+item+"auth_type"));
+			fvt_form_obj_set("wifiacsetup_form", "WIFIACEncrypType"+i, fvt_meta_config("wlanac_"+item+"security_type"));
+			fvt_form_obj_set("wifiacsetup_form", "WIFIWEPPassphraseLen"+i, fvt_meta_config("wlanac_"+item+"wep_passphrase_len"));
+			fvt_form_obj_set("wifiacsetup_form", "WIFIWEPPassphraseKey"+i, fvt_meta_config("wlanac_"+item+"wep_passphrase"));
+			fvt_form_obj_set("wifiacsetup_form", "WIFIACWEPKeyIndex"+i, fvt_meta_config("wlanac_"+item+"wepindex"));
+			fvt_form_obj_set("wifiacsetup_form", "WIFIACWEPKey1_S"+i, fvt_meta_config("wlanac_"+item+"wepkey1"));
+			fvt_form_obj_set("wifiacsetup_form", "WIFIACWEPKey2_S"+i, fvt_meta_config("wlanac_"+item+"wepkey2"));
+			fvt_form_obj_set("wifiacsetup_form", "WIFIACWEPKey3_S"+i, fvt_meta_config("wlanac_"+item+"wepkey3"));
+			fvt_form_obj_set("wifiacsetup_form", "WIFIACWEPKey4_S"+i, fvt_meta_config("wlanac_"+item+"wepkey4"));
+			fvt_form_obj_set("wifiacsetup_form", "WIFIACWPAPSK"+i, fvt_meta_config("wlanac_"+item+"wpawpa2_presharedkey"));
+			fvt_form_obj_set("wifiacsetup_form", "WIFIACRadiusWanif"+i, fvt_meta_config('wlanac_'+item+'802_1x_server_dev'));
+			fvt_form_obj_set("wifiacsetup_form", "WIFIACRadiusServer"+i, fvt_meta_config('wlanac_'+item+'802_1x_server'));
+			fvt_form_obj_set("wifiacsetup_form", "WIFIACRadiusPort"+i, fvt_meta_config('wlanac_'+item+'802_1x_port'));
+			fvt_form_obj_set("wifiacsetup_form", "WIFIACRadiusKey"+i, fvt_meta_config('wlanac_'+item+'802_1x_key'));
+			fvt_form_obj_set("wifiacsetup_form", "IEEE_80211w_"+i, fvt_meta_config('wlanac_'+item+'pmf_dot11IEEE80211W'));
+			fvt_form_obj_set("wifiacsetup_form", "SHA256_"+i, fvt_meta_config('wlanac_'+item+'pmf_enableSHA256'));
+		}
+		if (ShowWPA==1)
+		{
+			document.getElementById("id_Securitymode1").style.display="table-row";
+			document.getElementById("id_Securitymode2").style.display="table-row";
+			document.getElementById("id_Securitymode3").style.display="table-row";
+			document.getElementById("id_Securitymode4").style.display="table-row";
+		}
+		if (ShowWEP==1)
+		{
+			document.getElementById("id_WEPSecurity1").style.display="block";
+			document.getElementById("id_WEPSecurity2").style.display="block";
+			document.getElementById("id_WEPSecurity3").style.display="block";
+			document.getElementById("id_WEPSecurity4").style.display="block";
+		}
+	}
+}
+
+function fvt_form_submit(form_name)		{
+	fvt_paramlist_clear();
+	if (form_name=='wifiacsetup_form' || form_name=='*') {
+		//fvt_paramlist_cat_str('wlanac_wps_type', fvt_form_obj_get("wifiacsetup_form", "nosave_WPSType1"));
+		//fvt_paramlist_cat_str('wlanac_wps_pin_code', fvt_form_obj_get("wifiacsetup_form", "nosave_WPSPinCode1"));
+		for(var i =1 ; i<= ACSSIDNum;i++)
+		{
+			var item;
+			if (i == 1)
+				item='';
+			if (i == 2)
+				item='vap0_';
+			if (i == 3)
+				item='vap1_';
+			if (i == 4)
+				item='vap2_';
+			fvt_paramlist_cat_str("wlanac_"+item+"auth_type", fvt_form_obj_get("wifiacsetup_form", "WIFIACAuthType"+i));
+			fvt_paramlist_cat_str("wlanac_"+item+"security_type", fvt_form_obj_get("wifiacsetup_form", "WIFIACEncrypType"+i));
+			fvt_paramlist_cat_str("wlanac_"+item+"wep_passphrase_len", fvt_form_obj_get("wifiacsetup_form", "WIFIWEPPassphraseLen"+i));
+			if ( fvt_form_obj_get("wifiacsetup_form", "WIFIWEPPassphraseLen"+i) == "0" ) //WEP-OPEN
+				fvt_paramlist_cat_str("wlanac_"+item+"auth_type","OPEN");
+			//fvt_paramlist_cat_str("wlanac_"+item+"wep_passphrase", fvt_form_obj_get("wifiacsetup_form", "WIFIWEPPassphraseKey"+i));
+			var wlan_weppw;
+			if(fvt_form_obj_get("wifiacsetup_form", "WIFIWEPPassphraseKey"+i) != fvt_meta_config("wlanac_"+item+"wep_passphrase"))
+			{
+				if (ency_set=="1")
+				wlan_weppw = rc4_encrypt(rc4Key, fvt_form_obj_get("wifiacsetup_form", "WIFIWEPPassphraseKey"+i));
+				else
+				wlan_weppw = fvt_form_obj_get("wifiacsetup_form", "WIFIWEPPassphraseKey"+i);
+			}
+			else
+			{
+				wlan_weppw = fvt_meta_config("wlanac_"+item+"wep_passphrase");
+			}
+			fvt_paramlist_cat_str("wlanac_"+item+"wep_passphrase", wlan_weppw);
+
+			fvt_paramlist_cat_str("wlanac_"+item+"wepindex", fvt_form_obj_get("wifiacsetup_form", "WIFIACWEPKeyIndex"+i));
+			fvt_paramlist_cat_str("wlanac_"+item+"wepkey1", fvt_form_obj_get("wifiacsetup_form", "WIFIACWEPKey1_S"+i));
+			fvt_paramlist_cat_str("wlanac_"+item+"wepkey2", fvt_form_obj_get("wifiacsetup_form", "WIFIACWEPKey2_S"+i));
+			fvt_paramlist_cat_str("wlanac_"+item+"wepkey3", fvt_form_obj_get("wifiacsetup_form", "WIFIACWEPKey3_S"+i));
+			fvt_paramlist_cat_str("wlanac_"+item+"wepkey4", fvt_form_obj_get("wifiacsetup_form", "WIFIACWEPKey4_S"+i));
+			//fvt_paramlist_cat_str("wlanac_"+item+"wpawpa2_presharedkey", fvt_form_obj_get("wifiacsetup_form", "WIFIACWPAPSK"+i));
+			var wlan_pw;
+			if(fvt_form_obj_get("wifiacsetup_form", "WIFIACWPAPSK"+i) != fvt_meta_config("wlanac_"+item+"wpawpa2_presharedkey"))
+			{
+				if (ency_set=="1")
+				wlan_pw = rc4_encrypt(rc4Key, fvt_form_obj_get("wifiacsetup_form", "WIFIACWPAPSK"+i));
+				else
+				wlan_pw = fvt_form_obj_get("wifiacsetup_form", "WIFIACWPAPSK"+i);
+			}
+			else
+			{
+				wlan_pw = fvt_meta_config("wlanac_"+item+"wpawpa2_presharedkey");
+			}
+			fvt_paramlist_cat_str("wlanac_"+item+"wpawpa2_presharedkey", wlan_pw);
+
+			fvt_paramlist_cat_str('wlanac_'+item+'802_1x_server_dev', fvt_form_obj_get("wifiacsetup_form", "WIFIACRadiusWanif"+i));
+			fvt_paramlist_cat_str('wlanac_'+item+'802_1x_server', fvt_form_obj_get("wifiacsetup_form", "WIFIACRadiusServer"+i));
+			fvt_paramlist_cat_str('wlanac_'+item+'802_1x_port', fvt_form_obj_get("wifiacsetup_form", "WIFIACRadiusPort"+i));
+			//fvt_paramlist_cat_str('wlanac_'+item+'802_1x_key', fvt_form_obj_get("wifiacsetup_form", "WIFIACRadiusKey"+i));
+			var radiuskey_pw;
+			if(fvt_form_obj_get("wifiacsetup_form", "WIFIACRadiusKey"+i) != fvt_meta_config("wlanac_"+item+"802_1x_key"))
+			{
+				if (ency_set=="1")
+				radiuskey_pw = rc4_encrypt(rc4Key, fvt_form_obj_get("wifiacsetup_form", "WIFIACRadiusKey"+i));
+				else
+				radiuskey_pw = fvt_form_obj_get("wifiacsetup_form", "WIFIACRadiusKey"+i);
+			}
+			else
+			{
+				radiuskey_pw = fvt_meta_config("wlanac_"+item+"802_1x_key");
+			}
+			fvt_paramlist_cat_str("wlanac_"+item+"802_1x_key", radiuskey_pw);
+
+			fvt_paramlist_cat_str("wlanac_"+item+"pmf_dot11IEEE80211W", fvt_form_obj_get("wifiacsetup_form", "IEEE_80211w_"+i));
+			fvt_paramlist_cat_str("wlanac_"+item+"pmf_enableSHA256", fvt_form_obj_get("wifiacsetup_form", "SHA256_"+i));
+		}
+	}
+	fvt_paramlist_presubmit(form_name);
+}
+
+function security_sel_option()
+{
+	document.write("<option value='OPEN'>"+vOpen+"</option>");
+	if (ShowWEP==1)
+		document.write("<option value='SHARED'>"+vShared+"</option>");
+	if (ShowWPA==1)
+		document.write("<option value='WPAPSK'>WPA-PSK</option>");
+	document.write("<option value='WPA2PSK'>WPA2-PSK</option>");
+	document.write("<option value='WPAPSKWPA2PSK'>WPA-PSK/WPA2-PSK Mixed</option>");
+	if (ShowWPA==1)
+		document.write("<option value='WPA'>WPA (802.1x)</option>");
+	document.write("<option value='WPA2'>WPA2 (802.1x)</option>");
+	if (ShowWPA==0)
+		document.write("<option value='WPAWPA2'>WPA/WPA2 Mixed (802.1x)</option>");
+}
+function show_802_11w_sha256(index)
+{
+	//IEEE 802.11w
+	document.write("<tr id='id_802_11w_"+index+"' style='display:none;'>");
+	//document.write("<tr id='id_802_11w_"+index+"' style=''>");
+	document.write("<td><div class='lv2_new'>IEEE 802.11w</div></td>");
+	document.write("<td>");
+	document.write("<table><tr>");
+
+	document.write("<td>");
+	document.write("<input type='radio' name='IEEE_80211w_"+index+"' id='id_IEEE_80211w_none"+index+"' value='0' onclick='IEEE_80211w_check("+index+")'>");
+	document.write("&nbsp;NONE&nbsp;</td>");
+	document.write("<td>");
+	document.write("<input type='radio' name='IEEE_80211w_"+index+"' id='id_IEEE_80211w_cap"+index+"' value='1' onclick='IEEE_80211w_check("+index+")'>");
+	document.write("&nbsp;Capable&nbsp;</td>");
+	document.write("<td>");
+	document.write("<input type='radio' name='IEEE_80211w_"+index+"' id='id_IEEE_80211w_req"+index+"' value='2' onclick='IEEE_80211w_check("+index+")'>");
+	document.write("&nbsp;Required&nbsp;</td>");
+
+	document.write("</tr></table>");
+	document.write("</td>");
+	document.write("</tr>");
+
+	//IEEE SHA256
+	document.write("<tr id='id_sha256_"+index+"' style='display:none;'>");
+	//document.write("<tr id='id_sha256_"+index+"' style=''>");
+	document.write("<td><div class='lv2_new'>SHA256</div></td>");
+	document.write("<td>");
+	document.write("<table><tr>");
+
+	document.write("<td>");
+	document.write("<input type='radio' name='SHA256_"+index+"' id='id_SHA256_dis"+index+"' value='0'>");
+	document.write("&nbsp;Disable&nbsp;</td>");
+	document.write("<td>");
+	document.write("<input type='radio' name='SHA256_"+index+"' id='id_SHA256_en"+index+"' value='1'>");
+	document.write("&nbsp;Enable&nbsp;</td>");
+
+	document.write("</tr></table>");
+	document.write("</td>");
+	document.write("</tr>");
+}
+
+function IEEE_80211w_check(val)
+{
+	if (document.getElementById("id_IEEE_80211w_none" + val).checked)
+		{
+		document.getElementById("id_SHA256_en" + val).disabled=true;
+		document.getElementById("id_SHA256_dis" + val).checked=true;
+		}
+	else
+		{
+		document.getElementById("id_SHA256_en" + val).disabled=false;
+		}
+}
+//-->
+</script>
+<style>
+.div_2 {margin-left:48px;}
+</style>
+</head>
+
+<body align="left" onload="check_process();fvt_form_init('wifiacsetup_form');wifi_init();">
+<div id="container" >
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<form id="wifiacsetup_form" name="wifiacsetup_form" method="post">
+	<fieldset>
+		<div class="lv1_title">
+		Wi-Fi Setup&nbsp;&gt;&nbsp;11ac Wi-Fi Security</div>
+	</fieldset>
+	<div class="div1_indent">
+		<div class="lv3_new" id="wifi_table1">
+		<div>
+			<table><tbody>
+				<tr>
+					<script language="javascript" type="text/javascript">
+						document.write("<td><table><tr>");
+						document.write(" <td><table dir='ltr'><tr>");
+						document.write("<td><div ctrlflip='etc' class='lv1_new'>SSID</div></td>");
+						document.write("<td><div ctrlflip='etc' class='lv1_new'>&nbsp;1&nbsp;</div></td>");
+						document.write("<td><div class='lv1_new'>(</div></td>");
+						document.write("<td><div ctrlflip='etc' class='lv1_new'>"+fvt_meta_config('wlanac_ssid')+"</div></td>");
+						document.write("<td><div class='lv1_new'>)</div></td>");
+						document.write(" </tr></table></td>");
+						document.write("<td><div class='lv1_new size_colon'>:</div></td>");
+						document.write("</tr></table></td>");
+					</script>
+				<tr></tr>
+				</tr>
+			</tbody></table>
+		</div>
+		 <div class="div2_indent">
+			<table><tbody>
+		<!--	<tr>
+				<td class="width_wifisecurity"><div class="lv2_new" ctrlflip="right" ctrlid="167">WPS</div></td>
+				<td>
+					<table><tr>
+				<script language="javascript" type="text/javascript">
+					document.write("<td><input ctrlflip='etc' name=\"nosave_WPSType1\" value=\"PBC\" onclick=\"changeWPS()\" type=\"radio\" class=\"radio\"></td>");
+					document.write('<td class="width_wifiSe_pbc"><div ctrlflip="right" ctrlid="168">Push Button Control</div></td>');
+					document.write("<td><input ctrlflip='etc' name=\"nosave_WPSType1\" value=\"PIN\" onclick=\"changeWPS()\" type=\"radio\" class=\"radio\"></td>");
+					document.write('<td class="width_wifiSe_pin" ctrlflip="right">');
+					document.write('<table><tr>');
+					document.write('	<td><div iid="169" ctrlid="469">PIN</div></td>');
+					document.write('	<td><div>(</div></td>');
+					document.write('	<td><div ctrlid="470">Station</div></td>');
+					document.write('	<td><div>)</div></td>');
+					document.write('</tr></table></td>');
+					document.write("<td class='width_wifiSe_txt' ctrlflip='etc'><input name=\"nosave_WPSPinCode1\" id=\"id_WPSPinCode1\" class=\"width_wifiSe_txt\" type=\"text\"></td>");
+					document.write("<td ctrlflip='etc'><input name=\"WPSBtn\" id=\"id_WPSBtn\" class='width_short_start' value=\"Start\" type=\"button\" onclick=\"startWPS()\"></td>");
+					document.write("<td><input ctrlflip='etc' name=\"nosave_WPSStart\" id=\"id_WPSStart\" value=\"0\" disabled=\"disabled\" type=\"hidden\"></td>");
+				</script>
+				</tr></table>
+				</td>
+			</tr>-->
+			<tr>
+				<td class="width_wifisecurity"><div class="lv2_new" ctrlflip="right" ctrlid="170">Authentication</div></td>
+				<td>
+					<select ar='1' ctrlflip="etc" id="id_WIFIACAuthType1" name="WIFIACAuthType1" onchange="Authen(1);change_auth(1);" class="width_select200">
+						<script language="javascript" type="text/javascript">
+							security_sel_option();
+						</script>
+					</select>
+				</td>
+			</tr>
+
+			<tr id="id_Securitymode1" style="display:none;">
+				<td><div class="lv2_new" ctrlflip="right" ctrlid="344">Security</div></td>
+				<td>
+					<table><tr>
+					<td><input ctrlflip="etc" id="id_acsercurityNon1" name="WIFIACEncrypType1" value="NONE" onclick="acencryptNone(1)" type="radio" class="radio"></td>
+					<td class="width_wifiSe_n"><div ctrlflip="right" ctrlid="179">NONE</div></td>
+					<td><input ctrlflip="etc" id="id_acsercurityWep1" name="WIFIACEncrypType1" value="WEP" onclick="acencryptWep(1)" type="radio" class="radio"></td>
+					<td class="width_wifiSe_wep"><div ctrlflip="right" ctrlid="180">WEP</div></td>
+					<td><input ctrlflip="etc" id="id_acsercurityTkip1" name="WIFIACEncrypType1" value="TKIP" onclick="acencryptTkip(1)" type="radio" class="radio"></td>
+					<td class="width_wifiSe_tkip"><div ctrlflip="right" ctrlid="181">TKIP</div></td>
+					<td><input ctrlflip="etc" id="id_acsercurityAes1" name="WIFIACEncrypType1" value="AES" onclick="acencryptAes(1)" type="radio" class="radio"></td>
+					<td class="width_wifiSe_aes"><div ctrlflip="right" ctrlid="182">AES</div></td>
+					<td><input ctrlflip="etc" id="id_acsercurityTkipAes1" name="WIFIACEncrypType1" value="TKIPAES" onclick="acencryptAes(1)" type="radio" class="radio"></td>
+					<td><div ctrlflip="right" ctrlid="183">TKIP/AES Mixed</div></td>
+					</tr></table>
+				</td>
+			</tr>
+			<script language="javascript" type="text/javascript">
+				show_802_11w_sha256(1);
+			</script>
+			</tbody></table>
+
+			<table><tbody>
+			<tr></tr>
+			<tr>
+				<td><div class="lv2_new" ctrlflip="right" ctrlid="189">WPA-PSK/WPA2-PSK&nbsp;<br>&nbsp;</div></td>
+				<td><div class="lv2_new" ctrlflip="right" ctrlid="190">Preshared Key:&nbsp;<br>&nbsp;</div></td>
+				<td colspan="3" ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACWPAPSK1" name="WIFIACWPAPSK1" class="width_wifiSe_pkey" size="32" maxlength="63" type="password">
+				<script language="javascript" type="text/javascript">
+					document.write(vWlanpw);
+				</script>
+				</td>
+			</tr>
+			</tbody></table>
+
+			<table><tbody id="id_WEPSecurity1" style="display:none;">
+			<tr>
+				<td class="width_wifisecurity"><div class="lv2_new" ctrlflip="right" ctrlid="180">WEP</div></td>
+				<td class="width_wifisecurity2">
+					<table><tr>
+						<td><div class="lv2_new" ctrlflip="etc" ctrlid="184">Passphrase Key</div></td>
+						<td><div class="lv2_new">:</div></td>
+					</tr></table>
+				</td>
+				<td class="width_wifisecurity3" ctrlflip="etc">
+					<select ar='1' disabled="disabled" name="WIFIWEPPassphraseLen1" id="id_weplLength1"	 class="width_wifiSe_bits">
+						<option value="64">64 Bits</option>
+						<option value="128">128 Bits</option>
+						<option value="0">OPEN</option> <!-- WEP-OPEN -->
+					</select>
+				</td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_Passphrase1" name="WIFIWEPPassphraseKey1" class="width_text200" size="32" maxlength="32" type="password">
+				<script language="javascript" type="text/javascript">
+					document.write(vWlanweppw);
+				</script>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" name="genBtn1" id="id_genBtn1" class="width_buttoncreate" value="Generate" onclick="genPassphraseKey(1)" type="button">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td ctrlflip="etc">
+					<select ar='1' disabled="disabled" name="WIFIACWEPKeyIndex1" id="id_WIFIACWEPKeyIndex1" class="width_wifiSe_keys">
+						<option value="1">Key1</option>
+						<option value="2">Key2</option>
+						<option value="3">Key3</option>
+						<option value="4">Key4</option>
+					</select>
+				</td>
+				<td ctrlflip="right"><div class="lv2_new" ctrlid="185">Key1</div></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACWEPKey1_S1" name="WIFIACWEPKey1_S1" class="width_text200" size="26" maxlength="26" type="text">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td ctrlflip="right"><div class="lv2_new" ctrlid="186">Key2</div></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACWEPKey2_S1" name="WIFIACWEPKey2_S1" class="width_text200" size="26" maxlength="26" type="text">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td ctrlflip="right"><div class="lv2_new" ctrlid="187">Key3</div></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACWEPKey3_S1" name="WIFIACWEPKey3_S1" class="width_text200" size="26" maxlength="26" type="text">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td ctrlflip="right"><div class="lv2_new" ctrlid="188">Key4</div></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACWEPKey4_S1" name="WIFIACWEPKey4_S1" class="width_text200" size="26" maxlength="26" type="text">
+				</td>
+			</tr>
+			</tbody></table>
+
+			<table><tbody>
+			<tr></tr>
+			<tr>
+				<td class="width_wifisecurity" ctrlflip="right"><div class="lv2_new" ctrlid="191">802.1X</div></td>
+				<td ctrlflip="right"><div class="lv2_new" ctrlid="193">Interface</div></td>
+				<td><select class='width_routeS_selectif' name="WIFIACRadiusWanif1" id="id_WIFIACRadiusWanif1" value='' class='width_select80'>
+						<script>
+							faceinter();
+						</script>
+					  </select>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td class="width_wifisecurity2" ctrlflip="right"><div class="lv2_new" ctrlid="192">Radius Server</div></td>
+				<td dir='ltr'>
+					<script language="javascript" type="text/javascript">
+						var radiusIP = new Array();
+						var RadiusServerAddress = fvt_meta_config('wlanac_802_1x_server');
+						radiusIP = RadiusServerAddress.split(".");
+						document.write("<input type='text' id='id_WIFIACRadiusServer1_item1' class='width_ip1' size='2' value='"+radiusIP[0]+"' maxlength='3'/>.");
+						document.write("<input type='text' id='id_WIFIACRadiusServer1_item2' class='width_ip1' size='2' value='"+radiusIP[1]+"' maxlength='3'/>.");
+						document.write("<input type='text' id='id_WIFIACRadiusServer1_item3' class='width_ip1' size='2' value='"+radiusIP[2]+"' maxlength='3'/>.");
+						document.write("<input type='text' id='id_WIFIACRadiusServer1_item4' class='width_ip1' size='2' value='"+radiusIP[3]+"' maxlength='3'/>");
+						document.write("<input type='hidden' id='id_WIFIACRadiusServer1' name='WIFIACRadiusServer1' value='"+RadiusServerAddress+"'>");
+					</script>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td ctrlflip="right"><div class="lv2_new" ctrlid="193">Radius Port</div></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACRadiusPort1" name="WIFIACRadiusPort1" class="width_textip2" size="15" maxlength="5" type="text">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td	 ctrlflip="right"><div class="lv2_new" ctrlid="194">Radius Key</div></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACRadiusKey1" name="WIFIACRadiusKey1" class="width_textip2" size="15" value="12345" maxlength="64" type="password">
+				<script language="javascript" type="text/javascript">
+					document.write(vradiuskey);
+				</script>
+				</td>
+			</tr>
+			</tbody></table>
+		</div>
+		<!--wifi 2------------------------------------------------->
+	<div id="wifi_table2" class="lv3_new" style="display:none">
+		<div><hr class="hr2"></div>
+		<div>
+			<table><tbody>
+				<tr>
+					<script language="javascript" type="text/javascript">
+						document.write("<td><table><tr>");
+						document.write(" <td><table dir='ltr'><tr>");
+						document.write("<td><div ctrlflip='etc' class='lv1_new'>SSID</div></td>");
+						document.write("<td><div ctrlflip='etc' class='lv1_new'>&nbsp;2&nbsp;</div></td>");
+						document.write("<td><div class='lv1_new'>(</div></td>");
+						document.write("<td><div ctrlflip='etc' class='lv1_new'>"+fvt_meta_config('wlanac_vap0_ssid')+"</div></td>");
+						document.write("<td><div class='lv1_new'>)</div></td>");
+						document.write(" </tr></table></td>");
+						document.write("<td><div class='lv1_new size_colon'>:</div></td>");
+						document.write("</tr></table></td>");
+					</script>
+				<tr></tr>
+				</tr>
+			</tbody></table>
+		</div>
+		<div class="div2_indent">
+			<table><tbody>
+			<tr>
+				<td class="width_wifisecurity"><div class="lv2_new" ctrlflip="right" ctrlid="170">Authentication</div></td>
+				<td>
+					<select ar='1' ctrlflip="etc" id="id_WIFIACAuthType2" name="WIFIACAuthType2" onchange="Authen(2);change_auth(2);" class="width_select200">
+					<script language="javascript" type="text/javascript">
+						security_sel_option();
+					</script>
+					</select>
+				</td>
+			</tr>
+<!--					<table><tr>
+						<td><input ctrlflip="etc" name="WIFIACAuthType2" value="OPEN" onclick="Authen(2)" type="radio" class="radio"></td>
+						<td class='width_wifiSe_o'><div ctrlflip="right" ctrlid="340">Open</div></td>
+						<td><input ctrlflip="etc" name="WIFIACAuthType2" value="SHARED" onclick="Authen(2)" type="radio" class="radio"></td>
+						<td class='width_wifiSe_s'><div ctrlflip="etc" ctrlid="172">Shared</div></td>
+						<td><input ctrlflip="etc" name="WIFIACAuthType2" value="WPAPSK" onclick="Authen(2)" type="radio" class="radio"></td>
+						<td class='width_wifiSe_wpapsk'><div ctrlflip="right" ctrlid="173">WPAPSK</div></td>
+						<td><input ctrlflip="etc" name="WIFIACAuthType2" value="WPA2PSK" onclick="Authen(2)" type="radio" class="radio"></td>
+						<td class='width_wifiSe_wpa2'><div ctrlflip="right" ctrlid="174">WPA2PSK</div></td>
+					</tr></table>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<table><tr>
+							<td><input ctrlflip="etc" name="WIFIACAuthType2" value="WPAPSKWPA2PSK" onclick="Authen(2)" type="radio" class="radio"></td>
+							<td class="width_wifiSe_wpa22M"><div ctrlflip="right" ctrlid="175">WPAPSK/WPA2PSK Mixed</div></td>
+						</tr></table>
+					</td>
+				</tr>-->
+			<tr id="id_Securitymode2" style="display:none;">
+				<td><div class="lv2_new" ctrlflip="right" ctrlid="344">Security</div></td>
+				<td>
+				<table><tr>
+					<td><input ctrlflip="etc" id="id_acsercurityNon2" name="WIFIACEncrypType2" value="NONE" onclick="acencryptNone(2)" type="radio" class="radio"></td>
+					<td class="width_wifiSe_n"><div ctrlflip="right" ctrlid="179">NONE</div></td>
+					<td><input ctrlflip="etc" id="id_acsercurityWep2" name="WIFIACEncrypType2" value="WEP" onclick="acencryptWep(2)" type="radio" class="radio"></td>
+					<td class="width_wifiSe_wep"><div ctrlflip="right" ctrlid="180">WEP</div></td>
+					<td><input ctrlflip="etc" id="id_acsercurityTkip2" name="WIFIACEncrypType2" value="TKIP" onclick="acencryptTkip(2)" type="radio" class="radio"></td>
+					<td class="width_wifiSe_tkip"><div ctrlflip="right" ctrlid="181">TKIP</div></td>
+					<td><input ctrlflip="etc" id="id_acsercurityAes2" name="WIFIACEncrypType2" value="AES" onclick="acencryptAes(2)" type="radio" class="radio"></td>
+					<td class="width_wifiSe_aes"><div ctrlflip="right" ctrlid="182">AES</div></td>
+					<td><input ctrlflip="etc" id="id_acsercurityTkipAes2" name="WIFIACEncrypType2" value="TKIPAES" onclick="acencryptAes(2)" type="radio" class="radio"></td>
+					<td><div ctrlflip="right" ctrlid="183">TKIP/AES Mixed</div></td>
+				</tr></table>
+				</td>
+			</tr>
+			<script language="javascript" type="text/javascript">
+				show_802_11w_sha256(2);
+			</script>
+			</tbody></table>
+
+			<table><tbody>
+			<tr></tr>
+			<tr>
+				<td><div class="lv2_new" ctrlflip="right" ctrlid="189">WPA-PSK/WPA2-PSK&nbsp;<br>&nbsp;</div></td>
+				<td><div class="lv2_new" ctrlflip="right" ctrlid="190">Preshared Key:&nbsp;<br>&nbsp;</div></td>
+				<td colspan="3" ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACWPAPSK2" name="WIFIACWPAPSK2" class="width_wifiSe_pkey" size="32" maxlength="63" type="password">
+				<script language="javascript" type="text/javascript">
+					document.write(vWlanpw);
+				</script>
+				</td>
+			</tr>
+			</tbody></table>
+
+			<table><tbody id="id_WEPSecurity2" style="display:none;">
+			<tr>
+				<td class="width_wifisecurity"><div class="lv2_new" ctrlflip="right" ctrlid="180">WEP</div></td>
+				<td class="width_wifisecurity2">
+					<table><tr>
+						<td><div class="lv2_new" ctrlflip="etc" ctrlid="184">Passphrase Key</div></td>
+						<td><div class="lv2_new">:</div></td>
+					</tr></table>
+				</td>
+				<td class="width_wifisecurity3" ctrlflip="etc">
+					<select ar='1' disabled="disabled" name="WIFIWEPPassphraseLen2" id="id_weplLength2"	 class="width_wifiSe_bits">
+						<option value="64">64 Bits</option>
+						<option value="128">128 Bits</option>
+						<option value="0">OPEN</option> <!-- WEP-OPEN -->
+					</select>
+				</td>
+				<td>
+					<input ctrlflip="etc" disabled="disabled" id="id_Passphrase2" name="WIFIWEPPassphraseKey2" class="width_text200" size="32" maxlength="32" type="password">
+				<script language="javascript" type="text/javascript">
+					document.write(vWlanweppw);
+				</script>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" name="genBtn2" id="id_genBtn2" class="width_buttoncreate" value="Generate" onclick="genPassphraseKey(2)" type="button">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td ctrlflip="etc">
+					<select ar='1' disabled="disabled" name="WIFIACWEPKeyIndex2" id="id_WIFIACWEPKeyIndex2" class="width_wifiSe_keys">
+						<option value="1">Key1</option>
+						<option value="2">Key2</option>
+						<option value="3">Key3</option>
+						<option value="4">Key4</option>
+					</select>
+				</td>
+				<td><div class="lv2_new" ctrlflip="right" ctrlid="185">Key1</div></td>
+				<td>
+					<input ctrlflip="etc" disabled="disabled" id="id_WIFIACWEPKey1_S2" name="WIFIACWEPKey1_S2" class="width_text200" size="26" maxlength="26" type="text">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td><div class="lv2_new" ctrlflip="right" ctrlid="186">Key2</div></td>
+				<td>
+					<input ctrlflip="etc" disabled="disabled" id="id_WIFIACWEPKey2_S2" name="WIFIACWEPKey2_S2" class="width_text200" size="26" maxlength="26" type="text">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td><div class="lv2_new" ctrlflip="right" ctrlid="187">Key3</div></td>
+				<td>
+					<input ctrlflip="etc" disabled="disabled" id="id_WIFIACWEPKey3_S2" name="WIFIACWEPKey3_S2" class="width_text200" size="26" maxlength="26" type="text">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td><div class="lv2_new" ctrlflip="right" ctrlid="188">Key4</div></td>
+				<td>
+					<input ctrlflip="etc" disabled="disabled" id="id_WIFIACWEPKey4_S2" name="WIFIACWEPKey4_S2" class="width_text200" size="26" maxlength="26" type="text">
+				</td>
+			</tr>
+			</tbody></table>
+
+			<table><tbody>
+			<tr></tr>
+			<tr>
+				<td class="width_wifisecurity" ctrlflip="right"><div class="lv2_new" ctrlid="191">802.1X</div></td>
+				<td ctrlflip="right"><div class="lv2_new" ctrlid="193">Interface</div></td>
+				<td><select class='width_routeS_selectif' name="WIFIACRadiusWanif2" id="id_WIFIACRadiusWanif2" value='' class='width_select80'>
+						<script>
+							faceinter();
+						</script>
+					  </select>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td class="width_wifisecurity2" ctrlflip="right"><div class="lv2_new" ctrlid="192">Radius Server</div></td>
+				<td dir='ltr'>
+					<script language="javascript" type="text/javascript">
+						var radiusIP = new Array();
+						var RadiusServerAddress = fvt_meta_config('wlanac_vap0_802_1x_server');
+						radiusIP = RadiusServerAddress.split(".");
+						document.write("<input type='text' id='id_WIFIACRadiusServer2_item1' class='width_ip1' size='2' value='"+radiusIP[0]+"' maxlength='3'/>.");
+						document.write("<input type='text' id='id_WIFIACRadiusServer2_item2' class='width_ip1' size='2' value='"+radiusIP[1]+"' maxlength='3'/>.");
+						document.write("<input type='text' id='id_WIFIACRadiusServer2_item3' class='width_ip1' size='2' value='"+radiusIP[2]+"' maxlength='3'/>.");
+						document.write("<input type='text' id='id_WIFIACRadiusServer2_item4' class='width_ip1' size='2' value='"+radiusIP[3]+"' maxlength='3'/>");
+						document.write("<input type='hidden' id='id_WIFIACRadiusServer2' name='WIFIACRadiusServer2' value='"+RadiusServerAddress+"'>");
+					</script>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td ctrlflip="right"><div class="lv2_new" ctrlid="193">Radius Port</div></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACRadiusPort2" name="WIFIACRadiusPort2" class="width_textip2" size="15" maxlength="5" type="text">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td	 ctrlflip="right"><div class="lv2_new" ctrlid="194">Radius Key</div></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACRadiusKey2" name="WIFIACRadiusKey2" class="width_textip2" size="15" value="12345" maxlength="64" type="password">
+				<script language="javascript" type="text/javascript">
+					document.write(vradiuskey);
+				</script>
+				</td>
+			</tr>
+			</tbody></table>
+		</div>
+	</div>
+
+		<!--wifi 3---->
+	<div id="wifi_table3" class="lv3_new" style="display:none">
+		<div><hr class="hr2"></div>
+		<div>
+			<table><tbody>
+				<tr>
+					<script language="javascript" type="text/javascript">
+						document.write("<td><table><tr>");
+						document.write(" <td><table dir='ltr'><tr>");
+						document.write("<td><div ctrlflip='etc' class='lv1_new'>SSID</div></td>");
+						document.write("<td><div ctrlflip='etc' class='lv1_new'>&nbsp;3&nbsp;</div></td>");
+						document.write("<td><div class='lv1_new'>(</div></td>");
+						document.write("<td><div ctrlflip='etc' class='lv1_new'>"+fvt_meta_config('wlanac_vap1_ssid')+"</div></td>");
+						document.write("<td><div class='lv1_new'>)</div></td>");
+						document.write(" </tr></table></td>");
+						document.write("<td><div class='lv1_new size_colon'>:</div></td>");
+						document.write("</tr></table></td>");
+					</script>
+				<tr></tr>
+				</tr>
+			</tbody></table>
+		</div>
+		<div class="div2_indent">
+			<table><tbody>
+			<tr>
+					<td class="width_wifisecurity"><div class="lv2_new" ctrlflip="right" ctrlid="170">Authentication</div></td>
+					<td>
+					<select ar='1' ctrlflip="etc" id="id_WIFIACAuthType3" name="WIFIACAuthType3" onchange="Authen(3);change_auth(3);" class="width_select200">
+						<script language="javascript" type="text/javascript">
+							security_sel_option();
+						</script>
+					</select>
+				</td>
+			</tr>
+<!--					<table><tr>
+						<td><input ctrlflip="etc" name="WIFIACAuthType3" value="OPEN" onclick="Authen(3)" type="radio" class="radio"></td>
+						<td class='width_wifiSe_o'><div ctrlflip="right" ctrlid="340">Open</div></td>
+						<td><input ctrlflip="etc" name="WIFIACAuthType3" value="SHARED" onclick="Authen(3)" type="radio" class="radio"></td>
+						<td class='width_wifiSe_s'><div ctrlflip="etc" ctrlid="172">Shared</div></td>
+						<td><input ctrlflip="etc" name="WIFIACAuthType3" value="WPAPSK" onclick="Authen(3)" type="radio" class="radio"></td>
+						<td class='width_wifiSe_wpapsk'><div ctrlflip="right" ctrlid="173">WPAPSK</div></td>
+						<td><input ctrlflip="etc" name="WIFIACAuthType3" value="WPA2PSK" onclick="Authen(3)" type="radio" class="radio"></td>
+						<td class='width_wifiSe_wpa2'><div ctrlflip="right" ctrlid="174">WPA2PSK</div></td>
+					</tr></table>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<table><tr>
+							<td><input ctrlflip="etc" name="WIFIACAuthType3" value="WPAPSKWPA2PSK" onclick="Authen(3)" type="radio" class="radio"></td>
+							<td class="width_wifiSe_wpa22M"><div ctrlflip="right" ctrlid="175">WPAPSK/WPA2PSK Mixed</div></td>
+						</tr></table>
+					</td>
+				</tr>-->
+			<tr id="id_Securitymode3" style="display:none;">
+				<td><div class="lv2_new" ctrlflip="right" ctrlid="344">Security</div></td>
+				<td>
+				<table><tr>
+					<td><input ctrlflip="etc" id="id_acsercurityNon3" name="WIFIACEncrypType3" value="NONE" onclick="acencryptNone(3)" type="radio" class="radio"></td>
+					<td class="width_wifiSe_n"><div ctrlflip="right" ctrlid="179">NONE</div></td>
+					<td><input ctrlflip="etc" id="id_acsercurityWep3" name="WIFIACEncrypType3" value="WEP" onclick="acencryptWep(3)" type="radio" class="radio"></td>
+					<td class="width_wifiSe_wep"><div ctrlflip="right" ctrlid="180">WEP</div></td>
+					<td><input ctrlflip="etc" id="id_acsercurityTkip3" name="WIFIACEncrypType3" value="TKIP" onclick="acencryptTkip(3)" type="radio" class="radio"></td>
+					<td class="width_wifiSe_tkip"><div ctrlflip="right" ctrlid="181">TKIP</div></td>
+					<td><input ctrlflip="etc" id="id_acsercurityAes3" name="WIFIACEncrypType3" value="AES" onclick="acencryptAes(3)" type="radio" class="radio"></td>
+					<td class="width_wifiSe_aes"><div ctrlflip="right" ctrlid="182">AES</div></td>
+					<td><input ctrlflip="etc" id="id_acsercurityTkipAes3" name="WIFIACEncrypType3" value="TKIPAES" onclick="acencryptAes(3)" type="radio" class="radio"></td>
+					<td><div ctrlflip="right" ctrlid="183">TKIP/AES Mixed</div></td>
+				</tr></table>
+				</td>
+			</tr>
+			<script language="javascript" type="text/javascript">
+				show_802_11w_sha256(3);
+			</script>
+			</tbody></table>
+
+			<table><tbody>
+			<tr></tr>
+			<tr>
+				<td><div class="lv2_new" ctrlflip="right" ctrlid="189">WPA-PSK/WPA2-PSK&nbsp;<br>&nbsp;</div></td>
+				<td><div class="lv2_new" ctrlflip="right" ctrlid="190">Preshared Key:&nbsp;<br>&nbsp;</div></td>
+				<td colspan="3" ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACWPAPSK3" name="WIFIACWPAPSK3" class="width_wifiSe_pkey" size="32" maxlength="63" type="password">
+				<script language="javascript" type="text/javascript">
+					document.write(vWlanpw);
+				</script>
+				</td>
+			</tr>
+			</tbody></table>
+
+			<table><tbody id="id_WEPSecurity3" style="display:none;">
+			<tr>
+				<td class="width_wifisecurity"><div class="lv2_new" ctrlflip="right" ctrlid="180">WEP</div></td>
+				<td class="width_wifisecurity2">
+					<table><tr>
+						<td><div class="lv2_new" ctrlflip="etc" ctrlid="184">Passphrase Key</div></td>
+						<td><div class="lv2_new">:</div></td>
+					</tr></table>
+				</td>
+				<td class="width_wifisecurity3" ctrlflip="etc">
+					<select ar='1' disabled="disabled" name="WIFIWEPPassphraseLen3" id="id_weplLength3"	 class="width_wifiSe_bits">
+						<option value="64">64 Bits</option>
+						<option value="128">128 Bits</option>
+						<option value="0">OPEN</option> <!-- WEP-OPEN -->
+					</select>
+				</td>
+				<td>
+					<input ctrlflip="etc" disabled="disabled" id="id_Passphrase3" name="WIFIWEPPassphraseKey3" class="width_text200" size="32" maxlength="32" type="password">
+				<script language="javascript" type="text/javascript">
+					document.write(vWlanweppw);
+				</script>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" name="genBtn3" id="id_genBtn3" class="width_buttoncreate" value="Generate" onclick="genPassphraseKey(3)" type="button">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td ctrlflip="etc">
+					<select ar='1' disabled="disabled" name="WIFIACWEPKeyIndex3" id="id_WIFIACWEPKeyIndex3" class="width_wifiSe_keys">
+						<option value="1">Key1</option>
+						<option value="2">Key2</option>
+						<option value="3">Key3</option>
+						<option value="4">Key4</option>
+					</select>
+				</td>
+				<td><div class="lv2_new" ctrlflip="right" ctrlid="185">Key1</div></td>
+				<td>
+					<input ctrlflip="etc" disabled="disabled" id="id_WIFIACWEPKey1_S3" name="WIFIACWEPKey1_S3" class="width_text200" size="26" maxlength="26" type="text">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td ctrlflip="right"><div class="lv2_new" ctrlid="186">Key2</div></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACWEPKey2_S3" name="WIFIACWEPKey2_S3" class="width_text200" size="26" maxlength="26" type="text">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td ctrlflip="right"><div class="lv2_new" ctrlid="187">Key3</div></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACWEPKey3_S3" name="WIFIACWEPKey3_S3" class="width_text200" size="26" maxlength="26" type="text">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td ctrlflip="right"><div class="lv2_new" ctrlid="188">Key4</div></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACWEPKey4_S3" name="WIFIACWEPKey4_S3" class="width_text200" size="26" maxlength="26" type="text">
+				</td>
+			</tr>
+			</tbody></table>
+
+			<table><tbody>
+			<tr></tr>
+			<tr>
+				<td class="width_wifisecurity" ctrlflip="right"><div class="lv2_new" ctrlid="191">802.1X</div></td>
+				<td ctrlflip="right"><div class="lv2_new" ctrlid="193">Interface</div></td>
+				<td><select class='width_routeS_selectif' name="WIFIACRadiusWanif3" id="id_WIFIACRadiusWanif3" value='' class='width_select80'>
+						<script>
+							faceinter();
+						</script>
+					  </select>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td class="width_wifisecurity2" ctrlflip="right"><div class="lv2_new" ctrlid="192">Radius Server</div></td>
+				<td dir='ltr'>
+					<script language="javascript" type="text/javascript">
+						var radiusIP = new Array();
+						var RadiusServerAddress = fvt_meta_config('wlanac_vap1_802_1x_server');
+						radiusIP = RadiusServerAddress.split(".");
+						document.write("<input type='text' id='id_WIFIACRadiusServer3_item1' class='width_ip1' size='2' value='"+radiusIP[0]+"' maxlength='3'/>.");
+						document.write("<input type='text' id='id_WIFIACRadiusServer3_item2' class='width_ip1' size='2' value='"+radiusIP[1]+"' maxlength='3'/>.");
+						document.write("<input type='text' id='id_WIFIACRadiusServer3_item3' class='width_ip1' size='2' value='"+radiusIP[2]+"' maxlength='3'/>.");
+						document.write("<input type='text' id='id_WIFIACRadiusServer3_item4' class='width_ip1' size='2' value='"+radiusIP[3]+"' maxlength='3'/>");
+						document.write("<input type='hidden' id='id_WIFIACRadiusServer3' name='WIFIACRadiusServer3' value='"+RadiusServerAddress+"'>");
+					</script>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td ctrlflip="right"><div class="lv2_new" ctrlid="193">Radius Port</div></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACRadiusPort3" name="WIFIACRadiusPort3" class="width_textip2" size="15" maxlength="5" type="text">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td	 ctrlflip="right"><div class="lv2_new" ctrlid="194">Radius Key</div></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACRadiusKey3" name="WIFIACRadiusKey3" class="width_textip2" size="15" value="12345" maxlength="64" type="password">
+				<script language="javascript" type="text/javascript">
+					document.write(vradiuskey);
+				</script>
+				</td>
+			</tr>
+			</tbody></table>
+		</div>
+	</div>
+		<!--wifi 4	-->
+	<div id="wifi_table4" class="lv3_new" style="display:none">
+		<div><hr class="hr2"></div>
+		<div>
+			<table><tbody>
+				<tr>
+					<script language="javascript" type="text/javascript">
+						document.write("<td><table><tr>");
+						document.write(" <td><table dir='ltr'><tr>");
+						document.write("<td><div ctrlflip='etc' class='lv1_new'>SSID</div></td>");
+						document.write("<td><div ctrlflip='etc' class='lv1_new'>&nbsp;4&nbsp;</div></td>");
+						document.write("<td><div class='lv1_new'>(</div></td>");
+						document.write("<td><div ctrlflip='etc' class='lv1_new'>"+fvt_meta_config('wlanac_vap2_ssid')+"</div></td>");
+						document.write("<td><div class='lv1_new'>)</div></td>");
+						document.write(" </tr></table></td>");
+						document.write("<td><div class='lv1_new size_colon'>:</div></td>");
+						document.write("</tr></table></td>");
+					</script>
+				<tr></tr>
+				</tr>
+			</tbody></table>
+		</div>
+		<div class="div2_indent">
+			<table><tbody>
+			<tr>
+				<td class="width_wifisecurity"><div class="lv2_new" ctrlflip="right" ctrlid="170">Authentication</div></td>
+				<td>
+				<select ar='1' ctrlflip="etc" id="id_WIFIACAuthType4" name="WIFIACAuthType4" onchange="Authen(4);change_auth(4);" class="width_select200">
+					<script language="javascript" type="text/javascript">
+						security_sel_option();
+					</script>
+				</select>
+				</td>
+			</tr>
+<!--					<table><tr>
+						<td><input ctrlflip="etc" name="WIFIACAuthType4" value="OPEN" onclick="Authen(4)" type="radio" class="radio"></td>
+						<td class='width_wifiSe_o'><div ctrlflip="right" ctrlid="340">Open</div></td>
+						<td><input ctrlflip="etc" name="WIFIACAuthType4" value="SHARED" onclick="Authen(4)" type="radio" class="radio"></td>
+						<td class='width_wifiSe_s'><div ctrlflip="etc" ctrlid="172">Shared</div></td>
+						<td><input ctrlflip="etc" name="WIFIACAuthType4" value="WPAPSK" onclick="Authen(4)" type="radio" class="radio"></td>
+						<td class='width_wifiSe_wpapsk'><div ctrlflip="right" ctrlid="173">WPAPSK</div></td>
+						<td><input ctrlflip="etc" name="WIFIACAuthType4" value="WPA2PSK" onclick="Authen(4)" type="radio" class="radio"></td>
+						<td class='width_wifiSe_wpa2'><div ctrlflip="right" ctrlid="174">WPA2PSK</div></td>
+					</tr></table>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td>
+						<table><tr>
+							<td><input ctrlflip="etc" name="WIFIACAuthType4" value="WPAPSKWPA2PSK" onclick="Authen(4)" type="radio" class="radio"></td>
+							<td class="width_wifiSe_wpa22M"><div ctrlflip="right" ctrlid="175">WPAPSK/WPA2PSK Mixed</div></td>
+						</tr></table>
+					</td>
+				</tr>-->
+			<tr id="id_Securitymode4" style="display:none;">
+				<td><div class="lv2_new" ctrlflip="right" ctrlid="344">Security</div></td>
+				<td>
+				<table><tr>
+					<td><input ctrlflip="etc" id="id_acsercurityNon4" name="WIFIACEncrypType4" value="NONE" onclick="acencryptNone(4)" type="radio" class="radio"></td>
+					<td class="width_wifiSe_n"><div ctrlflip="right" ctrlid="179">NONE</div></td>
+					<td><input ctrlflip="etc" id="id_acsercurityWep4" name="WIFIACEncrypType4" value="WEP" onclick="acencryptWep(4)" type="radio" class="radio"></td>
+					<td class="width_wifiSe_wep"><div ctrlflip="right" ctrlid="180">WEP</div></td>
+					<td><input ctrlflip="etc" id="id_acsercurityTkip4" name="WIFIACEncrypType4" value="TKIP" onclick="acencryptTkip(4)" type="radio" class="radio"></td>
+					<td class="width_wifiSe_tkip"><div ctrlflip="right" ctrlid="181">TKIP</div></td>
+					<td><input ctrlflip="etc" id="id_acsercurityAes4" name="WIFIACEncrypType4" value="AES" onclick="acencryptAes(4)" type="radio" class="radio"></td>
+					<td class="width_wifiSe_aes"><div ctrlflip="right" ctrlid="182">AES</div></td>
+					<td><input ctrlflip="etc" id="id_acsercurityTkipAes4" name="WIFIACEncrypType4" value="TKIPAES" onclick="acencryptAes(4)" type="radio" class="radio"></td>
+					<td><div ctrlflip="right" ctrlid="183">TKIP/AES Mixed</div></td>
+				</tr></table>
+				</td>
+			</tr>
+			<script language="javascript" type="text/javascript">
+				show_802_11w_sha256(4);
+			</script>
+			</tbody></table>
+
+			<table><tbody>
+			<tr></tr>
+			<tr>
+				<td><div class="lv2_new" ctrlflip="right" ctrlid="189">WPA-PSK/WPA2-PSK&nbsp;<br>&nbsp;</div></td>
+				<td><div class="lv2_new" ctrlflip="right" ctrlid="190">Preshared Key:&nbsp;<br>&nbsp;</div></td>
+				<td colspan="3" ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACWPAPSK4" name="WIFIACWPAPSK4" class="width_wifiSe_pkey" size="32" maxlength="63" type="password">
+				<script language="javascript" type="text/javascript">
+					document.write(vWlanpw);
+				</script>
+				</td>
+			</tr>
+			</tbody></table>
+
+			<table><tbody id="id_WEPSecurity4" style="display:none;">
+			<tr>
+				<td class="width_wifisecurity"><div class="lv2_new" ctrlflip="right" ctrlid="180">WEP</div></td>
+				<td class="width_wifisecurity2">
+					<table><tr>
+						<td><div class="lv2_new" ctrlflip="etc" ctrlid="184">Passphrase Key</div></td>
+						<td><div class="lv2_new">:</div></td>
+					</tr></table>
+				</td>
+				<td class="width_wifisecurity3" ctrlflip="etc">
+					<select ar='1' disabled="disabled" name="WIFIWEPPassphraseLen4" id="id_weplLength4"	 class="width_wifiSe_bits">
+						<option value="64">64 Bits</option>
+						<option value="128">128 Bits</option>
+						<option value="0">OPEN</option> <!-- WEP-OPEN -->
+					</select>
+				</td>
+				<td>
+					<input ctrlflip="etc" disabled="disabled" id="id_Passphrase4" name="WIFIWEPPassphraseKey4" class="width_text200" size="32" maxlength="32" type="password">
+				<script language="javascript" type="text/javascript">
+					document.write(vWlanweppw);
+				</script>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" name="genBtn4" id="id_genBtn4" class="width_buttoncreate" value="Generate" onclick="genPassphraseKey(4)" type="button">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td ctrlflip="etc">
+					<select ar='1' disabled="disabled" name="WIFIACWEPKeyIndex4" id="id_WIFIACWEPKeyIndex4" class="width_wifiSe_keys">
+						<option value="1">Key1</option>
+						<option value="2">Key2</option>
+						<option value="3">Key3</option>
+						<option value="4">Key4</option>
+					</select>
+				</td>
+				<td ctrlflip="right"><div class="lv2_new" ctrlid="185">Key1</div></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACWEPKey1_S4" name="WIFIACWEPKey1_S4" class="width_text200" size="26" maxlength="26" type="text">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td ctrlflip="right"><div class="lv2_new" ctrlid="186">Key2</div></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACWEPKey2_S4" name="WIFIACWEPKey2_S4" class="width_text200" size="26" maxlength="26" type="text">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td ctrlflip="right"><div class="lv2_new" ctrlid="187">Key3</div></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACWEPKey3_S4" name="WIFIACWEPKey3_S4" class="width_text200" size="26" maxlength="26" type="text">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td ctrlflip="right"><div class="lv2_new" ctrlid="188">Key4</div></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACWEPKey4_S4" name="WIFIACWEPKey4_S4" class="width_text200" size="26" maxlength="26" type="text">
+				</td>
+			</tr>
+			</tbody></table>
+
+			<table><tbody>
+			<tr></tr>
+			<tr>
+				<td class="width_wifisecurity" ctrlflip="right"><div class="lv2_new" ctrlid="191">802.1X</div></td>
+				<td ctrlflip="right"><div class="lv2_new" ctrlid="193">Interface</div></td>
+				<td><select class='width_routeS_selectif' name="WIFIACRadiusWanif4" id="id_WIFIACRadiusWanif4" value='' class='width_select80'>
+						<script>
+							faceinter();
+						</script>
+					  </select>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td class="width_wifisecurity2" ctrlflip="right"><div class="lv2_new" ctrlid="192">Radius Server</div></td>
+				<td dir='ltr'>
+					<script language="javascript" type="text/javascript">
+						var radiusIP = new Array();
+						var RadiusServerAddress = fvt_meta_config('wlanac_vap2_802_1x_server');
+						radiusIP = RadiusServerAddress.split(".");
+						document.write("<input type='text' id='id_WIFIACRadiusServer4_item1' class='width_ip1' size='2' value='"+radiusIP[0]+"' maxlength='3'/>.");
+						document.write("<input type='text' id='id_WIFIACRadiusServer4_item2' class='width_ip1' size='2' value='"+radiusIP[1]+"' maxlength='3'/>.");
+						document.write("<input type='text' id='id_WIFIACRadiusServer4_item3' class='width_ip1' size='2' value='"+radiusIP[2]+"' maxlength='3'/>.");
+						document.write("<input type='text' id='id_WIFIACRadiusServer4_item4' class='width_ip1' size='2' value='"+radiusIP[3]+"' maxlength='3'/>");
+						document.write("<input type='hidden' id='id_WIFIACRadiusServer4' name='WIFIACRadiusServer4' value='"+RadiusServerAddress+"'>");
+					</script>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td ctrlflip="right"><div class="lv2_new" ctrlid="193">Radius Port</div></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACRadiusPort4" name="WIFIACRadiusPort4" class="width_textip2" size="15" maxlength="5" type="text">
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td	 ctrlflip="right"><div class="lv2_new" ctrlid="194">Radius Key</div></td>
+				<td ctrlflip="etc">
+					<input disabled="disabled" id="id_WIFIACRadiusKey4" name="WIFIACRadiusKey4" class="width_textip2" size="15" value="12345" maxlength="64" type="password">
+				<script language="javascript" type="text/javascript">
+					document.write(vradiuskey);
+				</script>
+				</td>
+			</tr>
+			</tbody></table>
+		</div>
+	</div>
+
+<!--wifi 5 ~ 8 -->
+
+</div>
+   <div class="top_cwmp2">
+	<table><tbody>
+		<tr>
+			<td class="button_center">
+				<input ctrlflip="etc" type="submit" onclick="wifiac_set()" name="applybtn" value="Apply Changes" class="width_apply">
+			</td>
+		</tr>
+		<tr id="id_wait_progress" style="display:none">
+			<td class="button_center">
+				<img src="../images/progress1.gif">
+			</td>
+		</tr>
+	</tbody></table>
+  </div>
+</form>
+</td></tr>
+</tbody></table>
+</div>
+
+<br>
+</body>
+</html>
+
+
+

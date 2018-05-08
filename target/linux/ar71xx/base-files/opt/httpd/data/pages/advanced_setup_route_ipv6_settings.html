@@ -1,0 +1,492 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<!--
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+-->
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+<script language="javascript" type="text/javascript" src="../js/ipaddr.js"></script>
+<style type="text/css">
+tr.rowt{background-color:#E0E0E0}
+tr.rowh{background-color:#F0F0F0}
+/* DarkBlue */
+div.rowh{color:#00008B}
+div.cellt{color:DarkGray}
+/* DarkSlateGrey */
+div.cells{color:#2F4F4F}
+.width_ipv6addr{width:250px;text-align:center;}
+.width_ipv6prefix{width:55px;text-align:center;}
+.width_waninf{width:150px;text-align:center;}
+td.tcenter{text-align:center;}
+</style>
+<script language="javascript" type="text/javascript">
+var countZero = 0;
+
+var i,j,k;
+var NodeLength=0;
+var route_max = 4;
+var wan_max = 8;
+
+function check_process()
+{
+	var process="Success";
+	if (process=="Existed")
+		alert("Please wait!!Another client is upgading firmware.");
+}
+function isBridgeMode()
+{
+		var wan_type="";
+		if (wan_type=="bridge")
+				document.getElementById("add_applybtn").disabled=true;
+}
+
+function check_ipv6_route_gateway(gw,dev)
+{
+	var n;
+	var m;
+	var o;
+	var i;
+
+	if ((gw.length > 0)&&(dev == "0")&&(gw!="0.0.0.0"))
+	{
+		for(i=0;i<NodeLength;i++)
+		{
+			var DestIP = document.getElementById("id_StaticRouteIP" + (i + 1)).value;
+			var IP_Mask = document.getElementById("id_StaticRouteNetmask" + (i + 1)).value;
+			var lan_ip = DestIP;
+			var lan_mask = IP_Mask;
+			n = lan_ip.split('.');
+			m = lan_mask.split('.');
+			o = gw.split('.');
+			if (o.length==4)
+			{
+				for (i=3;i>=0;i--)
+				{
+					if ((m[i] & n[i])!=(m[i] & o[i]))
+						return false;
+				}
+			}
+			else
+				return false;
+		}
+	}
+	return true;
+}
+
+function check_ipv6_route_ip(ip,netmask)
+{
+	var i;
+	var n;
+	var m;
+
+	if(ip.length > 0)
+	{
+		n = ip.split('.');
+		m = netmask.split('.');
+		if(n.length == 4)
+		{
+			if(n[0]==127)
+				return false;
+
+			if((isNaN(n[0]))||(n[0]<1)||(n[0]>=224)||(isBlank(n[0]))||(isInitialZero(n[0]))||(!check_integer(n[0])))
+				return false;
+
+			if((isNaN(n[1]))||(n[1]<0)||(n[1]>=255)||isBlank(n[1])||(isInitialZero(n[1]))||(!check_integer(n[1])))
+				return false;
+
+			if((isNaN(n[2]))||(n[2]<0)||(n[2]>=255)||isBlank(n[2])||(isInitialZero(n[2]))||(!check_integer(n[2])))
+				return false;
+
+			if((isNaN(n[3]))||(n[3]<0)||(n[3]>=255)||isBlank(n[3])||(isInitialZero(n[3]))||(!check_integer(n[3])))
+				return false;
+
+			for (i=3;i>=0;i--)
+			{
+				if (m[i]!=255)
+				{
+					if ((m[i] & n[i])!=n[i])
+						return false;
+				}
+				//else if (n[i]==0 && m[i]!=0)
+				//		return false;
+				else
+					return true;
+			}
+		}
+		else
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+function check_ipv4_route()
+{
+	var i, j;
+	var msg;
+	var no;
+	for(i = 0; i < route_max; i++)
+	{
+		var Dest_item = "id_StaticRouteIP" + (i + 1);
+		var value1 = "id_RouteIP" + (i + 1) + "_item1";
+		var value2 = "id_RouteIP" + (i + 1) + "_item2";
+		var value3 = "id_RouteIP" + (i + 1) + "_item3";
+		var value4 = "id_RouteIP" + (i + 1) + "_item4";
+		merge_ip(Dest_item, value1, value2, value3, value4);
+
+		var Gw_item = "id_StaticRouteGateway" + (i + 1);
+		value1 = "id_GW" + (i + 1) + "_item1";
+		value2 = "id_GW" + (i + 1) + "_item2";
+		value3 = "id_GW" + (i + 1) + "_item3";
+		value4 = "id_GW" + (i + 1) + "_item4";
+		merge_ip(Gw_item, value1, value2, value3, value4);
+	}
+
+	for(i = 0; i < route_max; i++)
+	{
+		var obj1=document.getElementById("id_StaticRouteIP" + (i + 1));
+		var obj2=document.getElementById("id_StaticRouteNetmask" + (i + 1));
+		var obj3=document.getElementById("id_StaticRouteGateway" + (i + 1));
+		var obj4=document.getElementById("id_StaticRouteMetric" + (i + 1));
+		var obj5=document.getElementById("id_StaticRouteInterface" + (i + 1));
+		if((obj1.value !="") && (obj3.value != "") && (obj4.value != ""))
+		{
+			if((obj1.value!="" && obj3.value=="") || (obj1.value=="" && obj3.value!="") ||
+				(obj1.value=="" && obj3.value=="" && obj4.value!=""))
+			{
+				alert("Group " + (i+1) + " rule incomplete");
+				return false;
+			}
+
+			else if( (obj1.value=="") &&
+					 (obj3.value=="") &&
+					 (obj4.value!=""))
+			{
+				alert("Group " + (i+1) + " rule incomplete");
+				return false;
+			}
+
+			else if( !((obj1.value=="")&&(obj2.value=="")) )
+			{
+				if ( !check_ipv6_route_ip(obj1.value,obj2.value) )
+				{
+					msg="IP Destination";
+					no=(i+1);
+					alert(msg + " of group " + no + " is invalid");
+					return false;
+				}
+
+				if ( !check_gateway(obj3.value) )
+				{
+					msg="Gateway";
+					no=(i+1);
+					alert(msg + " of group " + no + " is invalid");
+					return false;
+				}
+
+				if ( !check_ipv6_route_gateway(obj3.value,obj5.value) )
+				{
+					msg="Gateway";
+					no=(i+1);
+					//alert("msg + " of Gruop" + no + " is invalid");
+					alert(msg + " of group " + no + " is invalid");
+					return false;
+				}
+
+				if ( !check_integer_range(obj4.value, 1, 9999) )
+				{
+					no=i+1;
+					alert("Metric of group " + no + " is invalid");
+					return false;
+				}
+			}
+
+			if(NodeLength < (i+1))
+			{
+				document.getElementById("id_new_Entry"+(i+1)).value = i+1;
+			}
+		}
+	}
+
+	for(i = 0; i < route_max; i++)
+	{
+		var obj1=document.getElementById("id_StaticRouteIP" + (i + 1));
+		var obj2=document.getElementById("id_StaticRouteNetmask" + (i + 1));
+		if(obj1.value!="")
+		{
+			// check IP Destination value is valid or not
+			var SRIP_split=obj1.value.split(".");
+			var SRNetmask_split=obj2.value.split(".");
+			var SRIP_net ="";
+			for(nn = 0; nn < 4; nn++)
+			{
+				if ( nn < 3 )SRIP_net= SRIP_net + (SRIP_split[nn] & SRNetmask_split[nn]) + '.';
+				else SRIP_net = SRIP_net + (SRIP_split[nn] & SRNetmask_split[nn]);
+			}
+			if(obj1.value!=SRIP_net)
+			{
+				alert("Rule (" + (i+1) + ") IP Destination " + obj1.value + " is wrong, Please change to "+ SRIP_net);
+				return false;
+			}
+			for(j = i + 1; j <route_max; j++)
+			{
+				var obj3=document.getElementById("id_StaticRouteIP" + (j + 1));
+				var obj4=document.getElementById("id_StaticRouteNetmask" + (j + 1));
+				if(obj1.value!="")
+				{
+					if( (obj1.value==obj3.value) &&
+						(obj2.value==obj4.value)	)
+					{
+						alert("Routing rule of group "+ (i+1) +" and group " + (j+1)  +" are the same");
+						return false;
+					}
+				}
+			}
+		}
+	}
+	//alert("After applying changes,you shall reboot it.");
+	fvt_form_submit('route_ipv6_form');
+	document.route_ipv6_form.submit();
+}
+
+function check_ipv6_route()
+{
+	for(i=0; i<route_max; i++)
+		{
+		var ipv6addr=document.getElementById('id_IPv6SRT_IP'+i).value;
+		if( ! ipaddr.isValid(ipv6addr) && ipv6addr != '')
+			{
+				alert("Destination IPv6 address [ " + ipv6addr + " ] is invalid");
+				return false;
+			}
+		var ipv6addr=document.getElementById('id_IPv6SRT_NH'+i).value;
+		if( ! ipaddr.isValid(ipv6addr) && ipv6addr != '')
+			{
+				alert("Next Hop address [ " + ipv6addr + " ] is invalid");
+				return false;
+			}
+		var prefix=document.getElementById("id_IPv6SRT_Prefix"+i).value;
+		if (!check_integer_range(prefix,1,128))
+			{
+				alert("Prefix [ "+ prefix +" ] is invalid! (integer: 1-128)");
+				return false;
+			}
+		var metric=document.getElementById("id_IPv6SRT_Metric"+i).value;
+		if ( !check_integer_range(metric, 1, 9999) )
+				{
+					alert("Metric [ " + metric + " ] is invalid. (integer: 1-9999)");
+					return false;
+				}
+		}
+	document.getElementById('id_wait_progress').style.display="";
+	fvt_form_submit('route_ipv6_form');
+	document.route_ipv6_form.submit();
+}
+function fvt_form_init(form_name)
+{
+
+}
+
+function fvt_form_submit(form_name)		{
+	var i;
+	fvt_paramlist_clear();
+	if (form_name=='route_ipv6_form' || form_name=='*') {
+		for (i=0; i<route_max; i++)
+		{
+			if (fvt_form_obj_get("route_ipv6_form", "IPv6SRT_IP"+i) != '')
+			{
+				fvt_paramlist_cat_str("sroute6_ip"+i, fvt_form_obj_get("route_ipv6_form", "IPv6SRT_IP"+i));
+				fvt_paramlist_cat_str("sroute6_masklen"+i, fvt_form_obj_get("route_ipv6_form", "IPv6SRT_Prefix"+i));
+				fvt_paramlist_cat_str("sroute6_gateway"+i, fvt_form_obj_get("route_ipv6_form", "IPv6SRT_NH"+i));
+				fvt_paramlist_cat_str("sroute6_metric"+i, fvt_form_obj_get("route_ipv6_form", "IPv6SRT_Metric"+i));
+				fvt_paramlist_cat_str("sroute6_if"+i, fvt_form_obj_get("route_ipv6_form", "IPv6SRT_Inf"+i));
+				fvt_paramlist_cat_str("sroute6_enable"+i, fvt_form_obj_get("route_ipv6_form", "SIPv6SRT_Enable"+i));
+			}
+			else if(fvt_form_obj_get("route_ipv6_form", "IPv6SRT_IP"+i) == '' &&
+					fvt_form_obj_get("route_ipv6_form", "IPv6SRT_NH"+i) == '' &&
+					fvt_form_obj_get("route_ipv6_form", "IPv6SRT_Metric"+i) == '')
+			{
+				fvt_paramlist_cat_str("sroute6_ip"+i, fvt_form_obj_get("route_ipv6_form", "IPv6SRT_IP"+i));
+				fvt_paramlist_cat_str("sroute6_masklen"+i, fvt_form_obj_get("route_ipv6_form", "IPv6SRT_Prefix"+i));
+				fvt_paramlist_cat_str("sroute6_gateway"+i, fvt_form_obj_get("route_ipv6_form", "IPv6SRT_NH"+i));
+				fvt_paramlist_cat_str("sroute6_metric"+i, fvt_form_obj_get("route_ipv6_form", "IPv6SRT_Metric"+i));
+				fvt_paramlist_cat_str("sroute6_if"+i, fvt_form_obj_get("route_ipv6_form", "IPv6SRT_Inf"+i));
+				fvt_paramlist_cat_str("sroute6_enable"+i, 0);
+			}
+		}
+	}
+	fvt_paramlist_presubmit(form_name);
+}
+
+</script>
+</head>
+
+<body align="left" onload="fvt_form_init('route_ipv6_form');check_process();isBridgeMode();">
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<form id="id_route_ipv6_form" name="route_ipv6_form" method="post">
+	<fieldset>
+		<div class="lv1_title">Advanced Setup&nbsp;&gt;&nbsp;Route IPv6 Settings</div>
+	</fieldset>
+<div class="lv2_new lv1_indent">
+	<div><hr class="hr2" /></div>
+	<div class="lv1_new div1_topbottom">IPv6 Static Routing</div>
+	<div>
+		<table id="tb_ipv6route"><tbody>
+			<tr>
+				<th class="width_ipv6addr">
+					<div class=" lv2_new">Destination IPv6 Address</div>
+				</th>
+				<th class="width_ipv6prefix">
+					<div class=" lv2_new">Prefix</div>
+				</th>
+				<th class="width_ipv6addr">
+					<div class=" lv2_new">Next Hop</div>
+				</th>
+				<th class="width_ipv6prefix">
+					<div class=" lv2_new">Metric</div>
+				</th>
+				<th class="width_waninf">
+					<div class=" lv2_new">Interface</div>
+				</th>
+				<th class="width_routeS_en">
+					<div class=" lv2_new">Enable</div>
+				</th>
+			</tr>
+			<tr style="height:5px">
+				<td colspan="6">
+					<div><hr class="hr2" /></div>
+				</td>
+			</tr>
+		</tbody></table>
+	</div>
+	<div><hr class="hr2" /></div>
+	<div style="display:none">
+		<table><tbody>
+			<tr><td class="width_routeS_2"><div>Dynamic Routing</div></td>
+				<td>
+					<select cname="RIPEnable" id="id_RIPEnable" class="width_select80">
+						<option value="0">Disable</option>
+						<option value="RIPv1">RIP1</option>
+						<option value="RIPv2">RIP2</option>
+						<option value="RIPv1_RIPv2">RIP1 &amp; RIP2</option>
+					</select>
+				</td>
+			</tr>
+		</tbody></table>
+	</div>
+	<div class="top_cwmp2">
+		<table><tbody>
+			<tr>
+				<td class="button_center">
+					<input cname="applybtn" id="add_applybtn" value="Apply Changes" class="width_apply" onclick="check_ipv6_route()" type="button">
+				</td>
+			</tr>
+			<tr id="id_wait_progress" style="display:none">
+				<td align="center">
+					<img src="../images/progress1.gif">
+				</td>
+			</tr>
+
+		</tbody></table>
+	</div>
+</div>
+</form>
+</td></tr>
+</tbody></table>
+</div>
+
+<br>
+<script language="javascript" type="text/javascript">
+	(function() {
+		IPv6Static_routing_table('tb_ipv6route');
+	})();
+
+function add_table_row(tablearea, tdtext0, tdtext1, tdtext2, tdtext3, tdtext4, tdtext5)
+{
+	var tablearea = document.getElementById(tablearea);
+	//var table = document.createElement('table');
+	var new_row = document.createElement('tr');
+	var newcell = new_row.insertCell(0);
+	newcell.className = "tcenter";
+	newcell.innerHTML = tdtext0;
+	var newcell = new_row.insertCell(1);
+	newcell.className = "tcenter";
+	newcell.innerHTML = tdtext1;
+	var newcell = new_row.insertCell(2);
+	newcell.className = "tcenter";
+	newcell.innerHTML = tdtext2;
+	var newcell = new_row.insertCell(3);
+	newcell.className = "tcenter";
+	newcell.innerHTML = tdtext3;
+	var newcell = new_row.insertCell(4);
+	newcell.className = "tcenter";
+	newcell.innerHTML = tdtext4;
+	var newcell = new_row.insertCell(5);
+	newcell.className = "tcenter";
+	newcell.innerHTML = tdtext5;
+	//table.appendChild(new_row);
+	//tablearea.appendChild(table);
+	tablearea.appendChild(new_row);
+}
+
+function IPv6Static_routing_table(tablearea)
+{
+	var m;
+	for(m=0;m<route_max;m++)
+		{
+		var tdtext0="<input name='IPv6SRT_IP"+m+"' id='id_IPv6SRT_IP"+m+"' size='30' maxlength='39' value=''>";
+		var tdtext1="<input name='IPv6SRT_Prefix"+m+"' id='id_IPv6SRT_Prefix"+m+"' size='3' maxlength='3' value=''>";
+		var tdtext2="<input name='IPv6SRT_NH"+m+"' id='id_IPv6SRT_NH"+m+"' size='30' maxlength='39' value=''>";
+		var tdtext3="<input name='IPv6SRT_Metric"+m+"' id='id_IPv6SRT_Metric"+m+"' size='4' maxlength='4' value=''>";
+
+		var tdtext4="<select class='width_routeS_selectif' name='IPv6SRT_Inf"+m+"' value='' class='width_select80' id='id_IPv6SRT_Inf"+m+"'>";
+		var ifname,iftype;
+		for (k=0;k<wan_max;k++)
+			{
+			if(fvt_meta_config("wan"+k+"_if_name") != '')
+				{
+				iftype = fvt_meta_config("wan"+k+"_ip_assignment");
+				ifname = fvt_meta_config("wan"+k+"_if_name");
+				ifinter = fvt_meta_config("dev_wan"+k+"_interface");
+				tdtext4=tdtext4 + "<option value='"+ifinter+"'>"+ifinter+"("+ifname+")</option>";
+				}
+			}
+		if(fvt_meta_config("dev_lan0_interface") != '')
+			{
+			ifinter = fvt_meta_config("dev_lan0_interface");
+			tdtext4=tdtext4 + "<option value='"+ifinter+"'>"+ifinter+"(Lan)</option>";
+			}
+
+		tdtext4=tdtext4 + "</select>"
+
+		var tdtext5="<select name='SIPv6SRT_Enable"+m+"' value='' id='id_SIPv6SRT_Enable"+m+"'>";
+		tdtext5=tdtext5 + "<option value='0'>Disable</option>"
+		tdtext5=tdtext5 + "<option value='1'>Enable</option>"
+		tdtext5=tdtext5 + "</select>"
+		add_table_row(tablearea, tdtext0, tdtext1, tdtext2, tdtext3, tdtext4, tdtext5);
+		document.getElementById("id_IPv6SRT_IP"+m).value=fvt_meta_config('sroute6_ip'+m);
+		document.getElementById("id_IPv6SRT_Prefix"+m).value=fvt_meta_config('sroute6_masklen'+m);
+		document.getElementById("id_IPv6SRT_NH"+m).value=fvt_meta_config('sroute6_gateway'+m);
+		document.getElementById("id_IPv6SRT_Metric"+m).value=fvt_meta_config('sroute6_metric'+m);
+		if(fvt_meta_config('sroute6_if'+m) != '')
+			{
+			document.getElementById("id_IPv6SRT_Inf"+m).value=fvt_meta_config('sroute6_if'+m);
+			}
+		if(fvt_meta_config('sroute6_enable'+m) != '')
+			{
+			document.getElementById("id_SIPv6SRT_Enable"+m).value=fvt_meta_config('sroute6_enable'+m);
+			}
+		}
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,301 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+<title>Status &gt; GPON</title>
+<meta http-equiv="Content-Language" content="English">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="pragma" content="no-cache">
+<link rel="stylesheet" type="text/css" href="../css/style.css" media="screen">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="screen">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+
+<script language="javascript" type="text/javascript">
+var NavLang=GetNavLang();
+
+if (NavLang == "ZH")
+{
+var vAlarm = "Alarm 告警訊息";
+var vStatus = "Status 目前狀態";
+var vLOS = "LOS \(信號丟失\)";
+var vLOF = "LOF \(訊框丟失\)";
+var vSF = "SF \(信號失效\)";
+var vSD = "SD (\信號降級\)";
+var vLCDG = "LCDG \(GEM通道定界丟失\)";
+var vTF = "TF \(發射功率失敗\)";
+var vSUF = "SUF \(ONT啟動測距失敗\)";
+var vMEM = "MEM \(ONT接收未知訊息\)";
+var vDACT = "DACT \(解除ONT-ID\)";
+var vDIS = "DIS \(停用ONT\)";
+var vMIS = "MIS \(鏈路不匹配\)";
+var vPEE = "PEE \(物理設備錯誤\)";
+var vRDI = "RDI \(遠端故障指示\)";
+}
+else
+{
+var vAlarm = "Alarm";
+var vStatus = "Status";
+var vLOS = "LOS";
+var vLOF = "LOF";
+var vSF = "SF";
+var vSD = "SD";
+var vLCDG = "LCDG";
+var vTF = "TF";
+var vSUF = "SUF";
+var vMEM = "MEM";
+var vDACT = "DACT";
+var vDIS = "DIS";
+var vMIS = "MIS";
+var vPEE = "PEE";
+var vRDI = "RDI";
+}
+
+function reloadPage()
+{
+	window.parent.contentfrm.location.replace(window.parent.contentfrm.location.href);
+	timer = setTimeout("reloadPage()",30000);
+}
+
+function reloadw()
+{
+	timer = setTimeout("reloadPage()",30000);
+}
+
+function change_color()
+{
+		document.body.style.color = "Red";
+		document.body.style.fontWeight = 'blod';
+}
+
+function colorElementRed(id) {
+  var el = document.getElementById(id);
+  el.style.color = "Gold";
+  el.style.fontWeight = "Bold";
+  el.style.backgroundColor = "Red";
+
+}
+function colorElementGreen(id) {
+  var el = document.getElementById(id);
+  el.style.color = "Gray";
+  el.style.backgroundColor = "Green";
+}
+
+function RedGreen_txt(val) {
+	var regux = /^N/;
+	if ( regux.test( fvt_meta_config(val) ) )document.write("<span style=\"color:Green;\">NO<\/span>");
+	else if (fvt_meta_config(val) != "off")
+	document.write("<span style=\"color:Red;font-weight:bold;background-color:Yellow;\">&nbsp;YES&nbsp;<\/span>");
+	else document.write("<span style=\"color:Green;\">&nbsp;NO&nbsp;<\/span>");
+}
+
+</script>
+
+</head>
+
+<body  onload="reloadw();" leftmargin="0" topmargin="0" marginheight="0" marginwidth="0" bgcolor="#FFFFFF">
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<form id="interface_form" name="interface_form" method="post">
+
+	<fieldset>
+		<div class="lv1_title">Status&nbsp;&gt;&nbsp;Alarm Status</div>
+	</fieldset>
+
+	<table cellpadding="0" cellspacing="10" width="70%" border="0">
+			<tbody>
+			<tr></tr>
+
+				<tr>
+					<td width="40%" class="t-title">
+					<script language="javascript" type="text/javascript">
+						document.write("<b>"+vAlarm+"</b>");
+					</script>
+					</td>
+					<td width="30%" align="center" class="t-title">
+					<script language="javascript" type="text/javascript">
+						document.write("<b>"+vStatus+"</b>");
+					</script>
+					</td>
+				</tr>
+				<tr style="height:5px;">
+					<td colspan="9">
+						<div><hr class="hr2"></div>
+					</td>
+				</tr>
+
+				<tr>
+					<td class="usr_tr2">
+					<script language="javascript" type="text/javascript">
+						document.write("<b>"+vLOS+"</b>");
+					</script>
+					</td>
+					<td class="usr_tr2" align="center" id="los_alarm">
+					<script>
+							RedGreen_txt('kv_alarm_los');
+					</script>
+					</td>
+				</tr>
+
+				<tr>
+					<td class="usr_tr1">
+					<script language="javascript" type="text/javascript">
+						document.write("<b>"+vLOF+"</b>");
+					</script>
+					</td>
+					<td class="usr_tr1" align="center" id="lof_alarm">
+					<script>
+							RedGreen_txt('kv_alarm_lof');
+					</script>
+					</td>
+				</tr>
+
+				<tr>
+					<td class="usr_tr2">
+					<script language="javascript" type="text/javascript">
+						document.write("<b>"+vSF+"</b>");
+					</script>
+					</td>
+					<td class="usr_tr2" align="center" id="sf_alarm">
+					<script>
+							RedGreen_txt('kv_alarm_sf');
+					</script>
+					</td>
+				</tr>
+
+				<tr>
+					<td class="usr_tr1">
+					<script language="javascript" type="text/javascript">
+						document.write("<b>"+vSD+"</b>");
+					</script>
+					</td>
+					<td class="usr_tr1" align="center" id="sd_alarm">
+					<script>
+							RedGreen_txt('kv_alarm_sd');
+					</script>
+					</td>
+				</tr>
+
+				<tr>
+					<td class="usr_tr2">
+					<script language="javascript" type="text/javascript">
+						document.write("<b>"+vLCDG+"</b>");
+					</script>
+					</td>
+					<td class="usr_tr2" align="center" id="lom_alarm">
+					<script>
+							RedGreen_txt('kv_alarm_lom');
+					</script>
+					</td>
+				</tr>
+
+				<tr>
+					<td class="usr_tr1">
+					<script language="javascript" type="text/javascript">
+						document.write("<b>"+vTF+"</b>");
+					</script>
+					</td>
+					<td class="usr_tr1" align="center" id="tf_alarm">
+					<script>
+							RedGreen_txt('kv_alarm_tf');
+					</script>
+					</td>
+				</tr>
+
+				<tr>
+					<td class="usr_tr2">
+					<script language="javascript" type="text/javascript">
+						document.write("<b>"+vSUF+"</b>");
+					</script>
+					</td>
+					<td class="usr_tr2" align="center" id="suf_alarm">
+					<script>
+							RedGreen_txt('kv_alarm_suf');
+					</script>
+					</td>
+				</tr>
+
+				<tr>
+					<td class="usr_tr1">
+					<script language="javascript" type="text/javascript">
+						document.write("<b>"+vMEM+"</b>");
+					</script>
+					</td>
+					<td class="usr_tr1" align="center" id="mem_alarm">
+					<script>
+							RedGreen_txt('kv_alarm_mem');
+					</script>
+					</td>
+				</tr>
+
+				<tr>
+					<td class="usr_tr2">
+					<script language="javascript" type="text/javascript">
+						document.write("<b>"+vDACT+"</b>");
+					</script>
+					</td>
+					<td class="usr_tr2" align="center" id="dact_alarm">
+					<script>
+							RedGreen_txt('kv_alarm_dact');
+					</script>
+					</td>
+				</tr>
+
+				<tr>
+					<td class="usr_tr1">
+					<script language="javascript" type="text/javascript">
+						document.write("<b>"+vDIS+"</b>");
+					</script>
+					</td>
+					<td class="usr_tr1" align="center" id="dis_alarm">
+					<script>
+							RedGreen_txt('kv_alarm_dis');
+					</script>
+					</td>
+				</tr>
+
+				<tr>
+					<td class="usr_tr2">
+					<script language="javascript" type="text/javascript">
+						document.write("<b>"+vMIS+"</b>");
+					</script>
+					</td>
+					<td class="usr_tr2" align="center" id="mis_alarm">
+					<script>
+							RedGreen_txt('kv_alarm_mis');
+					</script>
+					</td>
+				</tr>
+
+				<tr>
+					<td class="usr_tr1">
+					<script language="javascript" type="text/javascript">
+						document.write("<b>"+vPEE+"</b>");
+					</script>
+					</td>
+					<td class="usr_tr1" align="center" id="pee_alarm">
+					<script>
+							RedGreen_txt('kv_alarm_pee');
+					</script>
+					</td>
+				</tr>
+
+				<tr>
+					<td class="usr_tr2">
+					<script language="javascript" type="text/javascript">
+						document.write("<b>"+vRDI+"</b>");
+					</script>
+					</td>
+					<td class="usr_tr2" align="center" id="rdi_alarm">
+					<script>
+							RedGreen_txt('kv_alarm_rdi');
+					</script>
+					</td>
+				</tr>
+
+		</tbody>
+	</table>
+
+</body>
+</html>

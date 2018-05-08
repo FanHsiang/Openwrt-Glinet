@@ -1,0 +1,441 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+<style type="text/css">
+td.width_ipv6ta{width:270px}
+td.width_ipv6td{width:15px}
+td.width_ipv6tp{width:100px}
+td.width_lanset2{width:210px}
+div.width_lanset3{margin-left:20px}
+select.width_lansetEnable{width:128px}
+</style>
+<script language="javascript" type="text/javascript">
+
+function saveChanges()
+{
+	var msg;
+	//alert(document.getElementById("id_ipv6btn").value);
+	//if (document.getElementById("id_ipv6btn").value=="Enable IPv6")
+	if (fvt_meta_config('wan0_ipv6_enable') =="1")
+	{
+
+		if(!check_integer(document.getElementById("id_wan_ipv6pre").value))
+		{
+		min = "0";	max = "128";
+		warn_int_between("WAN Prefix",min,max);
+		return false;
+		}
+
+		if(!check_integer(document.getElementById("id_lan_ipv6pre").value))
+		{
+		min = "0";	max = "128";
+		warn_int_between("LAN Prefix",min,max);
+		return false;
+		}
+
+		//merge_ipv6prefix("id_WANIPV6Addr","id_wan_ipv6ip","id_wan_ipv6pre");
+		//merge_ipv6prefix("id_LANIPV6Addr","id_lan_ipv6ip","id_lan_ipv6pre");
+
+		if (!checkIPv6(document.ipv6setting_form.wan_ipv6ip.value))
+		{
+		msg="WAN IPv6 Address";
+		warn_invalid(msg);
+		return false;
+		}
+
+		if (!checkIPv6(document.ipv6setting_form.wan_ipv6gw.value))
+		{
+		msg="WAN Gateway IPv6 Address";
+		warn_invalid(msg);
+		return false;
+		}
+
+		if (!checkIPv6(document.ipv6setting_form.wan_ipv6dns1.value))
+		{
+		msg="WAN Gateway DNS1 Address";
+		warn_invalid(msg);
+		return false;
+		}
+
+		if (!checkIPv6(document.ipv6setting_form.wan_ipv6dns2.value))
+		{
+		msg="WAN Gateway DNS1 Address";
+		warn_invalid(msg);
+		return false;
+		}
+
+		//var lan_ipv6_ck = document.ipv6setting_form.lan_ipv6ip.value+"::1";
+		//var ipv6_gua_prefix=document.getElementById("id_lan_ipv6ip").value+"::1/"+document.getElementById("id_lan_ipv6pre").value;
+		//alert(ipv6_gua_prefix);
+		//if (!checkIPv6(ipv6_gua_prefix))
+		//alert(document.ipv6setting_form.lan_ipv6ip.value+"::1");
+		if (!checkIPv6(document.ipv6setting_form.lan_ipv6ip.value+"::1"))
+		{
+		msg="LAN IPv6 Address";
+		//msg="LAN IPv6 Address"+lan_ipv6_ck;
+		warn_invalid(msg);
+		return false;
+		}
+		//if (ipv6_gua_prefix.match(":::"))
+		//{
+		//msg="LAN IPv6 Address";
+		////msg="LAN IPv6 Address"+lan_ipv6_ck;
+		//warn_invalid(msg);
+		//return false;
+		//}
+
+	}
+	fvt_form_submit('ipv6setting_form');
+	document.ipv6setting_form.submit();
+	return true;
+}
+
+function setup_ipv6(mode)
+{
+	if (confirm("Are you sure you want to change IPv6 mode ? After applying changes, ONT will reboot automatically."))
+	{
+		fvt_form_submit('ipv6enable_form',mode);
+		window.top.location.href="wwwctrl.cgi?action=wait_restart&time=135";
+		document.ipv6enable_form.submit();
+	}
+}
+
+function fvt_form_init(form_name)
+{
+
+	if (form_name=='ipv6setting_form' || form_name=='*')
+	{
+		//fvt_form_obj_set("ipv6setting_form", "wan_ipv6ip", "2001:B010:7300:701:250:7FFF:FEEA:7EE0");
+		//fvt_form_obj_set("ipv6setting_form", "wan_ipv6pre", "48");
+		//fvt_form_obj_set("ipv6setting_form", "wan_ipv6gw", "FF80::90:1A00:2A2:AD52");
+		//fvt_form_obj_set("ipv6setting_form", "lan_ipv6ip", "2001:B010:7300:701:250:7FFF:FEEA:7EE2");
+		//fvt_form_obj_set("ipv6setting_form", "lan_ipv6pre", "32");
+		////fvt_form_obj_set("ipv6setting_form", "lan_ipv6ipdns", "2001:8000:168::1");
+
+		fvt_form_obj_set("ipv6setting_form", "wan_ipv6ip", fvt_meta_config('wan0_ipv6_ip'));
+		fvt_form_obj_set("ipv6setting_form", "wan_ipv6pre", fvt_meta_config('wan0_ipv6_prefix_length'));
+		fvt_form_obj_set("ipv6setting_form", "wan_ipv6gw", fvt_meta_config('wan0_ipv6_gateway'));
+		fvt_form_obj_set("ipv6setting_form", "wan_ipv6dns1", fvt_meta_config('wan0_ipv6_dns1'));
+		fvt_form_obj_set("ipv6setting_form", "wan_ipv6dns2", fvt_meta_config('wan0_ipv6_dns2'));
+
+		var ipv6_gua_prefix_in=fvt_meta_config('wan0_ipv6_gua_prefix').replace(/::\//, '-');
+		if (ipv6_gua_prefix_in=="")ipv6_gua_prefix_in="-";
+		var ipv6_gua_prefix_spilt = ipv6_gua_prefix_in.split("-");
+		//alert(ipv6_gua_prefix_spilt[0]+"***"+ipv6_gua_prefix_spilt[1]);
+		fvt_form_obj_set("ipv6setting_form", "lan_ipv6ip", ipv6_gua_prefix_spilt[0]);
+		//fvt_form_obj_set("ipv6setting_form", "lan_ipv6pre", ipv6_gua_prefix_spilt[1]);
+
+		//fvt_form_obj_set("ipv6setting_form", "lan_ipv6ip", fvt_meta_config('lan0_ipv6_ip'));
+		//fvt_form_obj_set("ipv6setting_form", "lan_ipv6pre", fvt_meta_config('lan0_ipv6_prefix_length'));
+		//fvt_form_obj_set("ipv6setting_form", "lan_ipv6ipdns", fvt_meta_config('lan_ipv6ipdns'));
+		/////////////
+
+		if (fvt_meta_config('wan0_ipv6_enable')!='1')
+		{
+			document.getElementById("ipv6_status").style.color = 'black';
+			document.getElementById("ipv6_status").innerHTML = " IPv6 Status: Disable ";
+			document.getElementById("disable_ipv6").style.display = "none";
+			document.getElementById("enable_ipv6").style.display = "";
+			document.getElementById("ipv6_show").style.display = "none";
+		}
+		else
+		{
+			document.getElementById("ipv6_status").style.color = 'blue';
+			document.getElementById("ipv6_status").innerHTML = " IPv6 Status: Enable ";
+			document.getElementById("disable_ipv6").style.display = "";
+			document.getElementById("enable_ipv6").style.display = "none";
+			if (fvt_meta_config('wan0_ip_assignment')=='0')
+				document.getElementById("ipv6_show").style.display = "";
+			else
+				document.getElementById("ipv6_show").style.display = "none";
+		}
+			document.getElementById("ipv6_status").style.fontSize = "18px";
+			//document.getElementById("ipv6_status").style.border = "thick solid #0000FF";
+	}
+}
+
+function fvt_form_submit(form_name, mode) {
+	fvt_paramlist_clear();
+
+	if (form_name=='ipv6setting_form' || form_name=='*') {
+
+		fvt_paramlist_cat_str('wan0_ipv6_ip', fvt_form_obj_get("ipv6setting_form", "wan_ipv6ip"));
+		fvt_paramlist_cat_str('wan0_ipv6_prefix_length', fvt_form_obj_get("ipv6setting_form", "wan_ipv6pre"));
+		fvt_paramlist_cat_str('wan0_ipv6_gateway', fvt_form_obj_get("ipv6setting_form", "wan_ipv6gw"));
+		fvt_paramlist_cat_str('wan0_ipv6_dns1', fvt_form_obj_get("ipv6setting_form", "wan_ipv6dns1"));
+		fvt_paramlist_cat_str('wan0_ipv6_dns2', fvt_form_obj_get("ipv6setting_form", "wan_ipv6dns2"));
+		//fvt_paramlist_cat_str('lan0_ipv6_ip', fvt_form_obj_get("ipv6setting_form", "lan_ipv6ip"));
+		//fvt_paramlist_cat_str('lan0_ipv6_prefix_length', fvt_form_obj_get("ipv6setting_form", "lan_ipv6pre"));
+		var ipv6_gua_prefix=document.getElementById("id_lan_ipv6ip").value+"::/"+document.getElementById("id_lan_ipv6pre").value;
+		fvt_paramlist_cat_str('wan0_ipv6_gua_prefix', ipv6_gua_prefix);
+
+		//fvt_paramlist_cat_str('dhcp1_netmask', fvt_form_obj_get("ipv6setting_form", "lan_ipv6ipdns"));
+	}
+
+	if (form_name=='ipv6enable_form' || form_name=='*') {
+		if (mode=="ipv6_en" ) fvt_paramlist_cat_str('wan0_ipv6_enable',"1");
+		if (mode=="ipv6_dis") fvt_paramlist_cat_str('wan0_ipv6_enable',"0");
+		fvt_paramlist_cat_str('reboot', "1");
+	}
+
+	fvt_paramlist_presubmit(form_name);
+}
+
+// check whether the str is a right IPv6 address
+function checkIPv6(str)
+{
+	var idx = str.indexOf("::");
+	// there is no "::" in the ip address
+	if (idx == -1)
+	{
+		var items = str.split(":");
+		if (items.length != 8)
+		{
+			return false;
+		}
+		else
+		{
+			for (i in items)
+			{
+				if (!isHex(items[i]))
+				{
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+	else
+	{
+		// at least, there are two "::" in the ip address
+		if (idx != str.lastIndexOf("::"))
+		{
+			return false;
+		}
+		else
+		{
+			var items = str.split("::");
+			var items0 = items[0].split(":");
+			var items1 = items[1].split(":");
+			if ((items0.length + items1.length) > 7)
+			{
+				return false;
+			}
+			else
+			{
+				for (i in items0)
+				{
+					if (!isHex(items0[i]))
+					{
+						return false;
+					}
+				}
+				for (i in items1)
+				{
+					if (!isHex(items1[i]))
+					{
+						return false;
+					}
+				}
+				return true;
+			}
+		}
+	}
+}
+
+// check whether every char of the str is a Hex char(0~9,a~f,A~F)
+function isHex(str)
+{
+	if(str.length == 0 || str.length > 4)
+	{
+		return false;
+	}
+	str = str.toLowerCase();
+	var ch;
+	for(var i=0; i< str.length; i++)
+	{
+		ch = str.charAt(i);
+		if(!(ch >= '0' && ch <= '9') && !(ch >= 'a' && ch <= 'f'))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+function BacktoLan()
+{
+	window.location.href="wwwctrl.cgi?action=lan";
+}
+
+function merge_ipv6prefix(target, ipv6, prefix)
+{
+	var target_item=document.getElementById(target);
+	var value1=document.getElementById(ipv6).value;
+	var value2=document.getElementById(prefix).value;
+
+	target_item.value=value1+"/"+value2;
+	if(target_item.value=="/") target_item.value=""; return true;
+}
+//-->
+</script>
+</head>
+
+<body align="left" onload="fvt_form_init('ipv6setting_form');">
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<form id="ipv6enable_form" name="ipv6enable_form" method="post"></form>
+<form id="ipv6setting_form" name="ipv6setting_form" method="post" action=>
+<fieldset>
+	<div class="lv1_title">Advanced Setup&nbsp;&gt;&nbsp;IPv6 Wan/Lan Settings</div>
+</fieldset>
+<div class="div1_indent lv2_new">
+<div>
+	<table><tbody>
+	<tr>
+		<td name="ipv6_status" id="ipv6_status"></td>
+	</tr>
+	<tr>
+		<td id='disable_ipv6'>
+			<input type="button" onclick="setup_ipv6('ipv6_dis')" id="id_ipv6btn" name="ipv6btn" value="Disable IPv6">
+		</td>
+		<td id='enable_ipv6'>
+			<input type="button" onclick="setup_ipv6('ipv6_en')" id="id_ipv6btn" name="ipv6btn" value="Enable IPv6">
+		</td>
+	</tr>
+	<tr></tr>
+	</tbody></table>
+
+</div>
+<div id="ipv6_show">
+	<div><hr class="hr2"></div>
+<!-- WAN IPv6 ip -->
+		<table><tbody>
+
+		<tr>
+			<td class="lv1_title">Wan Static Ipv6 configuration :</td>
+			<td>
+			<!-- <input name="WANIPV6Addr" id="id_WANIPV6Addr" type="hidden"> -->
+			</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td class="width_ipv6ta"><div ctrlflip="right" ctrlid="32">IPv6 Address</div></td>
+			<td class="width_ipv6td"><div ctrlflip="right" ctrlid="32">/</div></td>
+			<td class="width_ipv6tp"><div ctrlflip="right" ctrlid="32">Prefix Length</div></td>
+		</tr>
+		<tr>
+			<td class="width_ipv6ta">
+				<input name="wan_ipv6ip" id="id_wan_ipv6ip" size="39" maxlength="39">
+			</td>
+			<td class="width_ipv6td">/</td>
+			<td class="width_ipv6tp">
+				<input name="wan_ipv6pre" id="id_wan_ipv6pre" size="3" maxlength="3">
+			</td>
+		</tr>
+		<tr>
+			<td class="width_ipv6ta"><div ctrlflip="right" ctrlid="32">IPv6 Gateway</div></td>
+			<td></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td class="width_ipv6ta">
+				<input name="wan_ipv6gw" id="id_wan_ipv6gw" size="39" maxlength="39">
+			</td>
+			<td></td>
+			<td></td>
+		</tr>
+<!-- DNS -->
+		<tr>
+			<td class="width_ipv6ta"><div ctrlflip="right" ctrlid="32">IPv6 DNS1</div></td>
+			<td></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td class="width_ipv6ta">
+				<input name="wan_ipv6dns1" id="id_wan_ipv6dns1" size="39" maxlength="39">
+			</td>
+			<td></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td class="width_ipv6ta"><div ctrlflip="right" ctrlid="32">IPv6 DNS2</div></td>
+			<td></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td class="width_ipv6ta">
+				<input name="wan_ipv6dns2" id="id_wan_ipv6dns2" size="39" maxlength="39">
+			</td>
+			<td></td>
+			<td></td>
+		</tr>
+		</tbody></table>
+		<div><hr class="hr2"></div>
+<!-- LAN IPv6 ip -->
+		<table><tbody>
+
+		<tr>
+			<td class="lv1_title">Lan Static Ipv6 configuration :</td>
+			<td>
+			<!-- <input name="LANIPV6Addr" id="id_LANIPV6Addr" type="hidden"> -->
+			</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td class="width_ipv6ta"><div ctrlflip="right" ctrlid="32">IPv6 Address</div></td>
+			<td class="width_ipv6td"><div ctrlflip="right" ctrlid="32">&nbsp:&nbsp:&nbsp/&nbsp</div></td>
+			<td class="width_ipv6tp"><div ctrlflip="right" ctrlid="32">Prefix Length</div></td>
+		</tr>
+		<tr>
+			<td class="width_ipv6ta">
+				<input name="lan_ipv6ip" id="id_lan_ipv6ip" size="39" maxlength="39">
+			</td>
+			<td class="width_ipv6td">&nbsp:&nbsp:&nbsp/&nbsp</td>
+			<td class="width_ipv6tp">
+				<input name="lan_ipv6pre" id="id_lan_ipv6pre" size="3" maxlength="3" value="64" disabled="disabled" />
+			</td>
+		</tr>
+		<tr style="display:none">
+			<td class="width_ipv6ta"><div ctrlflip="right" ctrlid="32">DNS</div></td>
+			<td></td>
+			<td></td>
+		</tr>
+		<tr style="display:none">
+			<td class="width_ipv6ta">
+				<input name="lan_ipv6ipdns" id="id_lan_ipv6ipdns" size="39" maxlength="39">
+			</td>
+			<td></td>
+			<td></td>
+		</tr>
+		</tbody></table>
+		<div><hr class="hr2"></div>
+
+	<div class="top_cwmp2">
+	<table><tbody>
+		<tr>
+		<td></td>
+			<td class="button_center">
+				<input ctrlflip="etc" type="button" onclick="saveChanges()" name="applybtn" value="Apply Changes" class="width_apply">
+			</td>
+		<td></td>
+		</tr>
+	</tbody></table>
+	</div>
+</div>
+</div>
+</form>
+
+</td></tr>
+</tbody></table>
+</div>
+
+</body>
+</html>

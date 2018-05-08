@@ -1,0 +1,315 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+<style>
+.textarea_1 {
+	height:180px;
+	width:500px;
+	border:1px solid #7F9DB7;
+	font-size: 12px;
+	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+	text-align:left;
+	resize:none;
+}
+.textarea_2 {
+	height:250px;
+	width:500px;
+	border:1px solid #7F9DB7;
+	font-size: 12px;
+	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+	text-align:left;
+	resize:none;
+}
+.width_text220 { width: 220px; }
+.width100 { width: 100px; }
+.widthrun { width: 320px; } // .width_text220+.width100
+//td.checkwidth {
+//	vertical-align:middle;
+//}
+tr.rowt{background-color:#E0E0E0}
+tr.rowh{background-color:#F0F0F0}
+/* DarkBlue */
+div.rowh{color:#00008B}
+div.cellt{color:DarkGray}
+/* DarkSlateGrey */
+div.cells{color:#2F4F4F}
+td input[type="radio"] {
+	float: none;
+	vertical-align: middle;
+}
+</style>
+
+<script language="javascript" type="text/javascript">
+var Ping_Testing;
+var Tracert_Testing;
+
+function check_process()
+{
+	var process="Success";
+	if (process=="Existed")
+		warn_wait();
+}
+function fvt_form_submit(form_name)
+{
+	fvt_paramlist_clear();
+	if (form_name=='ping_form' || form_name=='*') {
+		fvt_paramlist_cat_str('ping_ipv6', "0");
+		if ( document.getElementById('id_ipv6ping_chk').checked )
+			fvt_paramlist_cat_str('ping_ipv6', "1");
+		//fvt_paramlist_cat_str('kv_ping_test_inf', "1");
+		fvt_paramlist_cat_str('ping_test_host', fvt_form_obj_get("ping_form", "host_ping"));
+	} else if (form_name=='trace_form' || form_name=='*') {
+		//fvt_paramlist_cat_str('kv_traceroute_test_inf', "1");
+		fvt_paramlist_cat_str('traceroute_test_host', fvt_form_obj_get("trace_form", "host_traceroute"));
+	}
+	fvt_paramlist_presubmit(form_name);
+}
+function ping()
+{
+	if (!isStringOK(document.getElementById("id_host_ping").value))
+	{
+		var item="Ping";
+		warn_not_empty2("Host",item);
+		//alert("The "	+ item + " is invalid!");
+		return false;
+	}
+/*	if (!check_ip(document.getElementById("id_host_ping").value))
+	{
+		var item="Ping";
+		warn_invalid2("Host",item);
+		//alert("The "	+ item + " is invalid!");
+		return false;
+	}*/
+	document.getElementById("id_submitBtn_traceroute").disabled=true;
+	fvt_form_submit('ping_form');
+	localStorage.setItem("Ping_Testing", "1");
+	document.ping_form.submit();
+}
+function traceroute()
+{
+	if (!isStringOK(document.getElementById("id_host_traceroute").value))
+	{
+		var item="Trace route test";
+		var msg='Host';
+		warn_not_empty2(msg,item);
+		//alert("The "	+ item + " is invalid!");
+		return false;
+	}
+/*	if (!check_ip(document.getElementById("id_host_traceroute").value))
+	{
+		var item="Trace route test";
+		var msg='Host';
+		warn_invalid2(msg,item);
+		//alert("The "	+ item + " is invalid!");
+		return false;
+	}*/
+	document.getElementsByTagName("id_submitBtn_ping").disabled=true;
+	fvt_form_submit('trace_form');
+	localStorage.setItem("Tracert_Testing", "1");
+	document.trace_form.submit();
+}
+
+function disableBtn()
+{
+	/*if (document.getElementById("id_inf_ping").length==0)
+		document.getElementById("id_submitBtn_ping").disabled=true;
+	if (document.getElementById("id_inf_traceroute").length==0)
+		document.getElementById("id_submitBtn_traceroute").disabled=true;*/
+}
+
+function setGw()
+{
+}
+
+function reloadPage()
+{
+	//window.parent.contentfrm.location.replace(window.parent.contentfrm.location.href);
+	window.location.replace("/cgi-bin/wwwctrl.cgi?action=connection_test");
+	//timer = setTimeout("reloadPage()",7000);
+}
+
+function reloadw()
+{
+
+	if (localStorage.getItem("Tracert_Testing")=="1")
+	{
+		document.getElementById("id_submitBtn_ping").disabled=true;
+		if (fvt_meta_config('kv_tracert_runing')!="0")
+		{
+			timer = setTimeout("reloadPage()",7000);
+			document.getElementById("id_TracerouteRun").style.display="table-row";
+		}
+		if (fvt_meta_config('kv_tracert_runing')=="0")
+			document.getElementById("id_Traceroute").style.display="table-row";
+	}
+	else
+	{
+		document.getElementById("id_submitBtn_ping").disabled=false;
+		document.getElementById("id_Traceroute").style.display="table-row";
+	}
+
+	if (fvt_meta_config('kv_tracert_runing')=="0")
+	{
+		localStorage.setItem("Tracert_Testing","0");
+		document.getElementById("id_submitBtn_ping").disabled=false;
+	}
+
+	if (fvt_meta_config('kv_ping_v6opt')=="1") document.getElementById('id_ipv6ping_chk').checked=true;
+	if (localStorage.getItem("Ping_Testing")=="1")
+	{
+		document.getElementById("id_submitBtn_traceroute").disabled=true;
+		if (fvt_meta_config('kv_ping_runing')!="0")
+		{
+			timer = setTimeout("reloadPage()",2500);
+			document.getElementById("id_PingRun").style.display="table-row";
+		}
+		if (fvt_meta_config('kv_ping_runing')=="0")
+			document.getElementById("id_Ping").style.display="table-row";
+	}
+	else
+	{
+		document.getElementById("id_submitBtn_traceroute").disabled=false;
+		document.getElementById("id_Ping").style.display="table-row";
+	}
+
+	if (fvt_meta_config('kv_ping_runing')=="0")
+	{
+		localStorage.setItem("Ping_Testing","0");
+		document.getElementById("id_submitBtn_traceroute").disabled=false;
+	}
+}
+
+function stop_ping()
+{
+	localStorage.setItem("Ping_Testing","0");
+}
+function stop_traceroute()
+{
+	localStorage.setItem("Tracert_Testing","0");
+}
+</script>
+
+</head>
+
+<body align="left" onload="reloadw();check_process();disableBtn();setGw();">
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+	<fieldset>
+		<div class="lv1_title">
+		Maintenance&nbsp;&gt;&nbsp;Utilities&nbsp;&gt;&nbsp;Connection Test</div>
+	</fieldset>
+
+<div class="div1_indent">
+	<div class="lv5_new" ctrltxt="test">
+		This page allows you to test the connection to a network host by performing an IP ping (ICMP echo request) and trace route test. Either enter the IP address of the host or enter the domain name of the host. The result will be shown on this page after the "Start" button is pressed.
+	</div>
+<form id="ping_form" name="ping_form" method="post">
+	<div class="lv3_new top_test1">
+		<div class="lv1_new rowh">Ping test</div>
+		<div class="div2_indent">
+		<table>
+		<!--<tr><td class="width_restore"><div>Interface</div></td>
+				<td>
+					<select ar='1' name="inf_ping" id="id_inf_ping" onchange="setGw();" class="width_test">
+						<option value=1>WAN</option>
+						<option value=2>LAN</option>
+					</select>
+				</td>
+			</tr>
+		-->
+			<tr id="id_Ping" style='height:40px;display:none;'>
+				<td class="width100"><div>Host :</div></td>
+				<td class="width_text220">
+					<input type="text" name="host_ping" id="id_host_ping" class="width_text220">
+				</td>
+				<td class="width100"></td>
+				<td>
+					<input type="button" class='width_portw' id="id_submitBtn_ping" onclick="ping();" value="Start">
+				</td>
+			</tr>
+			<tr id="id_PingRun" style='height:40px;display:none;'>
+				<td colspan="2" class="widthrun">Ping is Runing .....</td>
+				<td class="width100"></td>
+				<td>
+					<input type="button" class='width_portw' id="id_stop_ping" onclick="stop_ping();" value="Stop">
+				</td>
+			</tr>
+			<tr id="id_PingVersion" style="height:20px;">
+				<td colspan="2">
+					IP Version:&nbsp;
+					<input type="radio" id="id_ipv4ping_chk" name="ipping_chk" checked>&nbsp;IPv4&nbsp;
+					<input type="radio" id="id_ipv6ping_chk" name="ipping_chk">&nbsp;IPv6
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4">
+					<!--<input type="text" name="ping_result" id="ping_result" class="size_testtxt">-->
+					<textarea id="ping_result" cols="" rows="" class="textarea_1"></textarea>
+					<script language="javascript" type="text/javascript">
+						document.getElementById("ping_result").value=fvt_meta_config('ping_result');
+					</script>
+				</td>
+			</tr>
+		</table>
+		</div>
+	</div>
+</form>
+<br>
+<form id="trace_form" name="trace_form" method="post">
+	<div class="top_test2">
+		<div class="lv1_new rowh">Trace route test</div>
+		<div class="div2_indent">
+		<table>
+		<!--<tr><td class="width_restore"><div>Interface</div></td>
+				<td>
+					<select ar='1' name="inf_traceroute" id="id_inf_traceroute" onchange="setGw();" class="width_test">
+						<option value=1>WAN</option>
+						<option value=2>LAN</option>
+					</select>
+				</td>
+			</tr>
+		-->
+			<tr id="id_Traceroute" style='height:40px;display:none;'>
+				<td class="width100"><div>Host :</div></td>
+				<td class="width_text220">
+					<input type="text" name="host_traceroute" id="id_host_traceroute" class="width_text220">
+				</td>
+				<td class="width100"></td>
+				<td>
+					<input type="button" class='width_portw' id="id_submitBtn_traceroute" onclick="traceroute();" value="Start">
+				</td>
+			</tr>
+			<tr id="id_TracerouteRun" style='height:40px;display:none;'>
+				<td colspan="2" class="widthrun">Traceroute is Runing .....</td>
+				<td class="width100"></td>
+				<td>
+					<input type="button" class='width_portw' id="id_stop_traceroute" onclick="stop_traceroute();" value="Stop">
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4">
+					<!--<input type="text" name="traceroute_result" id="traceroute_result" class="size_testtxt">-->
+					<textarea id="traceroute_result" cols="" rows="" class="textarea_2"></textarea>
+					<script language="javascript" type="text/javascript">
+						document.getElementById("traceroute_result").value=fvt_meta_config('traceroute_result');
+					</script>
+				</td>
+			</tr>
+			<tr></tr>
+		</table>
+		</div>
+	</div>
+</form>
+</div>
+</td></tr>
+</tbody></table>
+
+</body>
+</html>

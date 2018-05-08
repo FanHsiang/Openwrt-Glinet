@@ -1,0 +1,190 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+
+<script language="javascript" type="text/javascript">
+var NavLang=GetNavLang();
+
+if (NavLang == "ZH")
+{
+var vTLSMultiMode = "Multicast透通:";
+var vPbitWorkaround = "Symmetric P-bit Translation:";
+}
+else
+{
+var vTLSMultiMode = "Multicast Passthrough:";
+var vPbitWorkaround = "Symmetric P-bit Translation:";
+}
+
+function check_process()
+{
+	var process="Success";
+	if (process=="Existed")
+		warn_wait();
+		//alert("Please wait!!Another client is upgading firmware.");
+}
+
+function setup_tls(mode)
+{
+	fvt_form_submit('tls_form',mode);
+	document.tls_form.submit();
+}
+
+function setup_pbit_symmetric(mode)
+{
+	fvt_form_submit('tls_form',mode);
+	document.tls_form.submit();
+}
+
+function fvt_form_init(form_name)
+{
+	if (form_name=='tls_form' || form_name=='*')
+	{
+
+		if(fvt_meta_config('tls_mode')=="1")
+		{
+			document.getElementById("tls_status").style.color = 'blue';
+			document.getElementById("tls_status").innerHTML = "Multicast Passthrough Enable";
+			document.getElementById("disable_tls").style.display = "";
+			document.getElementById("enable_tls").style.display = "none";
+		}
+		else
+		{
+			document.getElementById("tls_status").style.color = 'black';
+			document.getElementById("tls_status").innerHTML = "Multicast Passthrough Disable";
+			document.getElementById("disable_tls").style.display = "none";
+			document.getElementById("enable_tls").style.display = "";
+		}
+
+		if(fvt_meta_config('pbit_symmetric')=="1")
+		{
+			document.getElementById("pbit_status").style.color = 'blue';
+			document.getElementById("pbit_status").innerHTML = "P-bit Translation Enable";
+			document.getElementById("disable_pbit").style.display = "";
+			document.getElementById("enable_pbit").style.display = "none";
+		}
+		else
+		{
+			document.getElementById("pbit_status").style.color = 'black';
+			document.getElementById("pbit_status").innerHTML = "P-bit Translation Disable";
+			document.getElementById("disable_pbit").style.display = "none";
+			document.getElementById("enable_pbit").style.display = "";
+		}
+
+	}
+}
+
+function fvt_form_submit(form_name, mode)	{
+	fvt_paramlist_clear();
+	if (form_name=='tls_form' || form_name=='*')
+	{
+		if (mode=="tls_en")		fvt_paramlist_cat_str('tls_mode',"1");
+		if (mode=="tls_dis")	fvt_paramlist_cat_str('tls_mode',"0");
+		if (mode=="pbit_symmetric_en")	fvt_paramlist_cat_str('pbit_symmetric',"1");
+		if (mode=="pbit_symmetric_dis")	fvt_paramlist_cat_str('pbit_symmetric',"0");
+	}
+	fvt_paramlist_presubmit(form_name);
+}
+
+function init()
+{
+
+}
+
+function toggle_visibility(id) {
+	var e = document.getElementById(id);
+	//if(e.style.display == 'none' && fvt_meta_config('igmp_status')=="off")
+	if(e.style.display == 'none')
+		e.style.display = "inline";
+	else
+		e.style.display = "none";
+}
+
+</script>
+</head>
+
+<body align="left" onload="fvt_form_init('tls_form');init();">
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<form id="id_tls_form" name="tls_form" method="post">
+	<fieldset>
+		<div class="lv1_title">Maintenance&nbsp;&gt;&nbsp;Utilities&nbsp;&gt;&nbsp;TLS Setup</div>
+	</fieldset>
+
+<div class="top_tls">
+	<table>
+	<tr></tr>
+	<div class="lv5_new">
+		<tr class="lv1_title">
+			<td width="220px"><b>
+				<script language="javascript" type="text/javascript">
+					document.write(vTLSMultiMode);
+				</script>
+			</b></td>
+			<td class="usr_tr2" height="18" name="tls_status" id="tls_status"></td>
+		</tr>
+	</div>
+
+	<tr></tr>
+		<tr id='disable_tls'>
+			<td width="100px"></td>
+			<td class="button_left">
+				<input ctrlflip="etc" type="button" onclick="setup_tls('tls_dis')" id="add_applybtn" name="applybtn" value="Disable Mcast Passthrough" class="width_firmupdate">
+			</td>
+			<td></td>
+		</tr>
+		<tr id='enable_tls'>
+			<td></td>
+			<td class="button_left">
+				<input ctrlflip="etc" type="button" onclick="setup_tls('tls_en')" id="add_applybtn" name="applybtn" value="Enable Mcast Passthrough" class="width_firmupdate">
+			</td>
+			<td></td>
+		</tr>
+	</table>
+</div>
+
+<div class="top_pbit">
+	<table>
+	<tr></tr>
+	<div class="lv5_new">
+		<tr class="lv1_title">
+			<td width="220px"><b>
+				<script language="javascript" type="text/javascript">
+					document.write(vPbitWorkaround);
+				</script>
+			</b></td>
+			<td class="usr_tr2" height="18" name="pbit_status" id="pbit_status"></td>
+		</tr>
+	</div>
+
+	<tr></tr>
+		<tr id='disable_pbit'>
+			<td width="100px"></td>
+			<td class="button_left">
+				<input ctrlflip="etc" type="button" onclick="setup_pbit_symmetric('pbit_symmetric_dis')" id="add_applybtn" name="applybtn" value="Disable P-bit Translation" class="width_firmupdate">
+			</td>
+			<td></td>
+		</tr>
+		<tr id='enable_pbit'>
+			<td></td>
+			<td class="button_left">
+				<input ctrlflip="etc" type="button" onclick="setup_pbit_symmetric('pbit_symmetric_en')" id="add_applybtn" name="applybtn" value="Enable P-bit Translation" class="width_firmupdate">
+			</td>
+			<td></td>
+		</tr>
+	</table>
+</div>
+</form>
+</td></tr>
+</tbody></table>
+</div>
+
+</body>
+</html>

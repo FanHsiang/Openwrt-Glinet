@@ -1,0 +1,752 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+<title>Phone</title>
+<meta http-equiv="Content-Language" content="English">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="pragma" content="no-cache">
+<link rel="stylesheet" type="text/css" href="Phone_service_files/style.css" media="screen">
+<script language="javascript" type="text/javascript" src="Phone_service_files/menu_base.html"></script>
+<script language="javascript" type="text/javascript" src="Phone_service_files/menu.html"></script>
+<script language="javascript" type="text/javascript" src="Phone_service_files/common.html"></script>
+
+<style type="text/css">
+<!--
+
+fieldset {
+padding:5px;
+margin:5px;
+width:600px;
+font-size:9pt;
+}
+
+legend {
+border:#FFFFFF 1px solid;
+padding:5px 5px;
+font-size:12px;
+color:#666666;
+background-color:#FFFFFF;
+}
+ul { 
+margin:8px 0px 4px 0px;
+} 
+
+.bSpnStr {
+font-weight: 700;
+}
+-->
+</style>
+
+<script language="javascript" type="text/javascript">
+<!--
+var menuSection	='Telephony';
+var menuItem	='Service Settings';
+var xmlDoc =loadXml("VoIP.xml");//Jamie add 201203014
+var value="";//fanny add 2012/05/03
+function checkMwi(val)
+{
+	    var item1=document.getElementById("mm_SIPAccountUnsolicitedMwi").value;
+	    var item2=document.getElementById("mm_SIPAccountMwi").value;
+	    if (val==1)
+	    {
+	    	document.getElementById("id_SIPAccountMwi").checked=false;
+	    	document.getElementById("id_SIPAccountUnsolicitedMwi").checked=(item1==1)?false:true;
+	    }
+	    else if (val==2)
+	    {
+	    	document.getElementById("id_SIPAccountUnsolicitedMwi").checked=false;
+	    	document.getElementById("id_SIPAccountMwi").checked=(item2==1)?false:true;
+	    }
+	    if (!document.getElementById("id_SIPAccountMwi").checked &&
+	    	!document.getElementById("id_SIPAccountUnsolicitedMwi").checked)
+	    {
+	    	document.getElementById("id_SIPMwiEnable").checked=false;
+	    	RNCheckbox(true);
+	    	NMCheckbox(true);
+	    }
+	    else
+	    	document.getElementById("id_SIPMwiEnable").checked=true;
+	    setValue('SIPAccountMwi');
+	    setValue('SIPAccountUnsolicitedMwi');
+	    checkMwiExpire();
+}
+function NMCheckbox(val)
+{
+	document.getElementById("id_SIPAccountMwi").disabled=val;
+	document.getElementById("id_SIPAccountUnsolicitedMwi").disabled=val;
+}
+function enableMwi()
+{
+	if (document.getElementById("id_SIPMwiEnable").checked)
+	{
+		NMCheckbox(false);
+		if (!document.getElementById("id_SIPAccountMwi").checked && 
+				!document.getElementById("id_SIPAccountUnsolicitedMwi").checked)
+		{
+			document.getElementById("id_SIPAccountUnsolicitedMwi").checked=true;
+		}
+		RNCheckbox(false);
+	}
+	else
+	{
+		document.getElementById("id_SIPAccountMwi").checked=false;
+		document.getElementById("id_SIPAccountUnsolicitedMwi").checked=false;
+		RNCheckbox(true);
+		NMCheckbox(true);
+	}
+	setValue("SIPAccountMwi");
+	setValue("SIPAccountUnsolicitedMwi");
+	checkMwiExpire();
+}
+function enableSessionTimerObj(val)
+{
+	document.getElementById("id_GUISessionTimerExpire").disabled = val;
+	document.getElementById("id_SIPAccountMinSessionTimerExpire").disabled = val;
+	document.getElementById("id_SIPAccountSessionRefresher").disabled = val;
+	document.getElementById("id_SIPAccountSessionRefreshMethod").disabled = val;
+}
+
+
+function RNCheckbox(val)
+{
+	document.getElementById("id_SIPAccountMwiReminderDialTone").disabled=val;
+	document.getElementById("id_SIPAccountMwiMessageLed").disabled=val;
+	document.getElementById("mm_SIPAccountMwiReminderDialTone").disabled=val;
+	document.getElementById("mm_SIPAccountMwiMessageLed").disabled=val;
+}
+function enableHWLine()
+{
+	if (document.getElementById("id_SIPHotline").checked)
+	{
+		document.getElementById("id_SIPWarmlineTimeout").disabled=false;
+		document.getElementById("id_SIPHotlineNumber").disabled=false;
+		document.getElementById("id_SIPWarmlineNumber").disabled=false;
+	}
+	else
+	{
+		document.getElementById("id_SIPWarmlineTimeout").disabled=true;
+                document.getElementById("id_SIPHotlineNumber").disabled=true;
+                document.getElementById("id_SIPWarmlineNumber").disabled=true;
+	}
+}
+
+function init()
+{
+	checkMwi(0);
+	enableMwi();
+	//enableSessionTimer();
+	enableHWLine();
+}
+
+
+function setValue(val)
+{
+	document.getElementById("mm_"+val).value = 
+		(document.getElementById("id_"+val).checked)?"1":"0";
+}
+
+function check_destination(val)
+{
+        var c,i=0;
+        for(i=0;i<val.length;i++)
+        {
+                c = val.charAt(i);
+                if(((c<'0')||(c>'9'))&&(c!='+'))
+                {
+                        return false;
+                }
+        }
+        return true;
+}
+
+function checkMwiExpire()
+{
+  if (document.getElementById("id_SIPAccountMwi").checked==true)
+    document.getElementById("id_SIPAccountMwiTimerExpire").disabled=false;
+  else
+    document.getElementById("id_SIPAccountMwiTimerExpire").disabled=true;
+}
+
+function apply(val)
+{
+  var item,min,max;
+  if(isBlank(document.getElementById("id_DSPCallWaitToneDuration").value))
+  {
+	alert("CW Alerting Timer can't be empty.");
+	return false;
+  }
+  if(!check_integer_range(document.getElementById("id_DSPCallWaitToneDuration").value,0,60))
+  {
+	alert("CW Alerting Timer should be a integer between 0-60.");
+	return false;
+  }
+
+  
+  if (document.getElementById("id_SIPAccountMwi").checked==true)
+  {
+	if (isBlank(document.getElementById("id_SIPAccountMwiTimerExpire").value))
+	{
+    		alert("Expiration Time can't be empty.");
+    		return false;
+  	}
+  	if (!check_integer_range(document.getElementById("id_SIPAccountMwiTimerExpire").value,0,3600))
+  	{
+    		alert("Expiration Time should be a integer between 0-3600.");
+    		return false;
+  	}
+  }
+
+  //if (document.getElementById("id_GUISessionTimerEnable").checked)
+  {
+  	if (document.getElementById("id_GUISessionTimerExpire").value.length==0 ||
+  		!check_integer_range(document.getElementById("id_GUISessionTimerExpire").value,90,3600))
+  	{
+  		item = "Default Session Expire";
+  		min = 90;
+  		max = 3600;
+  		alert(item+" should be an integer between "+min+" and "+max);
+    		return false;
+  	}
+  	if (document.getElementById("id_SIPAccountMinSessionTimerExpire").value.length==0 ||
+  		!check_integer_range(document.getElementById("id_SIPAccountMinSessionTimerExpire").value,90,3600))
+  	{
+  		item = "Minimal Session Expire";
+  		min = 90;
+  		max = 3600;
+  		alert(item+" should be an integer between "+min+" and "+max);
+    		return false;
+  	}
+ 	if (parseInt(document.getElementById("id_GUISessionTimerExpire").value) < 
+ 	parseInt(document.getElementById("id_SIPAccountMinSessionTimerExpire").value))
+  	{
+  		item = "Minimal Session Expire";
+  		alert(item + " is invalid!!");
+    		return false;
+  	}
+  }
+
+  if (document.getElementById("id_SIPHotline").checked)
+  {
+  	//if(document.getElementById("id_SIPHotlineNumber").value.length > 32)
+	//{
+	//	alert("Hot Line destination is too long");
+	//	return false;
+  	//}
+		
+  	if (!check_destination(document.getElementById("id_SIPHotlineNumber").value))
+	{
+		item = "Hot Line destination";
+                alert(item + " is invalid!!");
+                document.getElementById("id_SIPHotlineNumber").focus();
+                return false;
+	}
+	if (!check_destination(document.getElementById("id_SIPWarmlineNumber").value))
+        {
+                item = "Warm Line destination";
+                alert(item + " is invalid!!");
+                document.getElementById("id_SIPWarmlineNumber").focus();
+                return false;
+        }
+  }
+  if (val)
+  {
+  	//alert("Now your setting will be saved.");
+	document.nosave_call_form.nosave_apply.disabled=false;
+  }
+  else
+      document.nosave_call_form.nosave_both.disabled=false;
+  document.nosave_call_form.submit();
+}
+
+
+/*function enableSessionTimer()
+{
+	if (document.getElementById("id_GUISessionTimerEnable").checked)
+		enableSessionTimerObj(false);
+	else
+		enableSessionTimerObj(true);
+}*/
+
+function cancel()
+{
+  window.location.replace("phone_service.html");
+}
+
+-->
+</script>
+</head>
+
+<body leftmargin="0" topmargin="0" onload="init();" marginheight="0" marginwidth="0" bgcolor="#FFFFFF">
+<form id="id_call_form" name="nosave_call_form" method="post">
+<input name="nosave_apply" value="1" disabled="disabled" type="hidden">
+<input name="nosave_both" value="1" disabled="disabled" type="hidden">
+<script language="javascript" type="text/javascript">
+showMenu0(menuSection,menuItem);
+</script><table cellpadding="0" cellspacing="0" border="0"><tbody><tr><td height="100%" valign="top" width="185"><table cellpadding="0" cellspacing="0" width="185" align="left" border="0"><tbody><tr id="id_status_item11"><td colspan="3" class="section" onclick='setMenuFlag("status",1,9);' onmouseover='changeCursor("status",9);' height="20" width="170" background="Phone_service_files/blu_bar.gif">&nbsp;&nbsp;&nbsp;<img id="id_status_item10" src="Phone_service_files/up.gif" height="12" width="12">&nbsp;<font color="#FFFFFF">Status</font></td></tr><tr id="id_status_item1" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/status.html"><font color="#000000">System Usage</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_status_item2" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/wan_status.html"><font color="#000000">WAN PON Status</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_status_item3" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_gpon.html"><font color="#000000">PON Link Status</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_status_item4" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_device.html"><font color="#000000">Device Table</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_status_item5" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_dhcp.html"><font color="#000000">DHCP Lease</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_status_item6" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_wifi.html"><font color="#000000">WiFi Association</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_status_item7" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/statistics.html"><font color="#000000">WAN/(W)LAN Statistics</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_status_item8" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/igmp_membership.html"><font color="#000000">IGMP Membership</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_status_item9" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/igmp_statistic.html"><font color="#000000">IGMP Statistic</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_net_item5"><td colspan="3" class="section" onclick='setMenuFlag("net",1,3);' onmouseover='changeCursor("net",3);' height="20" width="170" background="Phone_service_files/blu_bar.gif">&nbsp;&nbsp;&nbsp;<img id="id_net_item4" src="Phone_service_files/up.gif" height="12" width="12">&nbsp;<font color="#FFFFFF">Network</font></td></tr><tr id="id_net_item1" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/usb_setting.html"><font color="#000000">USB</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_net_item2" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/lan_mn.html"><font color="#000000">LAN Settings</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_net_item3" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/wan_hybrid.html"><font color="#000000">WAN PON Connections</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_wifi_item5"><td colspan="3" class="section" onclick='setMenuFlag("wifi",1,3);' onmouseover='changeCursor("wifi",3);' height="20" width="170" background="Phone_service_files/blu_bar.gif">&nbsp;&nbsp;&nbsp;<img id="id_wifi_item4" src="Phone_service_files/up.gif" height="12" width="12">&nbsp;<font color="#FFFFFF">WiFi Setup</font></td></tr><tr id="id_wifi_item1" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/wifi_setting.html"><font color="#000000">WiFi Settings</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_wifi_item2" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/wifi_security.html"><font color="#000000">WiFi Security</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_wifi_item3" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/wifi_mac.html"><font color="#000000">WiFi Access</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_firewall_item8"><td colspan="3" class="section" onclick='setMenuFlag("firewall",1,6);' onmouseover='changeCursor("firewall",6);' height="20" width="170" background="Phone_service_files/blu_bar.gif">&nbsp;&nbsp;&nbsp;<img id="id_firewall_item7" src="Phone_service_files/up.gif" height="12" width="12">&nbsp;<font color="#FFFFFF">Firewall Setup</font></td></tr><tr id="id_firewall_item1" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/natfw_portforwarding.html"><font color="#000000">Port Forwarding</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_firewall_item2" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/natfw_dmz.html"><font color="#000000">Demilitarized Zone</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_firewall_item3" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/natfw_upnp.html"><font color="#000000">UPnP</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_firewall_item4" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/bridge_filter.html"><font color="#000000">Layer 2 Filter</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_firewall_item5" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/natfw_filter.html"><font color="#000000">Layer 3 Filter</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_firewall_item6" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/natfw_vpnpassthrough.html"><font color="#000000">NAT Passthrough</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_adv_item6"><td colspan="3" class="section" onclick='setMenuFlag("adv",1,4);' onmouseover='changeCursor("adv",4);' height="20" width="170" background="Phone_service_files/blu_bar.gif">&nbsp;&nbsp;&nbsp;<img id="id_adv_item5" src="Phone_service_files/up.gif" height="12" width="12">&nbsp;<font color="#FFFFFF">Advanced Setup</font></td></tr><tr id="id_adv_item1" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/advanced_route.html"><font color="#000000">Route Settings</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_adv_item2" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/static_dns.html"><font color="#000000">DNS Settings</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_adv_item3" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_syslog.html"><font color="#000000">System Log</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_adv_item4" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/igmp_setting.html"><font color="#000000">IGMP Proxy/Snooping</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_phone_item6"><td colspan="3" class="section" onclick='setMenuFlag("phone",1,4);' onmouseover='changeCursor("phone",4);' height="20" width="170" background="Phone_service_files/blu_bar.gif">&nbsp;&nbsp;&nbsp;<img id="id_phone_item5" src="Phone_service_files/up.gif" height="12" width="12">&nbsp;<font color="#FFFFFF">Telephony</font></td></tr><tr id="id_phone_item1" height="20"><td width="5" bgcolor="#CCCCCC">&nbsp;</td><td class="leftLink" width="155" bgcolor="#CCCCCC"><a href="http://192.168.2.1/phone_account.html"><font color="#000000">Account Setup</font></a></td><td width="10" align="right" bgcolor="#CCCCCC">&nbsp;</td></tr><tr id="id_phone_item2" height="20"><td width="5" bgcolor="#ADAE9D">&nbsp;</td><td class="leftLink" width="155" bgcolor="#ADAE9D"><a href="http://192.168.2.1/phone_service.html"><font color="#000000"><span class="selected_css">Service Settings</span></font></a></td><td width="10" align="right" bgcolor="#ADAE9D">&gt;&gt;</td></tr><tr id="id_phone_item3" height="20"><td width="5" bgcolor="#CCCCCC">&nbsp;</td><td class="leftLink" width="155" bgcolor="#CCCCCC"><a href="http://192.168.2.1/phone_server_set.html"><font color="#000000">SIP Server Settings</font></a></td><td width="10" align="right" bgcolor="#CCCCCC">&nbsp;</td></tr><tr id="id_phone_item4" height="20"><td width="5" bgcolor="#CCCCCC">&nbsp;</td><td class="leftLink" width="155" bgcolor="#CCCCCC"><a href="http://192.168.2.1/util_upgradeDialPlan.html"><font color="#000000">Upgrade Dial Plan</font></a></td><td width="10" align="right" bgcolor="#CCCCCC">&nbsp;</td></tr><tr id="id_util_item11"><td colspan="3" class="section" onclick='setMenuFlag("util",1,9);' onmouseover='changeCursor("util",9);' height="20" width="170" background="Phone_service_files/blu_bar.gif">&nbsp;&nbsp;&nbsp;<img id="id_util_item10" src="Phone_service_files/down.gif" height="12" width="12">&nbsp;<font color="#FFFFFF">Utilities</font></td></tr><tr id="id_util_item1" style="display:none" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_cfgstore.html"><font color="#000000">Configuration Backup</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_util_item2" style="display:none" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_cfgrestore.html"><font color="#000000">Configuration Restore</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_util_item3" style="display:none" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_webfirmware.html"><font color="#000000">Firmware Upgrade</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_util_item4" style="display:none" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/bootloader.html"><font color="#000000">Bootloader Upgrade</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_util_item5" style="display:none" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_system.html"><font color="#000000">System Settings</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_util_item6" style="display:none" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_remotemanagement.html"><font color="#000000">CWMP Management</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_util_item7" style="display:none" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_ping.html"><font color="#000000">Connection Test</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_util_item8" style="display:none" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_factory.html"><font color="#000000">Restore Factory Defaults</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_util_item9" style="display:none" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_reboot.html"><font color="#000000">Reboot Gateway</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr></tbody></table></td><td height="100%" valign="top" width="1" bgcolor="#CCCCCC"><img src="Phone_service_files/shim.gif" height="1" width="1"></td>
+<td valign="top" align="left"> 
+  <div class="direction">
+    <br>&nbsp;&nbsp;&nbsp;<span><b>Telephony&nbsp;&gt;&nbsp;Service Settings</b></span>
+  </div>
+  <table cellpadding="0" cellspacing="0" border="0">
+  <tbody><tr>
+    <td>&nbsp;</td>
+    <td colspan="3">
+      <table cellpadding="0" cellspacing="0" border="0">
+      
+    <tbody><tr>
+    <td>&nbsp;</td>
+    <td colspan="3">
+      <table cellpadding="0" cellspacing="0" border="0">
+      <tbody><tr>
+      <td>
+		<fieldset style="-moz-border-radius:8px;">
+			<legend><b>Hide Calling Identity(Per Call)</b></legend>
+			<ul>
+				<table width="550">
+					<tbody><tr height="25">
+						<td width="20">&nbsp;</td>
+						<td width="250">
+							<u><span><b>Service Code</b></span></u>
+						</td>
+						<td width="250">&nbsp;</td>
+					</tr>
+					<tr height="25">
+						<td width="20">&nbsp;</td>
+						<td width="250">
+							<span class="bSpnStr">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Invoke</span>
+						</td>
+						<td width="250">
+						<script language="javascript" type="text/javascript">
+							//var x=xmlDoc.getElementsByTagName("ServiceCode");
+							//document.write(x[0].getElementsByTagName("SIPScClir")[0].text);
+							value=getNodeValue("ServiceCode","SIPScClir",0);
+							document.write(value);
+						</script>*31*
+						DN#</td>
+					</tr>
+					<tr heigth="25">
+						<td width="20">&nbsp;</td>
+						<td width="250">&nbsp;</td>
+						<td style="ont-size:12px;color:red" width="250" align="right">DN:Directory Number</td>
+					</tr>
+				</tbody></table>
+			</ul>
+		</fieldset>
+	  </td>	
+	  </tr>
+	  <tr>
+	  <td>
+		<fieldset style="-moz-border-radius:8px;">
+			<legend><b>Call Waiting</b></legend>
+			<ul>
+				<table width="550">
+					<tbody><tr height="25">
+						<td width="20">&nbsp;</td>
+						<td colspan="2">
+							<script language="javascript" type="text/javascript">
+								value=getNodeValue("UaProfile","CWService",0);
+	
+								//var x=xmlDoc.getElementsByTagName("UaProfile");
+								if(value=="1")
+								{
+									document.write("<input type='hidden' id='mm_SIPCallWaitingEnable' name='SIPCallWaitingEnable' value='1'>");
+									document.write("<input type='checkbox' id='id_SIPCallWaitingEnable' value='1' onclick='setValue(\"SIPCallWaitingEnable\");' checked >");
+								}
+								else
+								{
+									document.write("<input type='hidden' id='mm_SIPCallWaitingEnable' name='SIPCallWaitingEnable' value='0'>");
+									document.write("<input type='checkbox' id='id_SIPCallWaitingEnable' value='0' onclick='setValue(\"SIPCallWaitingEnable\");' >");
+								}
+							</script><input id="mm_SIPCallWaitingEnable" name="SIPCallWaitingEnable" value="1" type="hidden"><input id="id_SIPCallWaitingEnable" value="1" onclick='setValue("SIPCallWaitingEnable");' checked="checked" type="checkbox">
+							&nbsp;
+							<span><b>Active</b></span>
+						</td>
+					</tr>
+					
+					<tr height="25">
+						<td width="20">&nbsp;</td>
+						<td>
+							<span><b>CW Alerting Timer</b></span>
+						</td>
+						<td>
+							<script language="javascript" type="text/javascript">
+							   
+							 //  var x=xmlDoc.getElementsByTagName("Line");
+							//   document.write("<input type='text' name='DSPCallWaitToneDuration' id='id_DSPCallWaitToneDuration' size='4' maxlength='4' value='"+x[0].getElementsByTagName("CallWaitToneDuration")[0].text+"'>");
+							     value=getNodeValue("Line","CallWaitToneDuration",0);
+							     document.write("<input type='text' name='DSPCallWaitToneDuration' id='id_DSPCallWaitToneDuration' size='4' maxlength='4' value='"+value+"'>");
+
+							</script><input name="DSPCallWaitToneDuration" id="id_DSPCallWaitToneDuration" size="4" maxlength="4" value="40" type="text">						
+							&nbsp;<span><b>Sec</b></span>
+						</td>
+					</tr>
+				</tbody></table>
+			</ul>
+		</fieldset>
+	  </td>
+	  </tr>
+
+	  <tr>
+	  <td>
+		<fieldset style="-moz-border-radius:8px;">
+			<legend><b>3 Party Conference</b></legend>
+			<ul>
+				<table width="550">
+					<tbody><tr height="25">
+						<td width="20">&nbsp;</td>
+						<td colspan="2">
+							<script language="javascript" type="text/javascript">
+								//var x=xmlDoc.getElementsByTagName("UaProfile");
+								value=getNodeValue("UaProfile","ThreePartyService",0);
+								//if(x[0].getElementsByTagName("ThreePartyService")[0].text == "1")
+								if(value == "1")
+								{
+									document.write("<input type='hidden' id='mm_SIPConferenceEnable' name='SIPConferenceEnable' value='1'>")
+									document.write("<input type='checkbox' id='id_SIPConferenceEnable' value='1' onclick='setValue(\"SIPConferenceEnable\");' checked >");
+								}
+								else
+								{
+									document.write("<input type='hidden' id='mm_SIPConferenceEnable' name='SIPConferenceEnable' value='0'>")
+									document.write("<input type='checkbox' id='id_SIPConferenceEnable' value='0' onclick='setValue(\"SIPConferenceEnable\");' >");
+								}
+							</script><input id="mm_SIPConferenceEnable" name="SIPConferenceEnable" value="1" type="hidden"><input id="id_SIPConferenceEnable" value="1" onclick='setValue("SIPConferenceEnable");' checked="checked" type="checkbox">
+							&nbsp;<span><b>Active</b></span>
+						</td>
+					</tr>
+				</tbody></table>
+			</ul>
+			</fieldset>
+		  </td>
+		  </tr>
+		  <tr>
+		  <td>
+							
+							
+        <fieldset style="-moz-border-radius:8px;">
+          <legend><b>Message Wait Indication</b></legend>
+          <ul>
+            <table width="550">
+              <tbody><tr height="25">
+					<td width="20">&nbsp;</td>
+					<td>
+						<input checked="checked" id="id_SIPMwiEnable" value="1" onclick="enableMwi();" type="checkbox">
+						&nbsp;<span><b>Active</b></span>
+					</td>
+				</tr>
+				<tr height="25">
+					<td width="20">&nbsp;</td>
+					<td valign="top">
+						<span><b>Notify Method</b></span>
+					</td>
+					<td>
+					<script language="javascript" type="text/javascript">
+						//var x=xmlDoc.getElementsByTagName("SIPAccount");
+						value=getNodeValue("SIPAccount","UnsolicitedMwi",0);
+						var value1=getNodeValue("SIPAccount","Mwi",0);
+						var value2=getNodeValue("SIPAccount","MwiTimerExpire",0);
+						if(value=="0")
+						{
+							document.write("<input type='radio' id='id_SIPAccountUnsolicitedMwi' onclick=\"checkMwi(1);setValue('SIPAccountUnsolicitedMwi');\">");
+							document.write("<span><b>Unsolicited Notify</b></span><br>");
+							document.write("<input type='hidden' id='mm_SIPAccountUnsolicitedMwi' name='SIPAccountUnsolicitedMwi' value='0'>");
+
+							// no Active
+							if(value1=="0")
+							{
+								document.write("<input type='radio' id='id_SIPAccountMwi' onClick=\"checkMwi(2);setValue('SIPAccountMwi');\">");
+								document.write("<span><b>Solicited Subscribe/Notify&nbsp;&nbsp;Expiration Time</b></span>");
+								document.write("<input type='hidden' id='mm_SIPAccountMwi' name='SIPAccountMwi' value='0'>");
+								document.write("<input type='text' name='SIPAccountMwiTimerExpire' id='id_SIPAccountMwiTimerExpire' disabled value='"+value2+"' size='4' maxlength='4'>");
+							}
+							else //choice Solicited Subscribe/Notify
+							{
+								document.write("<input type='radio' id='id_SIPAccountMwi' checked onClick=\"checkMwi(2);setValue('SIPAccountMwi');\">");
+								document.write("<span><b>Solicited Subscribe/Notify&nbsp;&nbsp;Expiration Time</b></span>");
+								document.write("<input type='hidden' id='mm_SIPAccountMwi' name='SIPAccountMwi' value='1'>");
+								document.write("<input type='text' name='SIPAccountMwiTimerExpire' id='id_SIPAccountMwiTimerExpire' value='"+value2+"' size='4' maxlength='4'>");
+							}
+						}
+						else // choice Unsolicited Notify
+						{
+							document.write("<input type='radio' id='id_SIPAccountUnsolicitedMwi' checked onclick=\"checkMwi(1);setValue('SIPAccountUnsolicitedMwi');\">");
+							document.write("<span><b>Unsolicited Notify</b></span><br>");
+							document.write("<input type='hidden' id='mm_SIPAccountUnsolicitedMwi' name='SIPAccountUnsolicitedMwi' value='1'>");
+
+							document.write("<input type='radio' id='id_SIPAccountMwi' onClick=\"checkMwi(2);setValue('SIPAccountMwi');\">");
+							document.write("<span><b>Solicited Subscribe/Notify;&nbsp;&nbsp;Expiration Time</b></span>");
+							document.write("<input type='hidden' id='mm_SIPAccountMwi' name='SIPAccountMwi' value='0'>");
+							document.write("<input type='text' name='SIPAccountMwiTimerExpire' id='id_SIPAccountMwiTimerExpire' disabled value='"+value2+"' size='4' maxlength='4'>");
+						}
+					</script><input id="id_SIPAccountUnsolicitedMwi" checked="checked" onclick="checkMwi(1);setValue('SIPAccountUnsolicitedMwi');" type="radio"><span><b>Unsolicited Notify</b></span><br><input id="mm_SIPAccountUnsolicitedMwi" name="SIPAccountUnsolicitedMwi" value="1" type="hidden"><input id="id_SIPAccountMwi" onclick="checkMwi(2);setValue('SIPAccountMwi');" type="radio"><span><b>Solicited Subscribe/Notify;&nbsp;&nbsp;Expiration Time</b></span><input id="mm_SIPAccountMwi" name="SIPAccountMwi" value="0" type="hidden"><input name="SIPAccountMwiTimerExpire" id="id_SIPAccountMwiTimerExpire" disabled="disabled" value="3600" size="4" maxlength="4" type="text">
+				  &nbsp;<span><b>Sec</b></span>
+                </td>
+              </tr>
+              <tr height="25">
+                <td width="20">&nbsp;</td>
+                <td valign="top">
+                  <span><b>Reminder Notification</b></span>
+                </td>
+                <td>
+					<script language="javascript" type="text/javascript">
+						//var x=xmlDoc.getElementsByTagName("SIPAccount");
+						value=getNodeValue("SIPAccount","MwiReminderDialTone",0);
+						//if(x[0].getElementsByTagName("MwiReminderDialTone")[0].childNodes[0].nodeValue=="1")
+						if(value=="1")
+						{
+							document.write("<input type='hidden' id='mm_SIPAccountMwiReminderDialTone' name='SIPAccountMwiReminderDialTone' value='1'>");
+							document.write("<input type='checkbox' id='id_SIPAccountMwiReminderDialTone' value='1' onclick='setValue(\"SIPAccountMwiReminderDialTone\");' checked >");
+						}
+						else
+						{
+							document.write("<input type='hidden' id='mm_SIPAccountMwiReminderDialTone' name='SIPAccountMwiReminderDialTone' value='0'>");
+							document.write("<input type='checkbox' id='id_SIPAccountMwiReminderDialTone' value='0' onclick='setValue(\"SIPAccountMwiReminderDialTone\");' >");	
+						}
+					</script><input id="mm_SIPAccountMwiReminderDialTone" name="SIPAccountMwiReminderDialTone" value="1" type="hidden"><input id="id_SIPAccountMwiReminderDialTone" value="1" onclick='setValue("SIPAccountMwiReminderDialTone");' checked="checked" type="checkbox">				  
+					<span><b>Stutter Dial Tone</b></span><br>
+
+					<script language="javascript" type="text/javascript">
+						//var x=xmlDoc.getElementsByTagName("SIPAccount");
+						value=getNodeValue("SIPAccount","MwiMessageLed",0);
+						//if(x[0].getElementsByTagName("MwiMessageLed")[0].childNodes[0].nodeValue=="1")
+						if(value=="1")
+						{
+							document.write("<input type='hidden' id='mm_SIPAccountMwiMessageLed' name='SIPAccountMwiMessageLed' value='1'>");
+							document.write("<input type='checkbox' id='id_SIPAccountMwiMessageLed' value='1' onclick='setValue(\"SIPAccountMwiMessageLed\");' checked >");
+						}
+						else
+						{
+							document.write("<input type='hidden' id='mm_SIPAccountMwiMessageLed' name='SIPAccountMwiMessageLed' value='0'>");
+							document.write("<input type='checkbox' id='id_SIPAccountMwiMessageLed' value='0' onclick='setValue(\"SIPAccountMwiMessageLed\");' >");	
+						}
+					</script><input id="mm_SIPAccountMwiMessageLed" name="SIPAccountMwiMessageLed" value="1" type="hidden"><input id="id_SIPAccountMwiMessageLed" value="1" onclick='setValue("SIPAccountMwiMessageLed");' checked="checked" type="checkbox">				  
+				  <span><b>Visual "Message" LED	</b></span>
+                </td>
+              </tr>
+            </tbody></table>
+          </ul>
+        </fieldset>
+      </td>
+      </tr>
+      <tr>
+      <td>
+        <fieldset style="-moz-border-radius:8px;">
+          <legend><b>Hot Line/Warm Line</b></legend>
+          <ul>
+            <table width="550">
+              <tbody><tr>
+                <td width="20">&nbsp;</td>
+                <td colspan="2">
+					<script language="javascript" type="text/javascript">
+						//var x=xmlDoc.getElementsByTagName("Hotline");
+						value=getNodeValue("Hotline","Enable",0);
+						//if(x[0].getElementsByTagName("Enable")[0].text=="1")
+						if(value=="1")
+						{
+							document.write("<input type='hidden' id='mm_SIPHotline' name='SIPHotline' value='1'>");
+							document.write("<input type='checkbox' id='id_SIPHotline' value='1' onclick='setValue(\"SIPHotline\");enableHWLine();' checked >");
+						}
+						else
+						{
+							document.write("<input type='hidden' id='mm_SIPHotline' name='SIPHotline' value='0'>");
+							document.write("<input type='checkbox' id='id_SIPHotline' value='0' onclick='setValue(\"SIPHotline\");enableHWLine();' >");		
+						}
+					</script><input id="mm_SIPHotline" name="SIPHotline" value="0" type="hidden"><input id="id_SIPHotline" value="0" onclick='setValue("SIPHotline");enableHWLine();' type="checkbox">	
+				  &nbsp;<span><b>Active</b></span>
+                </td>
+              </tr>
+              <tr>
+                <td width="20">&nbsp;</td>
+                <td width="250"><span><b>Warm Line Timer</b></span></td>
+				<td width="250">
+                  <span>
+	                  <select disabled="disabled" name="SIPWarmlineTimeout" id="id_SIPWarmlineTimeout">
+						<script language="javascript" type="text/javascript">
+							//var x=xmlDoc.getElementsByTagName("Hotline");
+							value=getNodeValue("Hotline","WarmlineTimeout",0);
+							var i=0;
+							for(i=0;i<=10;i=i+2)
+							{
+								//if(x[0].getElementsByTagName("WarmlineTimeout")[0].text==i)
+								if(value==i)
+									document.write("<option value="+i+" selected>"+i+"</option>");
+								else
+									document.write("<option value="+i+">"+i+"</option>");
+							}
+						</script><option value="0" selected="selected">0</option><option value="2">2</option><option value="4">4</option><option value="6">6</option><option value="8">8</option><option value="10">10</option>	
+
+	                  </select>
+                  </span>
+                  &nbsp;
+                  <span><b>Sec</b></span>
+                </td>
+              </tr>
+              <tr>
+                <td width="20">&nbsp;</td>
+                <td width="250"><span><b>Hot Line destination</b></span>&nbsp;</td>
+                <td width="250">
+					<script language="javascript" type="text/javascript">
+						//var x=xmlDoc.getElementsByTagName("Hotline");
+						//document.write("<input type='text' name='SIPHotlineNumber' id='id_SIPHotlineNumber' size='32' maxlength='64' value="+x[0].getElementsByTagName("HotlineNumber")[0].text+">");
+						value=getNodeValue("Hotline","HotlineNumber",0);
+  					document.write("<input type='text' name='SIPHotlineNumber' id='id_SIPHotlineNumber' size='32' maxlength='64' value="+value+">");
+					</script><input disabled="disabled" name="SIPHotlineNumber" id="id_SIPHotlineNumber" size="32" maxlength="64" value="hotline" type="text">
+				</td>
+              </tr>
+              <tr>
+                <td width="20">&nbsp;</td>
+                <td width="250"><span><b>Warm Line destination</b></span>&nbsp;</td>
+                <td width="250">
+					<script language="javascript" type="text/javascript">
+						//var x=xmlDoc.getElementsByTagName("Hotline");
+						//document.write("<input type='text' name='SIPWarmlineNumber' id='id_SIPWarmlineNumber' size='32' maxlength='64' value="+x[0].getElementsByTagName("WarmlineNumber")[0].text+">");
+						value=getNodeValue("Hotline","WarmlineNumber",0);
+						document.write("<input type='text' name='SIPWarmlineNumber' id='id_SIPWarmlineNumber' size='32' maxlength='64' value="+value+">");
+					</script><input disabled="disabled" name="SIPWarmlineNumber" id="id_SIPWarmlineNumber" size="32" maxlength="64" type="text">				
+				</td>
+              </tr>
+            </tbody></table>
+          </ul>
+        </fieldset>
+      </td>
+      </tr>
+      <tr>
+      <td>
+        <fieldset style="-moz-border-radius:8px;">
+          <legend><b>Session Timer</b></legend>
+          <ul>
+            <table width="550">
+              <tbody><tr height="25">
+                <td width="20">&nbsp;</td>
+                <td width="250">
+                 <span><b>Default Session Expire</b></span>
+                 </td>
+                 <td width="250">
+					<script language="javascript" type="text/javascript">
+						//var x=xmlDoc.getElementsByTagName("SIPAccount");                  
+						//document.write("<input type='text' name='GUISessionTimerExpire' id='id_GUISessionTimerExpire' size='5' maxlength='4' value='"+x[0].getElementsByTagName("SessionTimerExpire")[0].text+"'> &nbsp;");
+						value=getNodeValue("SIPAccount","SessionTimerExpire",0);                                                                                                                                             			
+						document.write("<input type='text' name='GUISessionTimerExpire' id='id_GUISessionTimerExpire' size='5' maxlength='4' value='"+value+"'> &nbsp;");	  
+					</script><input name="GUISessionTimerExpire" id="id_GUISessionTimerExpire" size="5" maxlength="4" value="1800" type="text"> &nbsp;
+                  <span><b>Sec</b></span>
+                </td>
+              </tr>
+              <tr height="25">
+                <td width="20">&nbsp;</td>
+                <td width="250">
+                 <span><b>Minimal Session Expire</b></span>
+                 </td>
+                 <td width="250">
+                  <script language="javascript" type="text/javascript">
+					//var x=xmlDoc.getElementsByTagName("SIPAccount");                  
+					//document.write("<input type='text' name='SIPAccountMinSessionTimerExpire' id='id_SIPAccountMinSessionTimerExpire' size='5' maxlength='4' value='"+x[0].getElementsByTagName("MinSessionTimerExpire")[0].text+"'> &nbsp;");                                                                                                                                             				  
+					value=getNodeValue("SIPAccount","MinSessionTimerExpire",0);
+					document.write("<input type='text' name='SIPAccountMinSessionTimerExpire' id='id_SIPAccountMinSessionTimerExpire' size='5' maxlength='4' value='"+value+"'> &nbsp;");
+				  </script><input name="SIPAccountMinSessionTimerExpire" id="id_SIPAccountMinSessionTimerExpire" size="5" maxlength="4" value="90" type="text"> &nbsp;
+                  <span><b>Sec</b></span>
+                </td>
+              </tr>
+            </tbody></table>
+          </ul>
+        </fieldset>
+      </td>
+      </tr>
+      <tr>
+      <td>
+<!--Jamie add ej_GetServiceHTML function wedside star-->
+<fieldset style="-moz-border-radius:8px;">
+ <legend><b>Do Not Disturb</b></legend>
+ <ul>
+   <table width="550">
+     <tbody><tr height="25">
+       <td width="20">&nbsp;</td>
+       <td width="250">
+         <u><span><b>Service Code</b></span></u>
+       </td>
+       <td width="250">&nbsp;</td>
+     </tr>
+     <tr height="25">
+       <td width="20">&nbsp;</td>
+       <td width="250">
+         <span class="bSpnStr">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Activate</span>
+       </td>
+       <script language="javascript" type="text/javascript">
+        //var x=xmlDoc.getElementsByTagName("ServiceCode");
+        //document.write("<td width='250'>"+x[0].getElementsByTagName("SIPScEnableDnd")[0].text+"</td>");
+        value=getNodeValue("ServiceCode","SIPScEnableDnd",0);
+        document.write("<td width='250'>"+value+"</td>");
+       </script><td width="250">*26#</td>
+     </tr>
+     <tr height="25">
+       <td width="20">&nbsp;</td>
+       <td width="250">
+         <span class="bSpnStr">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DeActivate</span>
+       </td>
+       <script language="javascript" type="text/javascript">
+       //var x=xmlDoc.getElementsByTagName("ServiceCode");
+       //document.write("<td width='250'>"+x[0].getElementsByTagName("SIPScDisableDnd")[0].text+"</td>");
+       value=getNodeValue("ServiceCode","SIPScDisableDnd",0);
+       document.write("<td width='250'>"+value+"</td>");
+       </script><td width="250">#26#</td>
+     </tr>
+   </tbody></table>
+ </ul>
+</fieldset>
+</td>
+</tr>
+<tr>
+<td>
+<fieldset style="-moz-border-radius:8px;">
+ <legend><b>Call Forwarding</b></legend>
+ <ul>
+   <table width="550">
+     <tbody><tr height="25">
+       <td width="20">&nbsp;</td>
+       <td width="250">
+    <script language="javascript" type="text/javascript">
+    //var x=xmlDoc.getElementsByTagName("SIPAccount");
+    value=getNodeValue("SIPAccount","CfwSplashRing",0);
+    //if( x[0].getElementsByTagName("CfwSplashRing")[0].text == "1")
+    if( value == "1")
+    {
+		document.write("<input type='hidden' id='mm_SIPAccountCfwSplashRing' name='SIPAccountCfwSplashRing' value='1'>");
+     	document.write("<input type='checkbox' id='id_SIPAccountCfwSplashRing' value='1' checked onclick=\"setValue('SIPAccountCfwSplashRing');\">");
+	}
+	else
+	{
+		document.write("<input type='hidden' id='mm_SIPAccountCfwSplashRing' name='SIPAccountCfwSplashRing' value='0'>");
+     	document.write("<input type='checkbox' id='id_SIPAccountCfwSplashRing' value='0' onclick=\"setValue('SIPAccountCfwSplashRing');\">");
+	}
+    </script><input id="mm_SIPAccountCfwSplashRing" name="SIPAccountCfwSplashRing" value="1" type="hidden"><input id="id_SIPAccountCfwSplashRing" value="1" checked="checked" onclick="setValue('SIPAccountCfwSplashRing');" type="checkbox">
+    
+	<span><b>Enable Splash Ring</b></span>
+       </td>
+       <td width="250">&nbsp;</td>
+     </tr>
+   </tbody></table>
+  </ul>
+</fieldset>
+<!--Jamie add ej_GetServiceHTML function wedside end-->
+      </td>
+      </tr>
+      </tbody></table>
+    </td>
+  </tr>
+  <tr height="30">
+    <td width="30">&nbsp;</td>
+    <td colspan="3"></td>
+  </tr>
+  <tr>
+    <td colspan="4" height="30" align="center">
+      <input id="savebtn" style="{width:100px;}" value="Save" class="submitBtn" onclick="apply(1);" type="button">
+      <input id="cancelbtn" style="{width:100px;}" value="Cancel" class="submitBtn" onclick="cancel();" type="button">
+    </td>
+  </tr>
+  </tbody></table>
+</td>
+
+<script language="javascript" type="text/javascript">
+	showTail();
+</script></tr></tbody></table>
+
+
+
+</td></tr></tbody></table></form></body></html>

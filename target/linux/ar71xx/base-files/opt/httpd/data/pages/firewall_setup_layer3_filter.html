@@ -1,0 +1,1030 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+
+<script language="javascript" type="text/javascript">
+//var xmlDoc =loadXml("WAN.xml");
+//var TagName="WANIPConnectionENTRY";
+var NodeLength=0;//getNodeLength(TagName);
+
+var filter_max = 16;
+
+/*
+var Brcount=0;
+for (i=0;i<NodeLength;i++)
+{
+    //if (getNodeValue(TagName,"NATEnabled",i)=="1")
+	      Brcount=Brcount+1;
+}
+TagName="WANPPPConnectionENTRY";
+NodeLength=0;//getNodeLength(TagName);
+for (i=0;i<NodeLength;i++)
+{
+    //if (getNodeValue(TagName,"NATEnabled",i)=="1")
+	      Brcount=Brcount+1;
+}
+*/
+
+function check_process()
+{
+	var process="Success";
+	if (process=="Existed")
+		alert("Please wait!!Another client is upgading firmware.");
+}
+
+function compare_port(start_port, end_port, no)
+{
+	var temp;
+
+	if (no==1)
+		temp='st';
+	else if (no==2)
+		temp='nd';
+	else if (no==3)
+		temp='rd';
+	else
+		temp='th';
+
+	if ((!isBlank(start_port))&&(!isBlank(end_port)))
+	{
+		if (parseInt(start_port)>parseInt(end_port))
+		{
+		//	alert(no + " Starting Port should be equal or smaller than the relative Ending Port!");
+			alert("Starting Port of group "+no+" should be equal or smaller than the relative Ending Port!");
+			return false;
+		}
+	}
+	return true;
+}
+
+function compare_ip(starting_ip, ending_ip, no)
+{
+	var i;
+	var part_ip;
+	var part_start;
+	var part_end;
+
+	var temp;
+
+	if (no==1)
+		temp='st';
+	else if (no==2)
+		temp='nd';
+	else if (no==3)
+		temp='rd';
+	else
+		temp='th';
+
+	if ((!isBlank(starting_ip))&&(!isBlank(ending_ip)))
+	{
+		part_start = starting_ip.split('.');
+		part_end = ending_ip.split('.');
+
+		for (i=0; i<3; i++)
+		{
+			if (part_start[i]!=part_end[i])
+			{
+			//	alert(no +" Starting IP and Ending IP don't match!");
+				alert("Starting IP and Ending IP of group "+no+" don't match!");
+				return false;
+			}
+		}
+
+		if (parseInt(part_start[3]) > parseInt(part_end[3]))
+		{
+		//	alert("The" + no + " Starting IP should be equal or smaller than the relative Ending IP!");
+			alert("Starting IP and Ending IP of group "+no+" don't match!");
+			return false;
+		}
+	}
+
+	return true;
+}
+
+function dscp_fun()
+{
+	if (document.natfw_filter_form.DSCPFilterEnable.value!="Disable")//fanny edit 2012/06/25 0 to Disable
+		document.natfw_filter_form.DSCPFilterMarking.disabled=false;
+	else
+		document.natfw_filter_form.DSCPFilterMarking.disabled=true;
+}
+
+function checkSpecSymbol(s)
+{
+ for(i=0;i<s.length;i++)
+ {
+  c=s.charAt(i);
+  if(c==';')
+  	return false;
+ }
+ return true;
+}
+
+function IP_NetMask_Select(MaskName,MaskID,Netmask)
+{
+		document.write("      <select style='width:125px' name='"+MaskName+padLeft(i+"","2")+"' id='"+MaskID+i+"' >");
+		document.write("          <option value='255.255.255.255' "+((Netmask=="255.255.255.255" ) ? " selected" : "")+" >255.255.255.255</option>\n");
+		document.write("          <option value='255.255.255.254' "+((Netmask=="255.255.255.254" ) ? " selected" : "")+" >255.255.255.254</option>\n");
+		document.write("          <option value='255.255.255.252' "+((Netmask=="255.255.255.252" ) ? " selected" : "")+" >255.255.255.252</option>\n");
+		document.write("          <option value='255.255.255.248' "+((Netmask=="255.255.255.248" ) ? " selected" : "")+" >255.255.255.248</option>\n");
+		document.write("          <option value='255.255.255.240' "+((Netmask=="255.255.255.240" ) ? " selected" : "")+" >255.255.255.240</option>\n");
+		document.write("          <option value='255.255.255.224' "+((Netmask=="255.255.255.224" ) ? " selected" : "")+" >255.255.255.224</option>\n");
+		document.write("          <option value='255.255.255.192' "+((Netmask=="255.255.255.192" ) ? " selected" : "")+" >255.255.255.192</option>\n");
+		document.write("          <option value='255.255.255.128' "+((Netmask=="255.255.255.128" ) ? " selected" : "")+" >255.255.255.128</option>\n");
+		document.write("          <option value='255.255.255.0' "+((Netmask=="255.255.255.0" ) ? " selected" : "")+" >255.255.255.0</option>\n");
+		document.write("          <option value='255.255.254.0' "+((Netmask=="255.255.254.0" ) ? " selected" : "")+" >255.255.254.0</option>\n");
+		document.write("          <option value='255.255.252.0' "+((Netmask=="255.255.252.0" ) ? " selected" : "")+" >255.255.252.0</option>\n");
+		document.write("          <option value='255.255.248.0' "+((Netmask=="255.255.248.0" ) ? " selected" : "")+" >255.255.248.0</option>\n");
+		document.write("          <option value='255.255.240.0' "+((Netmask=="255.255.240.0" ) ? " selected" : "")+" >255.255.240.0</option>\n");
+		document.write("          <option value='255.255.224.0' "+((Netmask=="255.255.224.0" ) ? " selected" : "")+" >255.255.224.0</option>\n");
+		document.write("          <option value='255.255.192.0' "+((Netmask=="255.255.192.0" ) ? " selected" : "")+" >255.255.192.0</option>\n");
+		document.write("          <option value='255.255.128.0' "+((Netmask=="255.255.128.0" ) ? " selected" : "")+" >255.255.128.0</option>\n");
+		document.write("          <option value='255.255.0.0' "+((Netmask=="255.255.0.0" ) ? " selected" : "")+" >255.255.0.0</option>\n");
+		document.write("          <option value='255.254.0.0' "+((Netmask=="255.254.0.0" ) ? " selected" : "")+" >255.254.0.0</option>\n");
+		document.write("          <option value='255.252.0.0' "+((Netmask=="255.252.0.0" ) ? " selected" : "")+" >255.252.0.0</option>\n");
+		document.write("          <option value='255.248.0.0' "+((Netmask=="255.248.0.0" ) ? " selected" : "")+" >255.248.0.0</option>\n");
+		document.write("          <option value='255.240.0.0' "+((Netmask=="255.240.0.0" ) ? " selected" : "")+" >255.240.0.0</option>\n");
+		document.write("          <option value='255.224.0.0' "+((Netmask=="255.224.0.0" ) ? " selected" : "")+" >255.224.0.0</option>\n");
+		document.write("          <option value='255.192.0.0' "+((Netmask=="255.192.0.0" ) ? " selected" : "")+" >255.192.0.0</option>\n");
+		document.write("          <option value='255.128.0.0' "+((Netmask=="255.128.0.0" ) ? " selected" : "")+" >255.128.0.0</option>\n");
+		document.write("          <option value='255.0.0.0' "+((Netmask=="255.0.0.0" ) ? " selected" : "")+" >255.0.0.0</option>\n");
+		document.write("          <option value='254.0.0.0' "+((Netmask=="254.0.0.0" ) ? " selected" : "")+" >254.0.0.0</option>\n");
+		document.write("          <option value='252.0.0.0' "+((Netmask=="252.0.0.0" ) ? " selected" : "")+" >252.0.0.0</option>\n");
+		document.write("          <option value='248.0.0.0' "+((Netmask=="248.0.0.0" ) ? " selected" : "")+" >248.0.0.0</option>\n");
+		document.write("          <option value='240.0.0.0' "+((Netmask=="240.0.0.0" ) ? " selected" : "")+" >240.0.0.0</option>\n");
+		document.write("          <option value='224.0.0.0' "+((Netmask=="224.0.0.0" ) ? " selected" : "")+" >224.0.0.0</option>\n");
+		document.write("          <option value='192.0.0.0' "+((Netmask=="192.0.0.0" ) ? " selected" : "")+" >192.0.0.0</option>\n");
+		document.write("          <option value='128.0.0.0' "+((Netmask=="128.0.0.0" ) ? " selected" : "")+" >128.0.0.0</option>\n");
+		document.write("      </select>");
+}
+
+//Fanny add 2012/06/18
+function Filter()
+{
+    var Filter_Name="";
+    var IP_Type="";
+    var SIP_Address="";
+    var SIP_Address_Sep="";
+    var SIP_Address_Sep1="";
+    var SIP_Address_Sep2="";
+    var SIP_Address_Sep3="";
+    var SIP_Address_Sep4="";
+    var SIP_Netmask=""
+    var Protocol=""
+    //var Port_Type="";
+    var SStarting_Port="";
+    var SEnding_Port="";
+    var Enable="";
+    var DIP_Address="";
+    //var DIP_Address_Sep="";
+    //var DIP_Address_Sep1="";
+    //var DIP_Address_Sep2="";
+    //var DIP_Address_Sep3="";
+    //var DIP_Address_Sep4="";
+    var DIP_Netmask=""
+    var DStarting_Port="";
+    var DEnding_Port="";
+
+    for (i=0;i<filter_max;i++)
+    {
+
+		Filter_Name="";
+		IP_Type="Source";
+		SIP_Address="";
+		SIP_Address_Sep1="";
+		SIP_Address_Sep2="";
+		SIP_Address_Sep3="";
+		SIP_Address_Sep4="";
+		SIP_Netmask="255.255.255.255";
+		Protocol="Both";
+		//Port_Type="Source";
+		SStarting_Port="";
+		SEnding_Port="";
+		Enable="0";
+		DIP_Address="";
+		//DIP_Address_Sep1="";
+		//DIP_Address_Sep2="";
+		//DIP_Address_Sep3="";
+		//DIP_Address_Sep4="";
+		DIP_Netmask="255.255.255.255";
+		DStarting_Port="";
+		DEnding_Port="";
+
+		document.write("<tr style='height:75px;'>");
+		document.write("  <td>");
+		document.write("      <input style='width:90px' type='text' name='IPFilterAP"+padLeft(i+"","2")+"' id='id_IPFilterAP"+i+"'  size='8' maxlength='16' value='"+Filter_Name+"' >");
+		document.write("  </td>");
+		document.write("  <td align='middle'>");
+		document.write("      <select style='width:65px' name='IPFilterEnable"+padLeft(i+"","2")+"' id='id_IPFilterEnable"+i+"'> ");
+		document.write("          <option value='1' "+((Enable=="1") ? " selected" : "")+" >Enable</option>");
+		document.write("          <option value='0' "+((Enable=="0") ? " selected" : "")+" >Disable</option>");
+		document.write("      </select>");
+		document.write("  </td>");
+		document.write("  <td>");
+		document.write("      <select style='width:80px' name='IPFilterType"+padLeft(i+"","2")+"' class='width_select40' id='id_IPFilterType"+i+"' >");
+		document.write("          <option value='INBOUND' "+((IP_Type=="INBOUND" ) ? " selected" : "")+" >INBOUND</option>");
+		document.write("          <option value='OUTBOUND' "+((IP_Type=="OUTBOUND") ? " selected" : "")+" >OUTBOUND</option>");
+		document.write("      </select>");
+		document.write("  </td>");
+		document.write("  <td>");
+		document.write("      <select style='width:65px' name='IPFilterProtocol"+padLeft(i+"","2")+"' class='width_select40' id='id_IPFilterProtocol"+i+"' onchange=\"block_port_range("+i+")\"' >");
+		document.write("          <option value='tcp' "+((Protocol=="TCP" ) ? " selected" : "")+" >TCP</option>");
+		document.write("          <option value='udp' "+((Protocol=="UDP" ) ? " selected" : "")+" >UDP</option>");
+		document.write("          <option value='icmp' "+((Protocol=="icmp" ) ? " selected" : "")+" >ICMP</option>");
+		document.write("      </select>");
+		document.write("  </td>");
+		document.write("  <td>");
+		document.write("      <label><input type='checkbox' name='SRCIPALL"+padLeft(i+"","2")+"' id='id_SRCIPALL"+i+"' onclick='SourceIP_All();'> All IP</label><BR>");
+		document.write("      <input style='width:120px;text-align:right;' type='text' name='IPFilterSRCIP"+padLeft(i+"","2")+"' id='id_IPFilterSRCIP"+i+"' maxlength=15 value='"+SIP_Address+"' >");
+//		document.write("      <input type='text' id='id_IPFilterSRCIP"+i+"_item1' class='width_ip' maxlength=3 value='"+SIP_Address_Sep1+"' >.");
+//		document.write("      <input type='text' id='id_IPFilterSRCIP"+i+"_item2' class='width_ip' maxlength=3 value='"+SIP_Address_Sep2+"' >.");
+//		document.write("      <input type='text' id='id_IPFilterSRCIP"+i+"_item3' class='width_ip' maxlength=3 value='"+SIP_Address_Sep3+"' >.");
+//		document.write("      <input type='text' id='id_IPFilterSRCIP"+i+"_item4' class='width_ip' maxlength=3 value='"+SIP_Address_Sep4+"' >");
+		//document.write("  </td>");
+		//document.write("  <td align='middle'>");
+		document.write("<BR>");
+
+		IP_NetMask_Select("IPFilterSRCMask","id_IPFilterSRCMask","SIP_Netmask");
+
+//		document.write("      <select style='width:125px' name='IPFilterSRCMask"+padLeft(i+"","2")+"' id='id_IPFilterSRCMask"+i+"' >");
+//		document.write("          <option value='255.255.255.255' "+((SIP_Netmask=="255.255.255.255" ) ? " selected" : "")+" >255.255.255.255</option>\n");
+//		document.write("          <option value='255.255.255.254' "+((SIP_Netmask=="255.255.255.254" ) ? " selected" : "")+" >255.255.255.254</option>\n");
+//		document.write("          <option value='255.255.255.252' "+((SIP_Netmask=="255.255.255.252" ) ? " selected" : "")+" >255.255.255.252</option>\n");
+//		document.write("          <option value='255.255.255.248' "+((SIP_Netmask=="255.255.255.248" ) ? " selected" : "")+" >255.255.255.248</option>\n");
+
+
+		document.write("  </td>");
+		document.write("  <td>");
+		document.write("      <label><input type='checkbox' name='SRCPortALL"+padLeft(i+"","2")+"' id='id_SRCPortALL"+i+"' onclick='SourcePort_All();'> All Port</label><BR>");
+		document.write("      <input style='width:60px' type='text' name='IPSRCStartPort"+padLeft(i+"","2")+"' class='width_portw' id='id_IPSRCStartPort"+i+"' maxlength=5 value='"+SStarting_Port+"' ><BR>&nbsp;");
+		document.write("  </td>");
+		document.write("  <td>");
+		document.write("      <BR><input style='width:60px' type='text' name='IPSRCEndPort"+padLeft(i+"","2")+"' class='width_portw' id='id_IPSRCEndPort"+i+"' maxlength=5 value='"+SEnding_Port+"' ><BR>&nbsp;");
+		document.write("  </td>");
+// Destination
+		document.write("  <td>");
+		document.write("      <label><input type='checkbox' name='DSTIPALL"+padLeft(i+"","2")+"' id='id_DSTIPALL"+i+"' onclick='DestIP_All();'> All IP</label><BR>");
+		document.write("      <input style='width:120px;text-align:right;' type='text' name='IPFilterDSTIP"+padLeft(i+"","2")+"' id='id_IPFilterDSTIP"+i+"' maxlength=15 value='"+DIP_Address+"' >");
+//		document.write("      <input type='text' id='id_IPFilterDSTIP"+i+"_item1' class='width_ip' maxlength=3 value='"+DIP_Address_Sep1+"' >.");
+//		document.write("      <input type='text' id='id_IPFilterDSTIP"+i+"_item2' class='width_ip' maxlength=3 value='"+DIP_Address_Sep2+"' >.");
+//		document.write("      <input type='text' id='id_IPFilterDSTIP"+i+"_item3' class='width_ip' maxlength=3 value='"+DIP_Address_Sep3+"' >.");
+//		document.write("      <input type='text' id='id_IPFilterDSTIP"+i+"_item4' class='width_ip' maxlength=3 value='"+DIP_Address_Sep4+"' >");
+		//document.write("  </td>");
+		//document.write("  <td align='middle'>");
+		document.write("<BR>");
+
+		IP_NetMask_Select("IPFilterDSTMask","id_IPFilterDSTMask","DIP_Netmask");
+
+		document.write("  </td>");
+		document.write("  <td>");
+		document.write("      <label><input type='checkbox' name='DSTPortALL"+padLeft(i+"","2")+"' id='id_DSTPortALL"+i+"' onclick='DestPort_All();'> All Port</label><BR>");
+		document.write("      <input style='width:60px' type='text' name='IPDSTStartPort"+padLeft(i+"","2")+"' class='width_portw' id='id_IPDSTStartPort"+i+"' maxlength=5 value='"+DStarting_Port+"' ><BR>&nbsp;");
+		document.write("  </td>");
+		document.write("  <td>");
+		document.write("      <BR><input style='width:60px' type='text' name='IPDSTEndPort"+padLeft(i+"","2")+"' class='width_portw' id='id_IPDSTEndPort"+i+"' maxlength=5 value='"+DEnding_Port+"' ><BR>&nbsp;");
+		document.write("  </td>");
+
+		document.write("</tr>");
+
+    }
+    // fvt_form_init();
+}
+
+function SourceIP_All()
+{
+	for (i=0;i<filter_max;i++)
+	{
+	if ( document.getElementById("id_SRCIPALL"+i).checked )
+		{
+		document.getElementById("id_IPFilterSRCIP"+i).disabled=true;
+		document.getElementById("id_IPFilterSRCMask"+i).disabled=true;
+		//alert("check" + i);
+		}
+	else
+		{
+		document.getElementById("id_IPFilterSRCIP"+i).disabled=false;
+		document.getElementById("id_IPFilterSRCMask"+i).disabled=false;
+		}
+	}
+}
+
+function DestIP_All()
+{
+	for (i=0;i<filter_max;i++)
+	{
+	if ( document.getElementById("id_DSTIPALL"+i).checked )
+		{
+		document.getElementById("id_IPFilterDSTIP"+i).disabled=true;
+		document.getElementById("id_IPFilterDSTMask"+i).disabled=true;
+		//alert("check" + i);
+		}
+	else
+		{
+		document.getElementById("id_IPFilterDSTIP"+i).disabled=false;
+		document.getElementById("id_IPFilterDSTMask"+i).disabled=false;
+		}
+	}
+}
+
+function SourcePort_All()
+{
+	for (i=0;i<filter_max;i++)
+	{
+	if ( document.getElementById("id_SRCPortALL"+i).checked )
+		{
+		document.getElementById("id_IPSRCStartPort"+i).disabled=true;
+		document.getElementById("id_IPSRCEndPort"+i).disabled=true;
+		//alert("check" + i);
+		}
+	else
+		{
+		document.getElementById("id_IPSRCStartPort"+i).disabled=false;
+		document.getElementById("id_IPSRCEndPort"+i).disabled=false;
+		}
+	}
+}
+
+function DestPort_All()
+{
+	for (i=0;i<filter_max;i++)
+	{
+	if ( document.getElementById("id_DSTPortALL"+i).checked )
+		{
+		document.getElementById("id_IPDSTStartPort"+i).disabled=true;
+		document.getElementById("id_IPDSTEndPort"+i).disabled=true;
+		//alert("check" + i);
+		}
+	else
+		{
+		document.getElementById("id_IPDSTStartPort"+i).disabled=false;
+		document.getElementById("id_IPDSTEndPort"+i).disabled=false;
+		}
+	}
+}
+function natfw_filter()
+{
+	var i, j;
+	var temp=document.natfw_filter_form;
+	var no;
+	var set;
+	var item;
+
+	//merge ip to hidden item
+  	for(i=0;i<filter_max;i++)
+//    		merge_ip("id_IPFilterSRCIP"+i, "id_IPFilterSRCIP"+i+"_item1", "id_IPFilterSRCIP"+i+"_item2", "id_IPFilterSRCIP"+i+"_item3", "id_IPFilterSRCIP"+i+"_item4");
+
+	for (i=0; i<filter_max; i++)
+	{
+		no=i;
+
+		if ((!isBlank(document.getElementById("id_IPFilterAP"+i).value))||(!isBlank(document.getElementById("id_IPFilterSRCIP"+i).value))||(!isBlank(document.getElementById("id_IPSRCStartPort"+i).value))
+		 ||(!isBlank(document.getElementById("id_IPSRCEndPort"+i).value)))
+		{
+			/*
+			if  ((isBlank(document.getElementById("id_IPFilterAP"+i).value))||(isBlank(document.getElementById("id_IPFilterSRCIP"+i).value)) )
+			{
+				alert("Please fill with the " + no + " group data!");
+				return;
+			}
+				*/
+			if  ((isBlank(document.getElementById("id_IPFilterAP"+i).value)))
+			{
+				alert("Please fill with the [Filter Name] of group" + no + "!");
+				return;
+			}
+		}
+
+		if (!checkSpecSymbol(document.getElementById("id_IPFilterAP"+i).value))
+		{
+			item="Filter Name";
+			alert("The "+ item +" of group "+ no +" is invalid!");
+			return;
+		}
+
+		if ( !check_ip_range(document.getElementById("id_IPFilterSRCIP"+i).value, document.getElementById("id_IPFilterSRCMask"+i).value) && !(document.getElementById("id_SRCIPALL"+i).checked) )
+		{
+			item="Source IP Address";
+			alert("The "+ item +" of group "+ no +" is invalid!");
+			return;
+		}
+
+		if (!check_ip_range(document.getElementById("id_IPFilterDSTIP"+i).value, document.getElementById("id_IPFilterDSTMask"+i).value) && !(document.getElementById("id_DSTIPALL"+i).checked) )
+		{
+			item="Destination IP Address";
+			alert("The "+ item +" of group "+ no +" is invalid!");
+			return;
+		}
+
+		if(!(isBlank(document.getElementById("id_IPSRCStartPort"+i).value)))
+		{
+			if ( !check_port(document.getElementById("id_IPSRCStartPort"+i).value))
+			{
+				item="Source Starting Port";
+				alert("The " + item + " of group "+ no + " should be an integer between 1 and 65535");
+				return;
+			}
+		}
+
+		if(!(isBlank(document.getElementById("id_IPSRCEndPort"+i).value)))
+		{
+			if (!check_port(document.getElementById("id_IPSRCEndPort"+i).value))
+			{
+				item="Source Ending Port";
+				alert("The " + item + " of group "+ no + " should be an integer between 1 and 65535");
+				return;
+			}
+		}
+
+		if(!(isBlank(document.getElementById("id_IPDSTStartPort"+i).value)))
+		{
+			if ( !check_port(document.getElementById("id_IPDSTStartPort"+i).value))
+			{
+				item="Destination Starting Port";
+				alert("The " + item + " of group "+ no + " should be an integer between 1 and 65535");
+				return;
+			}
+		}
+
+		if(!(isBlank(document.getElementById("id_IPDSTEndPort"+i).value)))
+		{
+			if (!check_port(document.getElementById("id_IPDSTEndPort"+i).value))
+			{
+				item="Destination Ending Port";
+				alert("The " + item + " of group "+ no + " should be an integer between 1 and 65535");
+				return;
+			}
+		}
+
+		if (!compare_port(document.getElementById("id_IPSRCStartPort"+i).value, document.getElementById("id_IPSRCEndPort"+i).value, i))
+			return;
+
+	}
+
+	for(i=0; i<filter_max; i++)
+	{
+	  if(document.getElementById("id_IPFilterAP"+i).value != "")
+		{
+			for(j=i+1; j<filter_max; j++)
+			{
+				if( (document.getElementById("id_IPFilterAP"+j).value != "") &&
+				    (document.getElementById("id_IPFilterAP"+i).value == document.getElementById("id_IPFilterAP"+j).value) )
+				{
+					alert("Filter Name of rule " + (i+1) + " and rule " + (j+1) + " are the same");
+					return;
+				}
+			}
+		}
+
+		//if( (document.getElementById("id_IPFilterEnable"+i).value == "1")  )
+		{
+			for(j=i+1; j<filter_max; j++)
+			{
+				if( (document.getElementById("id_IPFilterAP"+j).value != "") )
+				{
+					if( (document.getElementById("id_IPFilterType"+i).value == document.getElementById("id_IPFilterType"+j).value) &&
+					    (document.getElementById("id_IPFilterSRCIP"+i).value == document.getElementById("id_IPFilterSRCIP"+j).value) &&
+					    (document.getElementById("id_IPFilterSRCMask"+i).value == document.getElementById("id_IPFilterSRCMask"+j).value)   )
+					    // && (document.getElementById("id_IPFilterPortType"+i).value == document.getElementById("id_IPFilterPortType"+j).value)   )
+					{
+						if((document.getElementById("id_IPFilterProtocol"+i).value == document.getElementById("id_IPFilterProtocol"+j).value))
+						{
+							if(!check_overlap(document.getElementById("id_IPSRCStartPort"+i).value,
+									  document.getElementById("id_IPSRCEndPort"+i).value,
+									  document.getElementById("id_IPSRCStartPort"+j).value,
+									  document.getElementById("id_IPSRCEndPort"+j).value))
+							{
+								alert("Filter Rule " + i + "and Rule " + j + " are conflicted");
+								return;
+							}
+							if( (document.getElementById("id_IPSRCStartPort"+i).value == document.getElementById("id_IPSRCStartPort"+j).value) &&
+								(document.getElementById("id_IPSRCEndPort"+i).value == document.getElementById("id_IPSRCEndPort"+j).value))
+							{
+								alert("Filter Rule " + i + "and Rule " + j + " are conflicted");
+								return;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/*
+	if (temp.DSCPFilterEnable!="Disable")//fanny edit 2012/06/25 0 to Disable
+	{
+		if (temp.DSCPFilterMarking.value.length==0 || !check_integer_range(temp.DSCPFilterMarking.value)||
+				(temp.DSCPFilterMarking.value < 0 || temp.DSCPFilterMarking.value > 63))
+		{
+			alert("The DSCP value should be an integer between 0 and 63");
+			temp.DSCPFilterMarking.focus();
+			return ;
+		}
+	}
+	*/
+	fvt_form_submit();
+	document.getElementById('id_apply_tr').style.display="none";
+	document.getElementById('id_wait_progress').style.display="";
+	temp.submit();
+
+}
+
+function fvt_form_init()
+{
+	var i;
+	var j;
+	var f_name_key;
+	var f_name_val;
+	var f_name_id;
+	var f_ip_type_key;
+	var f_ip_type_val;
+	var f_ip_type_id;
+	var f_srcip_key;
+	var f_srcip_val;
+	var f_srcip_id;
+	var f_srcip_item_id;
+	var f_srcip_item_ary;
+	var f_srcmask_key;
+	var f_srcmask_val;
+	var f_srcmask_id;
+	var f_protocol_key;
+	var f_protocol_val;
+	var f_protocol_id;
+	//var f_port_type_key;
+	//var f_port_type_val;
+	//var f_port_type_id;
+	var f_sportstart_key;
+	var f_sportstart_val;
+	var f_sportstart_id;
+	var f_sportend_key;
+	var f_sportend_val;
+	var f_sportend_id;
+	var f_enable_key;
+	var f_enable_val;
+	var f_enable_id;
+
+	var f_dstip_key;
+	var f_dstip_val;
+	var f_dstip_id;
+	var f_dstmask_key;
+	var f_dstmask_val;
+	var f_dstmask_id;
+	var f_dportstart_key;
+	var f_dportstart_val;
+	var f_dportstart_id;
+	var f_dportend_key;
+	var f_dportend_val;
+	var f_dportend_id;
+
+
+	for(i=0; i<filter_max; i++)
+	{
+		f_name_key = 'fw_acl'+i+'_name';
+		f_ip_type_key = 'fw_acl'+i+'_type';
+		f_srcip_key = 'fw_acl'+i+'_srcip';
+		f_srcmask_key = 'fw_acl'+i+'_srcnetmask';
+		f_protocol_key = 'fw_acl'+i+'_proto';
+		//f_port_type_key = 'fw_acl'+i+'_port_type';
+		f_sportstart_key = 'fw_acl'+i+'_sport';
+		f_sportend_key = 'fw_acl'+i+'_sportend';
+		f_enable_key = 'fw_acl'+i+'_en';
+		//f_action_key = 'fw_acl'+i+'_action';
+		f_dstip_key = 'fw_acl'+i+'_dstip';
+		f_dstmask_key = 'fw_acl'+i+'_dstnetmask';
+		f_dportstart_key = 'fw_acl'+i+'_dport';
+		f_dportend_key = 'fw_acl'+i+'_dportend';
+
+		f_name_id = 'id_IPFilterAP'+i;
+		f_ip_type_id = 'id_IPFilterType'+i;
+		f_srcip_id = 'id_IPFilterSRCIP'+i;
+		f_srcmask_id = 'id_IPFilterSRCMask'+i;
+		f_protocol_id = 'id_IPFilterProtocol'+i;
+		//f_port_type_id = 'id_IPFilterPortType'+i;
+		f_sportstart_id = 'id_IPSRCStartPort'+i;
+		f_sportend_id = 'id_IPSRCEndPort'+i;
+		f_enable_id = 'id_IPFilterEnable'+i;
+		f_dstip_id = 'id_IPFilterDSTIP'+i;
+		f_dstmask_id = 'id_IPFilterDSTMask'+i;
+		f_dportstart_id = 'id_IPDSTStartPort'+i;
+		f_dportend_id = 'id_IPDSTEndPort'+i;
+
+		f_name_val = fvt_meta_config(f_name_key);
+		if(f_name_val=='')
+			continue;
+
+		//f_ip_type_val = fvt_meta_config(f_ip_type_key);
+		f_ip_type_val = fvt_meta_config(f_ip_type_key);
+		f_srcip_val = fvt_meta_config(f_srcip_key);
+		f_srcmask_val = fvt_meta_config(f_srcmask_key);
+		if (f_srcmask_val=="") f_srcmask_val="255.255.255.255";
+		f_protocol_val = fvt_meta_config(f_protocol_key);
+		//f_port_type_val = fvt_meta_config(f_port_type_key);
+		f_sportstart_val = fvt_meta_config(f_sportstart_key);
+		f_sportend_val = fvt_meta_config(f_sportend_key);
+		f_enable_val = fvt_meta_config(f_enable_key);
+		//if( f_enable_val == "" ) f_enable_val="0";
+		f_dstip_val = fvt_meta_config(f_dstip_key);
+		f_dstmask_val = fvt_meta_config(f_dstmask_key);
+		if (f_dstmask_val=="") f_dstmask_val="255.255.255.255";
+		f_dportstart_val = fvt_meta_config(f_dportstart_key);
+		f_dportend_val = fvt_meta_config(f_dportend_key);
+
+		document.getElementById(f_name_id).value = f_name_val;
+		document.getElementById(f_ip_type_id).value = f_ip_type_val;
+
+		document.getElementById('id_IPFilterSRCIP'+i).value = f_srcip_val;
+//		if(f_srcip_val != "")
+//		{
+//			f_srcip_item_ary = f_srcip_val.split('.');
+//		}
+//		else
+//		{
+//			f_srcip_item_ary = new Array();
+//			f_srcip_item_ary[0]="";
+//			f_srcip_item_ary[1]="";
+//			f_srcip_item_ary[2]="";
+//			f_srcip_item_ary[3]="";
+//		}
+//		for(j=1; j<=4; j++)
+//		{
+//			f_srcip_item_id = 'id_IPFilterSRCIP'+i+'_item'+j;
+//			document.getElementById(f_srcip_item_id).value = f_srcip_item_ary[(j-1)];
+//		}
+
+		document.getElementById(f_srcmask_id).value = f_srcmask_val;
+		document.getElementById(f_protocol_id).value = f_protocol_val;
+		//document.getElementById(f_port_type_id).value = f_port_type_val;
+		document.getElementById(f_sportstart_id).value = f_sportstart_val;
+		document.getElementById(f_sportend_id).value = f_sportend_val;
+		document.getElementById(f_enable_id).value = f_enable_val;
+
+		document.getElementById('id_IPFilterDSTIP'+i).value = f_dstip_val;
+		document.getElementById(f_dstmask_id).value = f_dstmask_val;
+		document.getElementById(f_dportstart_id).value = f_dportstart_val;
+		document.getElementById(f_dportend_id).value = f_dportend_val;
+		if(f_srcip_val == "") document.getElementById("id_SRCIPALL"+i).checked = true;
+		if(f_dstip_val == "") document.getElementById("id_DSTIPALL"+i).checked = true;
+		if(f_sportstart_val == "") document.getElementById("id_SRCPortALL"+i).checked = true;
+		if(f_dportstart_val == "") document.getElementById("id_DSTPortALL"+i).checked = true;
+	}
+
+	fvt_form_obj_set("natfw_filter_form", "block_private_ip_enable", fvt_meta_config('fw_block_private_ip'));
+	fvt_form_obj_set("natfw_filter_form", "acl_enable", fvt_meta_config('fw_acl_enable'));
+	check_acl_enable();
+	/*
+	fvt_form_obj_set("natfw_filter_form", "DSCPFilterEnable", fvt_meta_config('fw_dscp_enable'));
+	fvt_form_obj_set("natfw_filter_form", "DSCPFilterMarking", fvt_meta_config('fw_dscp_mark'));
+	if(fvt_meta_config('fw_dscp_enable')=="Disable"){
+		document.natfw_filter_form.DSCPFilterMarking.disabled=true;
+	}else{
+		document.natfw_filter_form.DSCPFilterMarking.disabled=false;
+	}
+	*/
+
+}
+
+function fvt_form_submit() 	{
+	var i;
+	var f_name_key;
+	var f_name_val;
+	var f_name_id;
+	var f_ip_type_key;
+	var f_ip_type_val;
+	var f_ip_type_id;
+	var f_srcip_key;
+	var f_srcip_val;
+	var f_srcip_id;
+	var f_srcmask_key;
+	var f_srcmask_val;
+	var f_srcmask_id;
+	var f_protocol_key;
+	var f_protocol_val;
+	var f_protocol_id;
+	//var f_port_type_key;
+	//var f_port_type_val;
+	//var f_port_type_id;
+	var f_sportstart_key;
+	var f_sportstart_val;
+	var f_sportstart_id;
+	var f_sportend_key;
+	var f_sportend_val;
+	var f_sportend_id;
+	var f_enable_key;
+	var f_enable_val;
+	var f_enable_id;
+	//var f_action_key;
+	//var f_action_id;
+	//var f_action_val;
+
+	var f_dstip_key;
+	var f_dstip_val;
+	var f_dstip_id;
+	var f_dstmask_key;
+	var f_dstmask_val;
+	var f_dstmask_id;
+	var f_dportstart_key;
+	var f_dportstart_val;
+	var f_dportstart_id;
+	var f_dportend_key;
+	var f_dportend_val;
+	var f_dportend_id;
+
+	fvt_paramlist_clear();
+
+	for(i=0; i<filter_max; i++)
+	{
+		f_name_key = 'fw_acl'+i+'_name';
+		f_ip_type_key = 'fw_acl'+i+'_type';
+		f_srcip_key = 'fw_acl'+i+'_srcip';
+		f_srcmask_key = 'fw_acl'+i+'_srcnetmask';
+		f_protocol_key = 'fw_acl'+i+'_proto';
+		//f_port_type_key = 'fw_acl'+i+'_port_type';
+		f_sportstart_key = 'fw_acl'+i+'_sport';
+		f_sportend_key = 'fw_acl'+i+'_sportend';
+		f_enable_key = 'fw_acl'+i+'_en';
+		//f_action_key = 'fw_acl'+i+'_action';
+		f_dstip_key = 'fw_acl'+i+'_dstip';
+		f_dstmask_key = 'fw_acl'+i+'_dstnetmask';
+		f_dportstart_key = 'fw_acl'+i+'_dport';
+		f_dportend_key = 'fw_acl'+i+'_dportend';
+
+		f_name_id = 'id_IPFilterAP'+i;
+		f_ip_type_id = 'id_IPFilterType'+i;
+		f_srcip_id = 'id_IPFilterSRCIP'+i;
+		f_srcmask_id = 'id_IPFilterSRCMask'+i;
+		f_protocol_id = 'id_IPFilterProtocol'+i;
+		//f_port_type_id = 'id_IPFilterPortType'+i;
+		f_sportstart_id = 'id_IPSRCStartPort'+i;
+		f_sportend_id = 'id_IPSRCEndPort'+i;
+		f_enable_id = 'id_IPFilterEnable'+i;
+		f_dstip_id = 'id_IPFilterDSTIP'+i;
+		f_dstmask_id = 'id_IPFilterDSTMask'+i;
+		f_dportstart_id = 'id_IPDSTStartPort'+i;
+		f_dportend_id = 'id_IPDSTEndPort'+i;
+
+		f_name_val = document.getElementById(f_name_id).value;
+
+
+		if((f_name_val=='') || (f_srcip_id=='') || (f_sportstart_id=='') || (f_sportend_id==''))
+		{
+			fvt_paramlist_cat_str(f_name_key, "");
+			fvt_paramlist_cat_str(f_ip_type_key, "");
+			fvt_paramlist_cat_str(f_srcip_key, "");
+			fvt_paramlist_cat_str(f_srcmask_key, "");
+			fvt_paramlist_cat_str(f_protocol_key, "");
+			//fvt_paramlist_cat_str(f_port_type_key, "");
+			fvt_paramlist_cat_str(f_sportstart_key, "");
+			fvt_paramlist_cat_str(f_sportend_key, "");
+			fvt_paramlist_cat_str(f_enable_key, "");
+			fvt_paramlist_cat_str("fw_acl"+i+"_action", "");
+		}
+		else
+		{
+			f_ip_type_val = document.getElementById(f_ip_type_id).value;
+			if ( (f_srcip_id=='') || (document.getElementById("id_SRCIPALL"+i).checked) ) f_srcip_val = "";
+			else f_srcip_val = document.getElementById(f_srcip_id).value;
+			f_srcmask_val = document.getElementById(f_srcmask_id).value;
+			f_protocol_val = document.getElementById(f_protocol_id).value;
+			//f_port_type_val = document.getElementById(f_port_type_id).value;
+			if ( (document.getElementById("id_SRCPortALL"+i).checked) )
+			{
+				f_sportstart_val = "";
+				f_sportend_val = "";
+			}
+			else
+			{
+				f_sportstart_val = document.getElementById(f_sportstart_id).value;
+				f_sportend_val = document.getElementById(f_sportend_id).value;
+			}
+			f_enable_val = document.getElementById(f_enable_id).value;
+
+			if ( (f_dstip_id=='') || (document.getElementById("id_DSTIPALL"+i).checked)) f_dstip_val = "";
+			else f_dstip_val = document.getElementById(f_dstip_id).value;
+			f_dstmask_val = document.getElementById(f_dstmask_id).value;
+			if ( (document.getElementById("id_DSTPortALL"+i).checked) )
+			{
+				f_dportstart_val = "";
+				f_dportend_val = "";
+			}
+			else
+			{
+				f_dportstart_val = document.getElementById(f_dportstart_id).value;
+				f_dportend_val = document.getElementById(f_dportend_id).value;
+			}
+
+			fvt_paramlist_cat_str(f_name_key, f_name_val);
+			fvt_paramlist_cat_str(f_ip_type_key, f_ip_type_val);
+			fvt_paramlist_cat_str(f_srcip_key, f_srcip_val);
+			//alert("DSTIP=" + f_dstip_val+" ID="+f_dstip_key);
+			fvt_paramlist_cat_str(f_dstip_key, f_dstip_val);
+
+			if(f_srcip_val == "") fvt_paramlist_cat_str(f_srcmask_key, "");
+			else fvt_paramlist_cat_str(f_srcmask_key, f_srcmask_val);
+
+			if(f_dstip_val == "") fvt_paramlist_cat_str(f_dstmask_key, "");
+			else
+			fvt_paramlist_cat_str(f_dstmask_key, f_dstmask_val);
+
+			fvt_paramlist_cat_str(f_protocol_key, f_protocol_val);
+
+			if(f_protocol_val != "icmp" )
+			{
+				//fvt_paramlist_cat_str(f_port_type_key, f_port_type_val);
+				fvt_paramlist_cat_str(f_sportstart_key, f_sportstart_val);
+				fvt_paramlist_cat_str(f_sportend_key, f_sportend_val);
+				fvt_paramlist_cat_str(f_dportstart_key, f_dportstart_val);
+				fvt_paramlist_cat_str(f_dportend_key, f_dportend_val);
+			}
+			fvt_paramlist_cat_str(f_enable_key, f_enable_val);
+			fvt_paramlist_cat_str("fw_acl"+i+"_action", "DROP");
+		}
+	}
+
+	fvt_paramlist_cat_str('fw_block_private_ip', fvt_form_obj_get("natfw_filter_form", "block_private_ip_enable"));
+	fvt_paramlist_cat_str('fw_acl_enable', fvt_form_obj_get("natfw_filter_form", "acl_enable"));
+
+	//fvt_paramlist_cat_str('fw_dscp_enable', fvt_form_obj_get("natfw_filter_form", "DSCPFilterEnable"));
+	//fvt_paramlist_cat_str('fw_dscp_mark', fvt_form_obj_get("natfw_filter_form", "DSCPFilterMarking"));
+
+	fvt_paramlist_presubmit('natfw_filter_form');
+}
+
+function check_acl_enable()
+{
+	var acl_enable = parseInt(document.getElementById("id_acl_enable").value, 10);
+	var action;
+
+	if(acl_enable == 0)
+		action = true;
+	else
+		action = false;
+
+	var inputs = document.getElementsByTagName("INPUT");
+	for (var i = 0; i < inputs.length; i++) {
+		if(inputs[i].id == "add_applybtn")
+			continue;
+	    inputs[i].disabled = action;
+	}
+	var selects = document.getElementsByTagName("select");
+	for (var i = 0; i < selects.length; i++) {
+		if(selects[i].id == "id_acl_enable" || selects[i].id == "block_private_ip_enable")
+			continue;
+		selects[i].disabled = action;
+	}
+	set_all_port_range();
+}
+
+function set_all_port_range()
+{
+	var i=0;
+
+	for(i=0; i<filter_max; i++)
+	{
+		block_port_range(i);
+	}
+}
+
+function block_port_range(index)
+{
+	var id = "id_IPFilterProtocol" + index;
+	var startPortId = "id_IPSRCStartPort" + index;
+	var endPortId = "id_IPSRCEndPort" + index;
+	//var portTypeID = "id_IPFilterPortType" + index;
+	var protocol = document.getElementById(id).value;
+	var action = false;
+	var acl_enable = parseInt(document.getElementById("id_acl_enable").value, 10);
+
+	if(acl_enable == 1)
+	{
+
+		if(protocol == "ICMP" || protocol == "icmp")
+		{
+			action = true;
+			document.getElementById(startPortId).value = "";
+			document.getElementById(endPortId).value = "";
+		}
+	}else
+	{
+
+		if(protocol == "ICMP" || protocol == "icmp")
+		{
+			document.getElementById(startPortId).value = "";
+			document.getElementById(endPortId).value = "";
+		}
+		action = true;
+	}
+	 document.getElementById(startPortId).disabled = action;
+	 document.getElementById(endPortId).disabled = action;
+	 //document.getElementById(portTypeID).disabled = action;
+
+}
+
+</script>
+</head>
+
+
+<body align="left" onload="fvt_form_init();SourceIP_All();DestIP_All();SourcePort_All();DestPort_All();check_process();">
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<form id="id_natfw_filter_form" name="natfw_filter_form" method="post">
+	<fieldset>
+		<div class="lv1_title">Firewall Setup&nbsp;&gt;&nbsp;Layer 3 Filter</div>
+	</fieldset>
+	<fieldset>
+		<div class="lv2_title" style="margin:10px 0em">
+			Block Traffic from WAN to LAN side IP
+			<select id="block_private_ip_enable" class="width_select40" name="block_private_ip_enable">
+			    <option value="1">Enable</option>
+			    <option value="0">Disable</option>
+			</select>
+		</div>
+		<div class="lv2_title" style="margin:10px 0em">
+			Access Restriction
+			<select id="id_acl_enable" class="width_select40" name="acl_enable" onchange="check_acl_enable()">
+
+			    <option value="1">Enable</option>
+			    <option value="0">Disable</option>
+
+			</select>
+			<div class="lv2_th" style="margin:10px 0">
+				<table><tbody>
+					<tr>
+						<th Rowspan="2"><div class="lv2_th" style="text-align:center;width:100px;">Filter&nbsp;Name</div></th>
+						<th Rowspan="2"><div class="lv2_th" style="text-align:center;width:75px;">Enable</div></th>
+						<th Rowspan="2"><div class="lv2_th" style="text-align:center;width:90px;">IP&nbsp;Type</div></th>
+						<th Rowspan="2"><div class="lv2_th" style="text-align:center;width:75px;">Protocol</div></th>
+						<th><div class="lv2_th" style="text-align:center;width:130px;">Source&nbsp;IP Addr</div></th>
+						<th Colspan="2"><div class="lv2_th" style="text-align:center;">Source Port</div></th>
+						<th><div class="lv2_th" style="text-align:center;width:130px;">Dest.&nbsp;IP Addr</div></th>
+						<th Colspan="2"><div class="lv2_th" style="text-align:center;">Dest. Port</div></th>
+					</tr>
+					<tr>
+						<th><div class="lv2_th" style="text-align:center;width:130px;">Netmask</div></th>
+						<th><div class="lv2_th" style="text-align:center;width:70px;">Starting</div></th>
+						<th><div class="lv2_th" style="text-align:center;width:70px;">Ending</div></th>
+						<th><div class="lv2_th" style="text-align:center;width:130px;">Netmask</div></th>
+						<th><div class="lv2_th" style="text-align:center;width:70px;">Starting</div></th>
+						<th><div class="lv2_th" style="text-align:center;width:70px;">Ending</div></th>
+					</tr>
+					<tr><td colspan="10"><hr size="2" noshade="noshade" style="border:1px #000000 solid;"></td></tr>
+						<script language="javascript" type="text/javascript">
+							Filter();
+						</script>
+				</tbody></table>
+			</div>
+
+		<!--
+		<div class="lv2_th" style="margin:10px 0">
+			<table><tbody>
+			  	<tr>
+			  		<td width="200px"><b>DSCP&nbsp;Packet&nbsp;Filter</b></td>
+			  	</tr>
+			  	<tr>
+			  		<td><b>Policy </b></td>
+			  		<td>
+				  		<select name="DSCPFilterEnable" onchange="dscp_fun();" class="width_select80">
+							<option value="Allow">Allow</option>
+							<option value="Deny">Deny</option>
+							<option value="Disable">Disable</option>
+			  			</select>
+			  		</td>
+			  		<td>
+				  		<input name="DSCPFilterMarking" size="2" maxlength="2" value="0" type="text">(0~63)
+			  		</td>
+			  	</tr>
+			</tbody></table>
+		</div>
+		-->
+		<div style="margin-top:20px" >
+			<table>
+			<tr id="id_apply_tr">
+
+				<td width="800px" align="center"><input type="button" onclick="natfw_filter()" id="add_applybtn" class="width_button" name="applybtn"  value="Apply Changes" style="padding:0px 2px;width:auto;height:20px;"></td>
+			</tr>
+			<tr id="id_wait_progress" style="display:none">
+				<td width="800px" align="center">
+						<img src="../images/progress1.gif">
+				</td>
+			</tr>
+			</table>
+		</div>
+	</div>
+</form>
+</td></tr>
+</tbody></table>
+</div>
+
+
+<br>
+</body>
+</html>
+
+
+
+

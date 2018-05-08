@@ -1,0 +1,167 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+<script language="javascript" type="text/javascript" src="../js/jquery-1.8.3.min.js"></script>
+<style>
+th {
+    color: #00008B;
+    font-weight: bold;
+	text-align: center;
+}
+td.chkbox {
+	text-align: center;
+}
+div.cells{color:#2F4F8F}
+</style>
+
+<script language="javascript" type="text/javascript">
+
+</script>
+</head>
+
+<body align="left">
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<form id="id_lanbuffer_set" name="lanbuffer_set" method="post">
+	<fieldset>
+		<div class="lv1_title">Maintenance&nbsp;&gt;&nbsp;Utilities&nbsp;&gt;&nbsp;Lan Port Egress Buffer Setting</div>
+	</fieldset>
+	<div class="lv4_title" style="margin:40px 1em;">
+		<table border="0">
+		<tr>
+			<th class="width_select150">&nbsp;</th>
+			<th class="width_select200">Large Egress Buffer</th>
+		</tr>
+		<tr>
+			<td><div class="cells">Ethernet port 1</div></td>
+			<td class="chkbox">
+				<input type="checkbox" id="id_eth1">
+			</td>
+		</tr>
+		<tr>
+			<td><div class="cells">Ethernet port 2</div></td>
+			<td class="chkbox">
+				<input type="checkbox" id="id_eth2">
+			</td>
+		</tr>
+		<tr>
+			<td><div class="cells">Ethernet port 3</div></td>
+			<td class="chkbox">
+				<input type="checkbox" id="id_eth3">
+			</td>
+		</tr>
+		<tr>
+			<td><div class="cells">Ethernet port 4</div></td>
+			<td class="chkbox">
+				<input type="checkbox" id="id_eth4">
+			</td>
+		</tr>
+		</table>
+		<div style="margin-top:40px;">
+			<table>
+				<tr>
+					<td width="500px" align="center">
+						<input type="button" id="apply_btn" class="width_button" value="Apply Changes" style="padding:0px 2px;width:auto;height:20px;">
+						<td>
+				</tr>
+				<tr id="id_wait_progress" style="display:none;position:fixed;top:0px;left:0px;width:100%;height:100%;opacity:0.3;background-color:rgb(0,0,0);">
+					<td class="button_center">
+						<img src="../images/progress1.gif" style="position:fixed;display:block;top:50%;left:50%;transform:translate(-50%,-50%);">
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+</form>
+</td></tr>
+</tbody></table>
+</div>
+
+<br>
+<script type="text/javascript">
+var gv_data;
+function init_page()
+{
+};
+
+function do_load()
+{
+
+	loadTableData();
+
+	$("#apply_btn").click(function() {
+		document.getElementById("id_wait_progress").style.display = 'block';
+		$.ajax({
+			type: "POST",
+			url: "lan_egress_set.cmd",
+			data: {
+					action: "set",
+					port1: $("#id_eth1").attr("checked") ? 1 : 0,
+					port2: $("#id_eth2").attr("checked") ? 1 : 0,
+					port3: $("#id_eth3").attr("checked") ? 1 : 0,
+					port4: $("#id_eth4").attr("checked") ? 1 : 0
+				},
+			success: function () {
+					document.getElementById("id_wait_progress").style.display = 'none';
+				}
+			})
+	});
+};
+
+function loadTableData()
+{
+	$.ajax({
+		url: "lan_egress_set.cmd",
+		data: {
+			action: "get"
+		},
+		async: true,
+		dataType: 'text',
+		type: "POST",
+		success: function (data) {
+			var i=1;
+			$(".removeOnReload").remove();
+			if (data && $.trim(data).length > 0) {
+				gv_data = eval("(" + data + ")");
+				//console.info("x="+gv_data.port1+gv_data.port2+gv_data.port3+gv_data.port4);
+			} else {
+				gv_data = false
+			};
+			if (gv_data.port1 == 1) {
+				$("#id_eth1").attr("checked", true)
+			};
+			if (gv_data.port2 == 1) {
+				$("#id_eth2").attr("checked", true)
+			};
+			if (gv_data.port3 == 1) {
+				$("#id_eth3").attr("checked", true)
+			};
+			if (gv_data.port4 == 1) {
+				$("#id_eth4").attr("checked", true)
+			};
+		},
+		error: function () {
+			//pop_up("error happens during load table data.", 0);
+			//alert("error happens during load table data.");
+		}
+	})
+
+};
+
+</script>
+<script type="text/javascript">
+$(document).ready(function(){
+	init_page();
+	do_load();
+});
+</script>
+</body>
+</html>
+

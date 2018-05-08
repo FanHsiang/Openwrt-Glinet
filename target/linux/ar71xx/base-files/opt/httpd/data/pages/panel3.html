@@ -1,0 +1,129 @@
+﻿<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<link rel="StyleSheet" href="../css/dtree.css" type="text/css" />
+	<script type="text/javascript" src="../js/dtree.js"></script>
+</head>
+	
+<body >
+<table >
+	<tr>
+		<tD valign="top" width="400">
+
+
+			<script type="text/javascript">
+				<!--
+
+				d = new dTree('d');
+
+				d.add(0,-1,'I-040GW');
+
+				d.add(1,0,'Quick Setup','/cgi-bin/wwwctrl.cgi?action=quick_setup');
+
+				/*
+				d.add(1,0,'Quick Setup');
+				d.add(22,1,'LAN Settings','/cgi-bin/wwwctrl.cgi?action=lan');
+				d.add(43,1,'WAN Connections','/cgi-bin/wwwctrl.cgi?action=wan_pon_connections');
+				d.add(48,1,'WiFi Security','/cgi-bin/wwwctrl.cgi?action=wifi_security');
+				d.add(49,1,'WiFi Settings','/cgi-bin/wwwctrl.cgi?action=wifi_setting');
+				*/
+
+				d.add(27,0,'Status');
+				d.add(4,27,'System Usage','/cgi-bin/wwwctrl.cgi?action=sysinfo');
+				d.add(37,27,'PON Link Status','/cgi-bin/wwwctrl.cgi?action=pon_link');
+				d.add(45,27,'WAN/(W)LAN Statistics','/cgi-bin/wwwctrl.cgi?action=statistics');
+				d.add(50,27,'Wi-Fi Association','/cgi-bin/wwwctrl.cgi?action=wifi_association');
+				d.add(29,27,'DHCP Lease','/cgi-bin/wwwctrl.cgi?action=dhcp');
+				
+				//d.add(2,0,'Device');
+				
+				d.add(32,0,'Advanced Setup');
+				d.add(5,32,'Register ID(SLID)','/cgi-bin/wwwctrl.cgi?action=slid');
+				d.add(43,32,'WAN Connections','/cgi-bin/wwwctrl.cgi?action=wan_pon_connections');
+				d.add(22,32,'LAN Settings','/cgi-bin/wwwctrl.cgi?action=lan');
+				d.add(33,32,'DNS Settings','/cgi-bin/wwwctrl.cgi?action=dns');
+				d.add(40,32,'Route Settings','/cgi-bin/wwwctrl.cgi?action=route');
+				d.add(52,32,'Dynamic DNS','/cgi-bin/wwwctrl.cgi?action=dynamic_dns');
+
+
+				d.add(46,0,'Wi-Fi Setup');
+				d.add(47,46,'Wi-Fi Settings','/cgi-bin/wwwctrl.cgi?action=wifi_setting');
+				d.add(48,46,'Wi-Fi Security','/cgi-bin/wwwctrl.cgi?action=wifi_security');
+				d.add(49,46,'Wi-Fi Access','/cgi-bin/wwwctrl.cgi?action=wifi_mac');
+
+				d.add(3,0,'Maintenance');
+				//d.add(5,2,'LOID','maintenance/LOID.htm');
+				//d.add(6,2,'General Setting');
+				
+				d.add(8,3,'Utilities');
+				d.add(17,8,'韌體更新','/cgi-bin/wwwctrl.cgi?action=firmware_upgrade');
+				d.add(18,8,'設定檔備份','/cgi-bin/wwwctrl.cgi?action=config_backup');
+				d.add(53,8,'設定檔回復','/cgi-bin/wwwctrl.cgi?action=config_restore');
+				d.add(19,8,'回復出廠預設值','/cgi-bin/wwwctrl.cgi?action=factory_default');
+				d.add(39,8,'重新啟動','/cgi-bin/wwwctrl.cgi?action=reboot');
+				d.add(41,8,'系統設定','/cgi-bin/wwwctrl.cgi?action=system_setting');
+				d.add(25,8,'連接測試','/cgi-bin/wwwctrl.cgi?action=connection_test');
+				d.add(26,8,'TR069 Management','/cgi-bin/wwwctrl.cgi?action=cwmp');
+				d.add(59,8,'供裝模式設定','/cgi-bin/wwwctrl.cgi?action=ont_mode');
+				d.add(65,8,'Lan Port Config','/cgi-bin/wwwctrl.cgi?action=lanport_config');
+				
+				d.add(7,3,'Log');
+				d.add(15,7,'System Log','/cgi-bin/wwwctrl.cgi?action=systemlog');
+				d.add(16,7,'Security Log','/cgi-bin/wwwctrl.cgi?action=securitylog');
+				
+				
+				//d.add(28,27,'Device Table','/cgi-bin/wwwctrl.cgi?action=device');
+				
+				d.add(30,0,'Firewall Setup');
+				//d.add(31,30,'Demilitarized Zone','/cgi-bin/wwwctrl.cgi?action=dmz');
+				d.add(34,30,'Layer 2 Filter','/cgi-bin/wwwctrl.cgi?action=l2_filter');
+				d.add(35,30,'Layer 3 Filter','/cgi-bin/wwwctrl.cgi?action=l3_filter');
+				d.add(36,30,'NAT ALG','/cgi-bin/wwwctrl.cgi?action=passthrough');
+				d.add(38,30,'Port Forwarding','/cgi-bin/wwwctrl.cgi?action=portforward');
+				d.add(42,30,'UPnP','/cgi-bin/wwwctrl.cgi?action=upnp');
+				d.add(60,30,'NAT classify','/cgi-bin/wwwctrl.cgi?action=nat_classify');
+				d.add(61,30,'MCL','/cgi-bin/wwwctrl.cgi?action=mcl');
+				
+				
+				
+
+				d.add(62,0,'CFM');
+				d.add(63,62,'CFM Action', '/cgi-bin/wwwctrl.cgi?action=cfm_action');
+				d.add(64,62,'CFM Status', '/cgi-bin/wwwctrl.cgi?action=cfm_status');
+				
+				
+				//d.add(44,27,'WAN PON Status','/cgi-bin/wwwctrl.cgi?action=wan_pon');
+				//d.add(51,32,'Static ARP Entry','/cgi-bin/wwwctrl.cgi?action=static_arp_entry');
+				
+				
+				
+				document.write(d);
+
+				//-->
+			</script>
+
+
+
+
+
+		<tD>
+		<td valign="top">
+
+
+			<table id="user" style="display:none">
+				<tr>
+					<td>User Name</td><td><input id="myName" type="text"></tD>
+				</tr>
+				<tR><tD>Account</tD><td><input type="text"></tD></tR>
+				<tR><tD>Password</td><td><input type="text">password must be at least 4 characters long</tD></tR>
+				<tR><tD>Phone</td><td><input type="text"></tD></tR>
+				<tr><tD>Email</td><td><input type="text"></tD></tR>
+				<tr><td>Department</td><td><input type="text"></tD></tR>
+				<TR><Td><button>Save </button></tD><tD><button>Cancel</button></tD></tR>
+			</table>
+
+
+
+		</tD>
+	</tR>
+</table>
+</body>

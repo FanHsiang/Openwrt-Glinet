@@ -1,0 +1,583 @@
+﻿
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset="UTF-8" />
+<title>.:: Welcome to the Web-Based Configurator::.</title>
+<link href="../css/zycss.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script type="text/JavaScript" src="../js/common.js" ></script>
+<script type="text/javascript" src="../js/json-to-table.js"></script>
+<script type="text/javascript">
+
+function sendReq(actIdx){
+
+	fvt_paramlist_clear();
+	//console.log("actIdx : %d\n", actIdx);
+
+	if(actIdx == 1){
+	//	console.log("Pressed Enable CCM\n");
+
+		objChecked = check_checked_box("mepChkBox")
+			if( objChecked==null )
+			{
+				showErrMsg("Need to select MEP first.");
+				return false;
+			}
+
+		/*Get all selected mep Id string*/
+		var allMepId ="";
+		for(i=0; i<objChecked.length; i++)
+		{
+			if(i+1==objChecked.length)
+				allMepId += objChecked[i].id;
+			else
+				allMepId += (objChecked[i].id+',');
+		}
+		//console.log("AllMepId enable ccm: %s\n", allMepId);
+
+		fvt_form_submit_ccm('statusForm', allMepId, '1');
+		document.forms["statusForm"].submit();
+		return true;
+		/*
+		switch(document.getElementById('ccmOnOff').value){
+			case 'Enable CCM':
+				actIdx = 1;
+			break;
+			case 'Disable CCM':
+				actIdx = 0;
+			break;
+            default:
+				break;
+		}
+		*/
+	}
+
+	else if(actIdx == 2 )
+	{
+	//	console.log("Disable CCM pressed! \n");
+
+		objChecked = check_checked_box("mepChkBox")
+		if( objChecked==null )
+		{
+			showErrMsg("Need to select MEP first.");
+			return false;
+		}
+		/*Get all selected mep Id string*/
+		var allMepId ="";
+		for(i=0; i<objChecked.length; i++)
+		{
+			if(i+1==objChecked.length)
+				allMepId += objChecked[i].id;
+			else
+				allMepId += (objChecked[i].id+',');
+		}
+	//	console.log("AllMepId disable ccm: %s\n", allMepId);
+
+		fvt_form_submit_ccm('statusForm', allMepId, '0');
+		document.forms["statusForm"].submit();
+		return true;
+	}
+
+	//Clean CCM counter
+	else if(actIdx == 3)
+	{
+	//	console.log("Clean CCM counter button pressed! actIdx=%d\n",actIdx);
+		fvt_form_submit('statusForm');
+		document.forms["statusForm"].submit();
+		return true;
+	}
+	//Clean ALL counter
+	else if(actIdx == 4 )
+	{
+	//	console.log("Clean ALL counter button pressed! actIdx=%d\n",actIdx);
+		fvt_form_submit4('statusForm');
+		document.forms["statusForm"].submit();
+		return true;
+	}
+	//Clean LBM counter
+	else if(actIdx == 5)
+	{
+	//	console.log("Clean LBM counter button pressed! actIdx=%d\n",actIdx);
+		fvt_form_submit2('statusForm');
+		document.forms["statusForm"].submit();
+		return true;
+	}
+	/*
+	else if(actIdx == 6 )
+	{
+		console.log("button pressed! actIdx=%d\n",actIdx);
+		location.href = "/cgi-bin/wwwctrl.cgi?action=cfm";
+	}
+	*/
+	//Clean LTM counter
+	else if(actIdx == 7)
+	{
+	//	console.log("Clean LTM counter button pressed! actIdx=%d\n",actIdx);
+		fvt_form_submit3('ltmForm');
+		document.forms["ltmForm"].submit();
+		return true;
+	}
+	//Send LTM/LBM
+	else if(actIdx == 8){
+		//fvt_paramlist_clear();
+		objectActType=document.getElementById("actionType");
+
+		if(!objectActType){
+			return false;
+		}
+
+		if(objectActType.value != "NONE"){
+			objectMAC=document.getElementById("ltmLbmMacDA");
+			if(objectMAC.value ==""){
+				showErrMsg("The destination MAC address is empty.");
+				return false;
+			}
+			else if(objectMAC.value !="" && checkMACAddrField(objectMAC)==false){
+				showErrMsg("The destination MAC address is wrong.");
+				return false;
+			}
+
+			objChecked = check_checked_box("mepChkBox")
+			if( objChecked==null )
+			{
+				showErrMsg("Need to select MEP first.");
+				return false;
+			}
+
+			destMac=objectMAC.value;
+
+			if(objectActType.value == "LBM"){
+				objectCount = document.getElementById("ltmLbmCut");
+				if(objectCount.value == ""){
+					objectCount.style.backgroundColor = "#FFCCCC";
+					showErrMsg("The Count is empty.");
+					return false;
+				}
+
+				if(!IsNumeric(objectCount.value)){
+					objectCount.style.backgroundColor = "#FFCCCC";
+					showErrMsg("The Count should be numeric.");
+					return false;
+				}
+				count=objectCount.value;
+			//	console.log("count=%d\n",count);
+			}
+		}
+
+		showMsg("");
+
+		atcType=objectActType.value;
+
+		/*Get all selected mep Id string*/
+		var allMepId ="";
+		for(i=0; i<objChecked.length; i++)
+		{
+			if(i+1==objChecked.length)
+				allMepId += objChecked[i].id;
+			else
+				allMepId += (objChecked[i].id+',');
+		}
+		//console.log("AllMepId: %s\n", allMepId);
+
+		if(objectActType.value == "LBM")
+		{
+			fvt_form_submit_lbm('cfmForm', allMepId, objectMAC.value, count);
+		}
+		else if(objectActType.value == "LTM")
+		{
+			fvt_form_submit_ltm('cfmForm', allMepId, objectMAC.value);
+		}
+	//	console.log("fvt_paramlist: %s\n", fvt_paramlist);
+		document.forms['cfmForm'].submit();
+		/*
+		if(objectActType.value == "LBM"){
+			location.href = "system_cfmaction.cgi?action="+actIdx+"&actionType="+atcType+"&ltmLbmMacDA="+destMac+"&ltmLbmCut="+count;
+		}else if(objectActType.value == "LTM"){
+			location.href = "system_cfmaction.cgi?action="+actIdx+"&actionType="+atcType+"&ltmLbmMacDA="+destMac;
+		}else{
+			location.href = "system_cfmaction.cgi?action="+actIdx+"&actionType="+atcType;
+		}
+		*/
+
+	}
+	/*
+	else{
+		console.log("go action = %d\n",actIdx);
+		location.href = "/cgi-bin/wwwctrl.cgi?action="+actIdx;
+	}
+	*/
+
+}
+
+function fvt_merge_meta_to_content(prefix)
+{
+	var content="";
+
+	var Reg_space = /%20/g;
+	var Reg_quotation = /%22/g;
+	var Reg_numSign = /%23/g;
+	var Reg_percent = /%25/g;
+	var Reg_amp = /%26/g;
+	var Reg_apostrophe = /%27/g;
+	var Reg_L_Parenthesis = /%28/g;
+	var Reg_R_Parenthesis = /%29/g;
+	var Reg_lt = /%3C/g;
+	var Reg_equal = /%3D/g;
+	var Reg_gt = /%3E/g;
+	var Reg_L_square_bracket = /%5B/g;
+	var Reg_R_square_bracket = /%5D/g;
+	var Reg_L_curly_bracket = /%7B/g;
+	var Reg_R_curly_bracket = /%7D/g;
+	var Reg_comma = /%2C/g
+
+	for (var key in meta_config)
+	{
+		if (prefix == key.substr(0, prefix.length))
+		{
+			var postfix=key.substr(prefix.length);
+			if (parseInt(postfix) != NaN)
+			{
+				meta_config[key] = meta_config[key].replace(Reg_space, " ");
+				meta_config[key] = meta_config[key].replace(Reg_comma, ",");
+				meta_config[key] = meta_config[key].replace(Reg_quotation, "\"");
+				meta_config[key] = meta_config[key].replace(Reg_numSign, "#");
+				meta_config[key] = meta_config[key].replace(Reg_percent, "%");
+				meta_config[key] = meta_config[key].replace(Reg_amp, "&");
+				meta_config[key] = meta_config[key].replace(Reg_apostrophe, "'");
+				meta_config[key] = meta_config[key].replace(Reg_L_Parenthesis, "(");
+				meta_config[key] = meta_config[key].replace(Reg_R_Parenthesis, ")");
+				meta_config[key] = meta_config[key].replace(Reg_lt, "<");
+				meta_config[key] = meta_config[key].replace(Reg_equal, "=");
+				meta_config[key] = meta_config[key].replace(Reg_gt, ">");
+				meta_config[key] = meta_config[key].replace(Reg_L_square_bracket, "[");
+				meta_config[key] = meta_config[key].replace(Reg_R_square_bracket, "]");
+				meta_config[key] = meta_config[key].replace(Reg_L_curly_bracket, "{");
+				meta_config[key] = meta_config[key].replace(Reg_R_curly_bracket, "}");
+
+			//	console.log("meta_config[%s]: \n%s", key, meta_config[key] );
+				content+=meta_config[key];
+			}
+		}
+	}
+	//console.log("content is :\n%s", content);
+	return content;
+}
+
+function checkMyForm(){}
+
+function doLoad(){
+
+	/*Fill out LTM status table*/
+	var ltmTable = "";
+	ltmTable = fvt_merge_meta_to_content("ltm_status_line");
+	ltmTable = ltmTable.replace(/%3A/g, ":");
+	//console.log("LTM status Table is :\n%s", ltmTable);
+	if(ltmTable !="" || ltmTable != undefined)
+		document.getElementById("ltm_table").innerHTML = ConvertJsonToTable(eval(ltmTable), 'ltmTableContent', 't-border', 'Download', '750');
+}
+
+function fvt_form_submit(form_name) {
+	fvt_paramlist_cat_str ("cfm_clear_ccm", "1");
+	//console.log("fvt_paramlist: %s\n", fvt_paramlist);
+	fvt_paramlist_presubmit(form_name);
+	return true;
+}
+
+function fvt_form_submit2(form_name) {
+	fvt_paramlist_cat_str ("cfm_clear_lbm", "1");
+	//console.log("fvt_paramlist: %s\n", fvt_paramlist);
+	fvt_paramlist_presubmit(form_name);
+	return true;
+}
+
+function fvt_form_submit3(form_name) {
+	fvt_paramlist_cat_str ("cfm_clear_ltm", "1");
+	//console.log("fvt_paramlist: %s\n", fvt_paramlist);
+	fvt_paramlist_presubmit(form_name);
+	return true;
+}
+
+function fvt_form_submit4(form_name) {
+	fvt_paramlist_cat_str ("cfm_clear_all", "1");
+	//console.log("fvt_paramlist: %s\n", fvt_paramlist);
+	fvt_paramlist_presubmit(form_name);
+	return true;
+}
+
+function fvt_form_submit_lbm(form_name, objId, mac, counter) {
+
+	if( objId!=null)
+	{
+		fvt_paramlist_cat_str ("mep_send_lbm", objId);
+		fvt_paramlist_presubmit(form_name);
+	}
+
+	fvt_paramlist_cat_str ("mep_send_mac", mac);
+
+	//console.log("send_counter:%d\n",counter);
+	if( counter != null || counter != undefined)
+	{
+		fvt_paramlist_cat_str ("lbm_send_count", counter);
+		fvt_paramlist_presubmit(form_name);
+	}
+	return true;
+}
+
+function fvt_form_submit_ltm(form_name, objId, mac) {
+
+	fvt_paramlist_cat_str ("mep_send_ltm", objId);
+	fvt_paramlist_cat_str ("mep_send_mac", mac);
+	fvt_paramlist_presubmit(form_name);
+	return true;
+}
+
+function fvt_form_submit_ccm(form_name, objId, val){
+	if(val==1){
+		fvt_paramlist_cat_str ("enable_ccm", 1);
+	}
+	else{
+		fvt_paramlist_cat_str ("disable_ccm", 1);
+	}
+	fvt_paramlist_cat_str ("selected_mep", objId);
+	fvt_paramlist_presubmit(form_name);
+	//console.log("[CCM]fvt_paramlist: %s\n", fvt_paramlist);
+	return true;
+}
+
+
+function check_checked_box(chkboxName)
+{
+	var checkboxes = document.getElementsByName(chkboxName);
+	var checkboxesChecked = [];
+	  // loop over them all
+	  for (var i=0; i<checkboxes.length; i++) {
+		 // And stick the checked ones onto an array...
+		 if (checkboxes[i].checked) {
+			checkboxesChecked.push(checkboxes[i]);
+		 }
+	  }
+	  // Return the array if it is non-empty, or null
+	  return checkboxesChecked.length > 0 ? checkboxesChecked : null;
+	  //return checkboxesChecked.length;
+
+}
+
+function checkboxAction(box_obj)
+{
+
+	//console.log("box_obj.name: %s\n", box_obj.name);
+	var obj_hasChecked = check_checked_box(box_obj.name);
+
+	if(obj_hasChecked==null)
+		len=0;
+	else
+		len=obj_hasChecked.length;
+	//console.log("hasChecked: %d\n", len);
+	selectedMep(len);
+}
+
+</script>
+
+
+<body onload="doLoad()">
+
+<div class="tabs">
+<!--
+	<ul>
+        <li><div class="focus"><span>CFM Action</span></div></li>
+	</ul><br class="clearfloat" />
+-->
+</div>
+	<fieldset>
+		<div class="lv1_title">CFM&nbsp;&gt;&nbsp;CFM Status</div>
+	</fieldset>
+<div class="config-block">
+<div class="left">
+	<br class="clearfloat" />
+<div class="right"><!-- configuration beginning -->
+
+<form id="statusForm" name="statusForm" method="post" action="" >
+<div class="headline">Status</div>
+	<table width="800" border="0" align="center" cellspacing="2">
+		<tr>
+			<td colspan="2"><div align="center">
+				<input type="button" name="cleanCcm" value="Clean All CFM Counter" class="btnstyle" onclick=" return sendReq(4)"/>
+			</div></td>
+		</tr>
+		<tr></tr>
+		<tr>
+			<td width="50%">
+			<table width="80%" border="0" align="center" cellpadding="0" cellspacing="1" >
+				<tr>
+					<td colspan="2" class="t-title">CCM Status </td>
+				</tr>
+				<tr>
+					<td width="50%" class="t-row1">Sent CCM:</td>
+					<td id="sentCCM counter" width="50%" class="t-row1">
+						<script>
+							var sentCCM = meta_config['sentCCM'];
+							if( sentCCM == undefined)
+								sentCCM = 0;
+							document.getElementById("sentCCM counter").innerHTML = sentCCM;
+						</script>
+					</td>
+				</tr>
+				<tr>
+                    <td class="t-row2">Invalid CCM: </td>
+                    <td id="invalidCCM counter" class="t-row2">
+						<script>
+							var invalidCCM = meta_config['invalidCCM'];
+							if( invalidCCM == undefined)
+								invalidCCM = 0;
+							document.getElementById("invalidCCM counter").innerHTML = invalidCCM;
+						</script>
+					</td>
+				</tr>
+				<tr>
+                    <td class="t-row1">Cross-Connect CCM: </td>
+						<script>
+							var crossCCM = meta_config['crossCCM'];
+							if( crossCCM == undefined)
+								crossCCM = 0;
+							document.getElementById("crossCCM counter").innerHTML = crossCCM;
+						</script>
+                    <td class="t-row1">0</td>
+				</tr>
+				<tr>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+				</tr>
+			</table>
+			</td>
+
+			<td width="50%">
+			<table width="80%" border="0" align="center" cellpadding="0" cellspacing="1">
+				<tr>
+					<td colspan="2" class="t-title">LBM Status </td>
+				</tr>
+				<tr>
+                    <td width="50%" class="t-row1">Sent LBMs:</td>
+                    <td id="sentLBM counter"width="50%" class="t-row1">
+						<script>
+							var sentLBM = meta_config['sentLBM'];
+							if( sentLBM == undefined)
+								sentLBM = 0;
+							document.getElementById("sentLBM counter").innerHTML = sentLBM;
+						</script>
+					</td>
+				</tr>
+				<tr>
+                    <td class="t-row2">Inorder LBRs: </td>
+                    <td id="inorderLBR counter" class="t-row2">
+						<script>
+							var inorderLBR = meta_config['inorderLBR'];
+							if( inorderLBR == undefined)
+								inorderLBR = 0;
+							document.getElementById("inorderLBR counter").innerHTML = inorderLBR;
+						</script>
+					</td>
+				</tr>
+				<tr>
+                    <td class="t-row1">Outorder LBRs: </td>
+                    <td id="outorderLBR" class="t-row1">
+						<script>
+							var outorderLBR = meta_config['outorderLBR'];
+							if( outorderLBR == undefined)
+								outorderLBR = 0;
+							document.getElementById("outorderLBR").innerHTML = outorderLBR;
+						</script>
+					</td>
+				</tr>
+				<tr>
+                    <td>&nbsp;</td>
+                    <td>&nbsp;</td>
+				</tr>
+			</table>
+			</td>
+		</tr>
+
+		<tr>
+			<td><div align="center">
+
+				<input type="button" name="refreshCcm" value="Refresh" class="btnstyle" onclick="location.reload()"/>
+				<!--
+				<input type="button" name="cleanCcm" value="Clean" class="btnstyle" onclick=" return sendReq(3)"/>
+				-->
+
+                </div>
+			</td>
+			<td><div align="center">
+
+				<input type="button" name="refreshLbm" value="Refresh" class="btnstyle" onclick="location.reload()"/>
+				<!--
+				<input type="button" name="cleanLbm" value="Clean" class="btnstyle" onclick="sendReq(5)"/>
+				-->
+
+
+				</div>
+			</td>
+		</tr>
+	</table>
+</form>
+<p>&nbsp;</p>
+<form id="ltmForm" name="ltmForm" method="post" action="" >
+	<table width="750" border="0"  class="t-border" align="center">
+		<tr>
+			<td colspan="4"  class="t-title">LTM Status </td>
+		</tr>
+		<tr>
+			<td><table id="ltm_table" width="750" border="0" align="center" cellpadding="0" cellspacing="1">
+
+				<tr>
+					<td width="50" class="CfgTabBg1"><div align="center">Index</div></td>
+					<td width="50" class="CfgTabBg1"><div align="center">MDL-MPid</div></td>
+					<!--<td width="250"  class="CfgTabBg1"><div align="center">Reply Action</div></td>-->
+					<td width="100" class="CfgTabBg1"><div align="center">MAC </div></td>
+					<td width="50" class="CfgTabBg1"><div align="center">TTL </div></td>
+					<td width="100" class="CfgTabBg1"><div align="center">Response Time </div></td>
+				</tr>
+
+			</table>
+			</td>
+		</tr>
+		<tr>
+			<td><div align="center">
+
+				<input type="button" name="refreshLtm" value="Refresh" class="btnstyle" onclick="location.reload()"/>
+				<input type="button" name="cleanLtm" value="Clean LTM" class="btnstyle" onclick="sendReq(7)"/>
+			</div></td>
+		</tr>
+
+	</table>
+</form>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+	<p></p>
+		<table width="26%" border="0" cellspacing="2" class="t-border" align="center">
+			<tr>
+				<td bgcolor="#FFFF99" class="strong">Hint:</td>
+			</tr>
+			<tr><td bgcolor="#FFFFCC">
+			<span class="hint">
+			CCM: Continuity Check Message<br />
+			LBM: Loopback Message<br />
+			LTM: Linktrace Message<br />
+			MD:  Maintenance Domain<br />
+			MA:  Maintenance Association<br />
+			MEP: Maintenance association End Point
+			</span>
+			</td></tr>
+		</table>
+
+			<p><br class="clearfloat" />
+
+</div>
+		<br class="clearfloat" />
+</div>
+</div>
+<div class="config-bottom"><br class="clearfloat" /></div><br />
+
+</body>
+
+</html>

@@ -1,0 +1,146 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+
+<script language="javascript" type="text/javascript">
+
+if (fvt_meta_config('dev_wlanac0_interface') != '') var ac_installed = "1";
+
+function check_process()
+{
+	var process="Success";
+	if (process=="Existed")
+		alert("Please wait!!Another client is upgading firmware.");
+}
+
+function wifi_sta_info()
+{
+	var i,j,vap,item_mac;
+	for (j=1;j<=4;j++)
+	{
+		if(j==1) vap='';
+		else if (j==2) vap='vap0_';
+		else if (j==3) vap='vap1_';
+		else if (j==4) vap='vap2_';
+		var sta_num=fvt_meta_config("kv_sta_num"+j);
+		if (sta_num != 0)
+		{
+			document.write("<tr><td><b>11n SSID "+j+"("+fvt_meta_config("wlan_"+vap+"ssid")+"):</b></td></tr>");
+			for (i=1;i<=sta_num;i++)
+			{
+				document.write("<tr><td>"+i+"</td>");
+				item_mac=fvt_meta_config("kv_sta_mac"+j+"_"+i);
+				var mac_item1 = item_mac.substr(0 , 2);
+				var mac_item2 = item_mac.substr(2 , 2);
+				var mac_item3 = item_mac.substr(4 , 2);
+				var mac_item4 = item_mac.substr(6 , 2);
+				var mac_item5 = item_mac.substr(8 , 2);
+				var mac_item6 = item_mac.substr(10 , 2);
+				document.write("<td>");
+				document.write(""+mac_item1+":");
+				document.write(""+mac_item2+":");
+				document.write(""+mac_item3+":");
+				document.write(""+mac_item4+":");
+				document.write(""+mac_item5+":");
+				document.write(""+mac_item6+"");
+				document.write("</td>");
+				document.write("<td>"+fvt_meta_config("kv_sta_rate"+j+"_"+i)+"Mbps</td>");
+				document.write("<td align=\"center\">"+fvt_meta_config("kv_sta_channel"+j+"_"+i)+"</td>");
+				document.write("<td >"+fvt_meta_config("kv_sta_time"+j+"_"+i)+"</td></tr>");
+			}
+		}
+	}
+}
+
+function wifi_acsta_info()
+{
+	var i,j,vap,item_mac;
+	for (j=1;j<=4;j++)
+	{
+		if(j==1) vap='';
+		else if (j==2) vap='vap0_';
+		else if (j==3) vap='vap1_';
+		else if (j==4) vap='vap2_';
+		var sta_num=fvt_meta_config("kv_sta_ac_num"+j);
+		if (sta_num != 0)
+		{
+			document.write("<tr><td><b>11ac SSID "+j+"("+fvt_meta_config("wlanac_"+vap+"ssid")+"):</b></td></tr>");
+			for (i=1;i<=sta_num;i++)
+			{
+				document.write("<tr><td>"+i+"</td>");
+				item_mac=fvt_meta_config("kv_sta_ac_mac"+j+"_"+i);
+				var mac_item1 = item_mac.substr(0 , 2);
+				var mac_item2 = item_mac.substr(2 , 2);
+				var mac_item3 = item_mac.substr(4 , 2);
+				var mac_item4 = item_mac.substr(6 , 2);
+				var mac_item5 = item_mac.substr(8 , 2);
+				var mac_item6 = item_mac.substr(10 , 2);
+				document.write("<td>");
+				document.write(""+mac_item1+":");
+				document.write(""+mac_item2+":");
+				document.write(""+mac_item3+":");
+				document.write(""+mac_item4+":");
+				document.write(""+mac_item5+":");
+				document.write(""+mac_item6+"");
+				document.write("</td>");
+				document.write("<td>"+fvt_meta_config("kv_sta_ac_rate"+j+"_"+i)+"Mbps</td>");
+				document.write("<td align=\"center\">"+fvt_meta_config("kv_sta_ac_channel"+j+"_"+i)+"</td>");
+				document.write("<td >"+fvt_meta_config("kv_sta_ac_time"+j+"_"+i)+"</td></tr>");
+			}
+		}
+	}
+}
+</script>
+</head>
+
+<body align="left" onload="check_process();">
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<form id="fWifi_ass" name="fWifi_ass" method="post" action=>
+<fieldset>
+	<script language="javascript" type="text/javascript">
+		if(fvt_meta_config('sess_level')=="admin")
+			document.write("<div class='lv1_title'>Status&nbsp;&gt;&nbsp;Wi-Fi Clients</div>");
+		else
+			document.write("<div class='lv1_title'>Maintenance&nbsp;&gt;&nbsp;WLAN Association List</div>");
+	</script>
+</fieldset>
+<div class="div1_indent lv3_new">
+	<table>
+		<tr class="lv1_title">
+			<th class="width_Swifi_no"><div class="lv2_new" ctrlflip="etc" ctrlid="46">No.</div></th>
+			<th class="width_Swifi_mac"><div class="lv2_new" ctrlflip="etc" ctrlid="44">MAC Address</div></th>
+			<th class="width_Swifi_rate"><div class="lv2_new" ctrlflip="etc" ctrlid="50">Rate</div></th>
+			<th class="width_Swifi_channel"><div class="lv2_new" ctrlflip="etc" ctrlid="50">Channel</div></th>
+			<th class="width_Swifi_linktime"><div class="lv2_new" ctrlflip="etc" ctrlid="50">Link time</div></th>
+		</tr>
+		<tr style="height:5px;">
+			<td colspan="9">
+				<div><hr class="hr2"></div>
+			</td>
+		</tr>
+
+		<script language="javascript" type="text/javascript">
+			wifi_sta_info();
+			if (ac_installed == "1") wifi_acsta_info();
+		</script>
+
+	</table>
+</div>
+</form>
+</td></tr>
+</tbody></table>
+</div>
+
+<br>
+</body>
+</html>
+
+

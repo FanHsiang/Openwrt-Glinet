@@ -1,0 +1,538 @@
+﻿
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset="UTF-8" />
+<title>.:: Welcome to the Web-Based Configurator::.</title>
+<link href="../css/zycss.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script type="text/JavaScript" src="../js/common.js" ></script>
+<script type="text/javascript" src="../js/json-to-table.js"></script>
+<script type="text/javascript">
+
+function isNumber(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+}
+
+function sendReq(actIdx){
+
+	fvt_paramlist_clear();
+	//console.log("actIdx : %d\n", actIdx);
+
+	if(actIdx == 1){
+				
+		objChecked = check_checked_box("mepChkBox")
+			if( objChecked==null )
+			{
+				showErrMsg("Need to select MEP first.");
+				return false;
+			}
+		
+		/*Get all selected mep Id string*/
+		var allMepId ="";
+		for(i=0; i<objChecked.length; i++)
+		{
+			if(i+1==objChecked.length)
+				allMepId += objChecked[i].id;
+			else
+				allMepId += (objChecked[i].id+',');
+		}
+		
+		
+		fvt_form_submit_ccm('cfmForm', allMepId, '1');
+		document.forms["cfmForm"].submit();
+		return true;
+		/*
+		switch(document.getElementById('ccmOnOff').value){
+			case 'Enable CCM':
+				actIdx = 1;
+			break;
+			case 'Disable CCM':
+				actIdx = 0;
+			break;
+            default:
+				break;
+		}
+		*/
+	}
+	
+	else if(actIdx == 2 )
+	{
+				
+		objChecked = check_checked_box("mepChkBox")
+		if( objChecked==null )
+		{
+			showErrMsg("Need to select MEP first.");
+			return false;
+		}
+		/*Get all selected mep Id string*/
+		var allMepId ="";
+		for(i=0; i<objChecked.length; i++)
+		{
+			if(i+1==objChecked.length)
+				allMepId += objChecked[i].id;
+			else
+				allMepId += (objChecked[i].id+',');
+		}
+		
+		fvt_form_submit_ccm('cfmForm', allMepId, '0');
+		document.forms["cfmForm"].submit();
+		return true;
+	}
+	
+	//Clean CCM counter
+	else if(actIdx == 3)
+	{
+		fvt_form_submit('cfmForm');
+		document.forms["cfmForm"].submit();
+		return true;
+	}
+	/*
+	else if(actIdx == 4 )
+	{
+		location.href = "/cgi-bin/wwwctrl.cgi?action=cfm";		
+	}
+	*/
+	//Clean LBM counter
+	else if(actIdx == 5)
+	{
+		fvt_form_submit2('cfmForm');
+		document.forms["cfmForm"].submit();
+		return true;
+	}
+	/*
+	else if(actIdx == 6 )
+	{
+		location.href = "/cgi-bin/wwwctrl.cgi?action=cfm";		
+	}
+	*/
+	//Clean LTM counter
+	else if(actIdx == 7)
+	{
+		fvt_form_submit3('ltmForm');
+		document.forms["ltmForm"].submit();
+		return true;
+	}
+	//Send LTM/LBM
+	else if(actIdx == 8){
+		//fvt_paramlist_clear();
+		objectActType=document.getElementById("actionType");
+
+		if(!objectActType){
+			return false;
+		}
+		
+		if(objectActType.value != "NONE"){
+			objectMAC=document.getElementById("ltmLbmMacDA");
+			if(objectMAC.value ==""){
+				showErrMsg("The destination MAC address is empty.");
+				return false;
+			}
+			else if(objectMAC.value !="" && check_mac(objectMAC)==false ){
+				showErrMsg("The destination MAC address is wrong.");
+				return false;
+			}		
+			
+			objChecked = check_checked_box("mepChkBox")
+			if( objChecked==null )
+			{
+				showErrMsg("Need to select MEP first.");
+				return false;
+			}
+
+			destMac=objectMAC.value;
+		
+			if(objectActType.value == "LBM"){
+				objectCount = document.getElementById("ltmLbmCut");
+				if(objectCount.value == ""){
+					objectCount.style.backgroundColor = "#FFCCCC";
+					showErrMsg("The Count is empty.");
+					return false;
+				}
+			
+				if(!isNumber(objectCount.value)){
+					objectCount.style.backgroundColor = "#FFCCCC";
+					showErrMsg("The Count should be numeric.");
+					return false;
+				}
+				count=objectCount.value;
+			}
+		}
+
+		
+		
+		atcType=objectActType.value;
+		
+		/*Get all selected mep Id string*/
+		var allMepId ="";
+		for(i=0; i<objChecked.length; i++)
+		{
+			if(i+1==objChecked.length)
+				allMepId += objChecked[i].id;
+			else
+				allMepId += (objChecked[i].id+',');
+		}
+		
+		if(objectActType.value == "LBM")
+		{	
+			fvt_form_submit_lbm('cfmForm', allMepId, objectMAC.value, count);
+		}
+		else if(objectActType.value == "LTM")
+		{
+			fvt_form_submit_ltm('cfmForm', allMepId, objectMAC.value);
+		}
+		document.forms['cfmForm'].submit();		
+		/*
+		if(objectActType.value == "LBM"){			
+			location.href = "system_cfmaction.cgi?action="+actIdx+"&actionType="+atcType+"&ltmLbmMacDA="+destMac+"&ltmLbmCut="+count;
+		}else if(objectActType.value == "LTM"){
+			location.href = "system_cfmaction.cgi?action="+actIdx+"&actionType="+atcType+"&ltmLbmMacDA="+destMac;
+		}else{
+			location.href = "system_cfmaction.cgi?action="+actIdx+"&actionType="+atcType;
+		}
+		*/
+		
+	}
+	/*
+	else{
+		location.href = "/cgi-bin/wwwctrl.cgi?action="+actIdx;		
+	}
+	*/
+	
+}
+
+function selectedMep(value){
+
+	objectCCM = document.getElementById("ccmOnOff");
+	objectOffCCM = document.getElementById("ccmOff");
+	objectLtmLbmSend = document.getElementById("ltmLbmSend");
+	if(value>0){
+		objectCCM.disabled=false;
+		objectLtmLbmSend.disabled = false;
+		objectOffCCM.disabled = false;
+	}else{
+		objectCCM.disabled=true;
+		objectLtmLbmSend.disabled = true;
+		objectOffCCM.disabled = true;
+	}
+}
+
+function disableInputBox(){
+
+	objectActType = document.getElementById("actionType");
+	objectMAC     = document.getElementById("ltmLbmMacDA");
+	objectCount   = document.getElementById("ltmLbmCut");
+
+	objectMAC.style.backgroundColor = 'white';
+	objectCount.style.backgroundColor = 'white';
+	
+	if(objectActType.value == "NONE"){
+		objectMAC.disabled=true;
+		objectCount.disabled=true;
+		objectMAC.style.backgroundColor = 'gray';
+		objectCount.style.backgroundColor = 'gray';
+	}else if(objectActType.value == "LBM"){
+		objectMAC.disabled=false;
+		objectCount.disabled=false;
+	}else{
+		objectMAC.disabled=false;
+		objectCount.disabled=true;
+		objectCount.style.backgroundColor = 'gray';
+	}	
+}
+
+function fvt_merge_meta_to_content(prefix) 
+{
+	var content="";
+		
+	var Reg_space = /%20/g;
+	var Reg_quotation = /%22/g;
+	var Reg_numSign = /%23/g;
+	var Reg_percent = /%25/g;
+	var Reg_amp = /%26/g;
+	var Reg_apostrophe = /%27/g;
+	var Reg_L_Parenthesis = /%28/g;
+	var Reg_R_Parenthesis = /%29/g;
+	var Reg_lt = /%3C/g;
+	var Reg_equal = /%3D/g;
+	var Reg_gt = /%3E/g;
+	var Reg_L_square_bracket = /%5B/g;
+	var Reg_R_square_bracket = /%5D/g;
+	var Reg_L_curly_bracket = /%7B/g;
+	var Reg_R_curly_bracket = /%7D/g;
+	var Reg_comma = /%2C/g
+
+
+
+	for (var key in meta_config)
+	{
+		if (prefix == key.substr(0, prefix.length))
+		{
+			var postfix=key.substr(prefix.length);
+			if (parseInt(postfix) != NaN)
+			{
+				meta_config[key] = meta_config[key].replace(Reg_space, " ");
+				meta_config[key] = meta_config[key].replace(Reg_comma, ",");
+				meta_config[key] = meta_config[key].replace(Reg_quotation, "\"");
+				meta_config[key] = meta_config[key].replace(Reg_numSign, "#");
+				meta_config[key] = meta_config[key].replace(Reg_percent, "%");
+				meta_config[key] = meta_config[key].replace(Reg_amp, "&");
+				meta_config[key] = meta_config[key].replace(Reg_apostrophe, "'");
+				meta_config[key] = meta_config[key].replace(Reg_L_Parenthesis, "(");
+				meta_config[key] = meta_config[key].replace(Reg_R_Parenthesis, ")");
+				meta_config[key] = meta_config[key].replace(Reg_lt, "<");
+				meta_config[key] = meta_config[key].replace(Reg_equal, "=");
+				meta_config[key] = meta_config[key].replace(Reg_gt, ">");
+				meta_config[key] = meta_config[key].replace(Reg_L_square_bracket, "[");
+				meta_config[key] = meta_config[key].replace(Reg_R_square_bracket, "]");
+				meta_config[key] = meta_config[key].replace(Reg_L_curly_bracket, "{");
+				meta_config[key] = meta_config[key].replace(Reg_R_curly_bracket, "}");
+
+				content+=meta_config[key];
+			}
+		}
+	}
+	
+	return content;
+}
+
+function checkMyForm(){}
+
+function doLoad(){
+
+	disableInputBox();
+	
+	objectSelected = document.getElementById("mepSelected");
+	objectCCM  = document.getElementById("ccmOnOff");
+	objectOffCCM  = document.getElementById("ccmOff");
+	objectSend = document.getElementById("ltmLbmSend");
+	
+	if(objectSelected.value == "ENABLE"){
+		objectSend.disabled=false;
+		objectCCM.disabled=false;
+		objectOffCCM.disable=false;
+	}else{
+		objectSend.disabled=true;
+		objectCCM.disabled=true;
+		objectOffCCM.disable=true;
+	}
+	
+	/*fill out the MEP List table*/	
+	
+
+	var cfmTable = "";
+	cfmTable = fvt_merge_meta_to_content("cfm_content_line").replace(/%3A/g, ":");
+		
+	if(cfmTable == 'undefined')
+	{
+		//console.log("CFM Table is undefined");
+	}
+	else if(cfmTable == "")
+	{
+		//console.log("cfmTable is \"\"");
+		
+	}
+	else if(cfmTable == null)
+	{
+		//console.log("cfmTable is null");
+	}
+	else
+	{
+		//console.log("CFM Table is JSON");
+		document.getElementById("cfmForm").innerHTML = ConvertJsonToTable(eval(cfmTable), 'cfmTable', 't-border', 'Download', '750');
+	}
+
+}
+
+function fvt_form_submit(form_name) {
+	fvt_paramlist_cat_str ("cfm_clear_ccm", "1");
+	
+	fvt_paramlist_presubmit(form_name);
+	return true;
+}
+
+function fvt_form_submit2(form_name) {
+	fvt_paramlist_cat_str ("cfm_clear_lbm", "1");
+	
+	fvt_paramlist_presubmit(form_name);
+	return true;
+}
+
+function fvt_form_submit3(form_name) {
+	fvt_paramlist_cat_str ("cfm_clear_ltm", "1");
+	
+	fvt_paramlist_presubmit(form_name);
+	return true;
+}
+
+function fvt_form_submit_lbm(form_name, objId, mac, counter) {
+    
+	if( objId!=null)
+	{
+		fvt_paramlist_cat_str ("mep_send_lbm", objId);
+		fvt_paramlist_presubmit(form_name);
+	}
+	
+	fvt_paramlist_cat_str ("mep_send_mac", mac);
+	
+	
+	if( counter != null || counter != undefined)
+	{
+		fvt_paramlist_cat_str ("lbm_send_count", counter);
+		fvt_paramlist_presubmit(form_name);
+	}
+	return true;
+}
+
+function fvt_form_submit_ltm(form_name, objId, mac) {
+    
+	fvt_paramlist_cat_str ("mep_send_ltm", objId);
+	fvt_paramlist_cat_str ("mep_send_mac", mac);
+	fvt_paramlist_presubmit(form_name);
+	return true;
+}
+
+function fvt_form_submit_ccm(form_name, objId, val){
+	if(val==1){
+		fvt_paramlist_cat_str ("enable_ccm", 1);
+	}
+	else{
+		fvt_paramlist_cat_str ("disable_ccm", 1);
+	}
+	fvt_paramlist_cat_str ("selected_mep", objId);
+	fvt_paramlist_presubmit(form_name);
+	
+	return true;
+}
+
+
+function check_checked_box(chkboxName)
+{
+	var checkboxes = document.getElementsByName(chkboxName);
+	var checkboxesChecked = [];
+	  // loop over them all
+	  for (var i=0; i<checkboxes.length; i++) {
+		 // And stick the checked ones onto an array...
+		 if (checkboxes[i].checked) {
+			checkboxesChecked.push(checkboxes[i]);
+		 }
+	  }
+	  // Return the array if it is non-empty, or null
+	  return checkboxesChecked.length > 0 ? checkboxesChecked : null;
+	  //return checkboxesChecked.length;
+	
+}
+
+function checkboxAction(box_obj)
+{
+
+	
+	
+	var obj_hasChecked = check_checked_box(box_obj.name);
+	
+	if(obj_hasChecked==null)
+		len=0;
+	else
+		len=obj_hasChecked.length;
+	
+	selectedMep(len);
+}
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+<body onload="doLoad()">
+
+<div class="tabs">
+<!--
+	<ul>
+        <li><div class="focus"><span>CFM Action</span></div></li>
+	</ul><br class="clearfloat" />
+-->
+</div>
+	<fieldset>
+		<div class="lv1_title">CFM&nbsp;&gt;&nbsp;CFM Action</div>
+	</fieldset>
+<div class="config-block">
+	<div class="left">
+		<br class="clearfloat" />
+	  <div class="right"><!-- configuration beginning -->
+
+<div class="headline">MEP List</div>
+	<!--<form id="cfmForm" name="cfmForm" method="post" enctype="multipart/form-data" action="" onsubmit="return checkMyForm(this)">-->
+	<form id="cfmForm" name="cfmForm" method="post" action="">
+			
+			
+			<table id="cfmTable" width="750" border="0" align="center" cellpadding="0" cellspacing="1" class="t-border">
+				<tr class="t-title">
+
+			  	<td class="t-title" width="50">Type</td>
+				<td class="t-title" width="100">MD Level</td>
+				<td class="t-title" width="100">MD Name </td>
+				<td class="t-title" width="100">VLAN ID </td>
+				<td class="t-title" width="50">P-Bit </td>
+				<td class="t-title" width="50">ID</td>
+
+				<td class="t-title" width="100">Interface</td>
+				<td class="t-title" width="100">Direction</td>
+				<td class="t-title" width="100">MAC Address</td>
+				<td class="t-title" width="50">CCM</td>
+                
+              </tr>
+            </table>
+			
+			
+		<input name="mepSelected" id="mepSelected" type="hidden" value=""/>
+	</form>
+
+<p>&nbsp;</p>
+
+<div class="headline">LTM/LBM Action</div>
+		<table width="750" border="0" align="center" cellpadding="0" cellspacing="1">
+            <tr>
+				<td width="75"></td>
+			    <td width="75"></td>
+				<td width="50" height="31" align="left">
+                  <select name="actionType" id="actionType" onchange="disableInputBox(this)">
+				    <option value="NONE" selected="selected">NONE</option>
+
+                    <option value="LBM" >LBM</option>
+                    <option value="LTM" >LTM</option>
+                  </select>
+				</td>
+                <td width="200" align="right">Destination MAC Address:</td>
+                <td width="50" align="left"><input name="ltmLbmMacDA" type="input" id="ltmLbmMacDA" value="" STYLE="background-color: gray;" disabled="disabled"></td>
+                <td width="60" align="right">Count:</td>
+
+                <td width="50" aligh="left"><input name="ltmLbmCut" type="input" id="ltmLbmCut" size="5" value="" STYLE="background-color: gray;" disabled="disabled"></td>
+				<td width="50"><input type="button" name="ltmLbmSend" id="ltmLbmSend" value="Send" class="btnstyle" onclick="sendReq(8)"/></td>
+				<td width="150"></td>
+            </tr>
+			<tr>
+				<td width="75"></td>
+			    <td width="75"></td>
+                <td>
+					<input type="button" name="enableCcm" id="ccmOnOff" value="Enable CCM" class="btnstyle" disabled="disabled" onclick="sendReq(1)"/>						
+				</td>   
+				<td>
+					<input type="button" name="disableCcm" id="ccmOff" value="Disable CCM" class="btnstyle" disabled="disabled" onclick="sendReq(2)"/>					 
+				</td>
+             </tr>
+        </table>
+		</div class="right">
+	</div class="left">
+</div class="config-block">
+</br>
+</body>
+
+
+</html>

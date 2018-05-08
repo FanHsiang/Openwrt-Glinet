@@ -1,0 +1,13 @@
+#!/bin/sh
+account=$1
+version=`grep version /root/version | cut -d"=" -f2`
+set -- `/sbin/ifconfig br0 |grep HWaddr`
+lan_mac=$5
+onu_state=`diag gpon get onu-state | grep 'ONU state' | cut -d'(' -f2 | cut -d')' -f1`
+[ -f /nvram/gpon.dat ] && . /nvram/gpon.dat
+echo "    Login Account : $account"
+echo " Firmware Version : $version"
+echo "          Lan MAC : $lan_mac"
+echo "        ONU State : $onu_state"
+echo "             SLID : $onu_password"
+echo "    Serial Number : $onu_serial"

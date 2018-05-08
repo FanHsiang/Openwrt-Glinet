@@ -1,0 +1,157 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+
+
+<script language="javascript" type="text/javascript">
+var protocol;
+//var xmlDoc =loadXml("Firewall.xml");
+//var NodeLength = getNodeLength("NATPassthrough");
+
+function check_process()
+{
+	var process="Success";
+	if (process=="Existed")
+	{
+		alert("Please wait!!Another client is upgading firmware.");
+	}
+}
+
+function isBridgeMode()
+{
+        var wan_type="";
+        if (wan_type=="bridge")
+                document.getElementById("add_applybtn").disabled=true;
+}
+
+function setMode()
+{
+	
+	if (confirm("Are you sure you want to change mode ? After applying changes,ONT will reboot automatically"))	
+	{
+		fvt_form_submit();
+		document.ont_mode_form.submit();
+		return 0;
+	}
+	return 0;
+}
+
+
+function fvt_form_init() 
+{
+	var form_name = 'ont_mode_form' ;
+	if (form_name=='ont_mode_form' || form_name=='*') {
+
+		if(fvt_meta_config('ont_mode')=='0')
+		{
+			document.getElementById("PureBridgeMode").checked = true;
+		}
+		else
+		{
+			document.getElementById("RouterMode").checked = true;
+		}
+		
+	}
+
+	
+	if( fvt_meta_config('pon_status') =='O5')
+	{
+		document.getElementById("RouterMode").disabled = true;
+		document.getElementById("PureBridgeMode").disabled = true;
+		document.getElementById("add_applybtn").disabled = true;
+		document.getElementById("id_hint").style.display = "inline";
+	}
+	
+}
+
+
+function fvt_form_submit() 	{
+	var form_name = 'ont_mode_form' ;
+	fvt_paramlist_clear();
+	
+	if (form_name=='ont_mode_form' || form_name=='*') 
+	{
+		
+		if (document.getElementById("PureBridgeMode").checked)
+		{
+			fvt_paramlist_cat_str('ont_mode', '0');	
+		}
+		else
+		{
+			fvt_paramlist_cat_str('ont_mode', '1');	
+		}
+		//fvt_paramlist_cat_str('ont_mode_change', '1');	
+		
+	}
+	fvt_paramlist_presubmit(form_name);
+	//document.ont_mode_form.action="wwwctrl.cgi?action=wait_restart";
+	//document.ont_mode_form.submit();
+	return true;
+}
+
+
+
+</script>
+</head>
+
+<body align="left" onload="fvt_form_init();check_process();isBridgeMode();">
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<form id="id_ont_mode_form" name="ont_mode_form" method="post"  action="wwwctrl.cgi?action=wait_restart" target="contentfrm">				
+	<fieldset>
+		<div class="lv1_title">Maintenance&nbsp;&gt;&nbsp;Utilities&nbsp;&gt;&nbsp;ONT Mode</div>
+	</fieldset>
+	<fieldset>
+		<div class="lv5_new">
+		Please note that these settings should only be configured with the help and guidance of your service provider.
+		</div>
+		<div id="id_hint"  style="display:none;">
+			<font color="red"><b>Can not modify this setting ! Please disconnect the PON fiber firstly.</b><font>
+		</div>
+	</fieldset>	
+	<div style="margin:30px 0px;">
+		
+		<div class="lv3_title">
+		<table><tbody>
+		<tr>
+			<td width="200px"><div class="lv4_title">ONT Mode</div></td>
+			<td width="150px">
+				<input name="ontMode" id="RouterMode" type="radio" class="radio">
+				<label for="RouterMode">Routing Mode&nbsp;&nbsp;</label></input>
+			</td>
+			<td>
+				<input name="ontMode" id="PureBridgeMode" type="radio" class="radio">
+				<label for="PureBridgeMode">Pure Bridge Mode</label></input>
+			</td>
+		</tr>
+		
+		</tbody></table>
+		</div>
+	
+		<div style="margin-top:40px;">
+			<table>
+			<tr>
+				<td width="600px" align="center"><input type="button" onclick="setMode()" id="add_applybtn" name="applybtn" class="width_button"  value="Apply Changes" style="padding:0px 2px;width:auto;height:20px;"><td>
+			</tr>
+			</table>
+		</div>
+	</div>
+</form>
+</td></tr>	
+</tbody></table>
+</div>
+
+<br>		
+</body>
+</html>
+
+
+
+

@@ -1,0 +1,385 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+
+<style type="text/css">
+td.width_ipv6ta{width:270px}
+td.width_ipv6td{width:15px}
+td.width_ipv6tp{width:100px}
+div.width_lanset3{margin-left:20px}
+select.width_lansetEnable{width:128px}
+td.dhcpmode{padding-left:20px;}
+tr.rowt{background-color:#E0E0E0}
+tr.rowh{background-color:#F0F0F0}
+/* DarkBlue */
+div.rowh{color:#00008B}
+div.cellt{color:DarkGray}
+/* DarkSlateGrey */
+div.cells{color:#2F4F4F}
+table.TB_COLLAPSE {
+	border-collapse:collapse;
+}
+table.TB_COLLAPSE caption {
+	padding:10px;
+	font-size:24px;
+	background-color:#f3f6f9;
+}
+table.TB_COLLAPSE thead th {
+	padding:5px 0px;
+	color:#fff;
+	background-color:#915957;
+}
+table.TB_COLLAPSE tbody td {
+	padding:5px 0px;
+	color:#888;
+	text-align:center;
+	border:1px solid #915957;
+}
+table.TB_COLLAPSE tbody td.hlight {
+	padding:5px 0px;
+	color:#333;
+	text-align:center;
+	border:1px solid #915957;
+}
+</style>
+
+<script language="javascript" type="text/javascript">
+var show_ula_prefix=0;
+var ra_mbit_keep;
+var option_max=4;
+
+function saveChanges()
+{
+	if( fvt_form_submit('ipv6lansetting_form') )
+	{
+		document.getElementById('id_wait_progress').style.display="";
+		document.ipv6lansetting_form.submit();
+	}
+	return true;
+}
+
+function fvt_form_init(form_name)
+{
+	if (form_name=='ipv6lansetting_form' || form_name=='*')
+	{
+		var v6_dhcp_enable=fvt_meta_config('lan0_ipv6_dhcp_enable');
+		fvt_form_obj_set("ipv6lansetting_form", "dhcp_enable", v6_dhcp_enable);
+		document.ipv6lansetting_form.dhcp_enable[v6_dhcp_enable].checked=true;
+
+		var v6_ra_enable=fvt_meta_config('lan0_ipv6_ra_enable');
+
+		fvt_form_obj_set("ipv6lansetting_form", "ra_enable", v6_ra_enable);
+		//document.ipv6lansetting_form.ra_enable[v6_ra_enable].checked=true;
+
+		var v6_ra_mbit=fvt_meta_config('lan0_ipv6_ra_mbit');
+		ra_mbit_keep=v6_ra_mbit;
+		fvt_form_obj_set("ipv6lansetting_form", "ra_mbit", v6_ra_mbit);
+		//document.ipv6lansetting_form.ra_mbit[v6_ra_mbit].checked=true;
+		document.ipv6lansetting_form.State_mode[v6_ra_mbit].checked=true;
+
+		var v6_ra_abit=fvt_meta_config('lan0_ipv6_ra_abit');
+		fvt_form_obj_set("ipv6lansetting_form", "ra_abit", v6_ra_abit);
+		//document.ipv6lansetting_form.ra_abit[v6_ra_abit].checked=true;
+
+		var v6_dns_proxy_enable=fvt_meta_config('lan0_ipv6_dns_proxy_enable');
+		fvt_form_obj_set("ipv6lansetting_form", "dns_proxy_enable", v6_dns_proxy_enable);
+		document.ipv6lansetting_form.dns_proxy_enable[v6_dns_proxy_enable].checked=true;
+
+		var v6_mtusync_enable=fvt_meta_config('lan0_ipv6_ra_mtu_wanif_index');
+		fvt_form_obj_set("ipv6lansetting_form", "syncmtu_enable", v6_mtusync_enable);
+		if (v6_mtusync_enable=="0")
+			document.ipv6lansetting_form.syncmtu_enable[1].checked=true;
+		else
+			document.ipv6lansetting_form.syncmtu_enable[0].checked=true;
+
+		if (fvt_meta_config('wan0_ip_assignment') == 2)
+		{
+			//document.getElementById("show_syncmtu").style.display = "";
+			document.getElementById("id_syncmtu_Enable").disabled = false;
+			document.getElementById("id_syncmtu_Disable").disabled = false;
+		}
+		else
+		{
+			//document.getElementById("show_syncmtu").style.display = "none";
+			document.getElementById("id_syncmtu_Enable").disabled = true;
+			document.getElementById("id_syncmtu_Disable").disabled = true;
+		}
+
+		document.getElementById("ipv6_show").style.display = "";
+
+		change_State_mode();
+	}
+	document.getElementById("id_dhcpv6_option_tb").style.display="none";
+	//document.getElementById("id_dhcpv6_option_tb").style.display="";
+	document.getElementById("id_dns_proxy_Enable").disabled = true;
+}
+
+function fvt_form_submit(form_name, mode) {
+	fvt_paramlist_clear();
+
+	if (form_name=='ipv6lansetting_form' || form_name=='*') {
+
+		fvt_paramlist_cat_str('lan0_ipv6_dhcp_enable', fvt_form_obj_get("ipv6lansetting_form", "dhcp_enable"));
+		fvt_paramlist_cat_str('lan0_ipv6_ra_enable', fvt_form_obj_get("ipv6lansetting_form", "dhcp_enable"));
+		//fvt_paramlist_cat_str('lan0_ipv6_ra_mbit', fvt_form_obj_get("ipv6lansetting_form", "ra_mbit"));
+		fvt_paramlist_cat_str('lan0_ipv6_ra_mbit', fvt_form_obj_get("ipv6lansetting_form", "State_mode"));
+		//fvt_paramlist_cat_str('lan0_ipv6_ra_abit', fvt_form_obj_get("ipv6lansetting_form", "ra_abit"));
+		var abit="0";
+		if(document.ipv6lansetting_form.State_mode.value=="0") abit="1";
+		fvt_paramlist_cat_str('lan0_ipv6_ra_abit', abit);
+
+		fvt_paramlist_cat_str('lan0_ipv6_dns_proxy_enable', fvt_form_obj_get("ipv6lansetting_form", "dns_proxy_enable"));
+
+		var ramtu_sync="";
+		if (document.ipv6lansetting_form.syncmtu_enable.value=="1" && fvt_meta_config('wan0_ip_assignment')==2)
+			ramtu_sync="0";
+		fvt_paramlist_cat_str('lan0_ipv6_ra_mtu_wanif_index', ramtu_sync);
+
+		//fvt_paramlist_cat_str('lan0_ipv6_ula_prefix', fvt_form_obj_get("ipv6lansetting_form", "ula_prefix"));
+		//var ipv6_gua_prefix=document.getElementById("id_lan_ipv6ip").value+"::/"+document.getElementById("id_lan_ipv6pre").value;
+
+		var confirm_message="Are you sure you want to change DHCPv6 mode? After applying changes, ONT will reboot automatically."
+		if (ra_mbit_keep!=document.querySelector('input[name="State_mode"]:checked').value)
+		{
+			if (confirm(confirm_message))
+			{
+				fvt_paramlist_cat_str('reboot', "1");
+				window.top.location.href="wwwctrl.cgi?action=wait_restart&time=125";
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+
+	fvt_paramlist_presubmit(form_name);
+	return true;
+}
+
+function merge_ipv6prefix(target, ipv6, prefix)
+{
+	var target_item=document.getElementById(target);
+	var value1=document.getElementById(ipv6).value;
+	var value2=document.getElementById(prefix).value;
+
+	target_item.value=value1+"/"+value2;
+	if(target_item.value=="/") target_item.value=""; return true;
+}
+
+function change_State_mode()
+{
+	if(document.getElementById("id_dhcp_Disable").checked)
+	{
+		document.getElementById("id_Stateless").disabled=true;
+		document.getElementById("id_Stateful").disabled=true;
+	}
+	else
+	{
+		document.getElementById("id_Stateless").disabled=false;
+		document.getElementById("id_Stateful").disabled=false;
+	}
+}
+
+function change_dhcpmode(dhcpmode)
+{
+	var alert_msg="Warning : Re-boot device is needed after DHCPv6 mode change to '"+dhcpmode+"'!";
+	if (ra_mbit_keep==document.querySelector('input[name="State_mode"]:checked').value)
+	{
+		document.getElementById("tr_show_warning").style.display = "none";
+	}
+	else
+	{
+		document.getElementById("tr_show_warning").style.display = "";
+		document.getElementById("td_warning").style.color = 'red';
+		document.getElementById("td_warning").innerHTML = alert_msg;
+	}
+}
+
+function OptionURL(OPT)
+{
+	window.location.href="wwwctrl.cgi?action=option_ipv6&opt="+OPT;
+}
+
+function list_v6option(OPT)
+{
+	document.write("<td>"+OPT+"</td>");
+	document.write("<td><input type='button' value='Edit' onclick='OptionURL("+OPT+")' target='contentfrm'></td>");
+	var capability=fvt_meta_config("dhcp_pool"+OPT+"_capability");
+	// capability 1:passthrougt ENABLE, 2: Match Remote, 3: Match Local
+	if (capability == 2)
+		{
+		document.write("<td class='hlight'>Enable<BR>Match Remote</td>");
+		}
+	else if (capability == 3)
+		{
+		document.write("<td class='hlight'>Enable<BR>Match Local</td>");
+		}
+	else
+		{
+		document.write("<td>Disable</td>");
+		}
+
+	var opt60_en=fvt_meta_config("dhcp_pool"+OPT+"_option60_enable");
+	if (opt60_en == 1) document.write("<td class='hlight'>Enable</td>");
+	else document.write("<td>Disable</td>");
+
+	var opt61_en=fvt_meta_config("dhcp_pool"+OPT+"_option61_enable");
+	if (opt61_en == 1) document.write("<td class='hlight'>Enable</td>");
+	else document.write("<td>Disable</td>");
+
+	var opt125_en=fvt_meta_config("dhcp_pool"+OPT+"_option125_enable");
+	if (opt125_en == 1) document.write("<td class='hlight'>Enable</td>");
+	else document.write("<td>Disable</td>");
+
+	var poolstart=fvt_meta_config('dhcp0_pool'+OPT+'_number_start');
+	var poolend=fvt_meta_config('dhcp0_pool'+OPT+'_number_end')
+	document.write("<td>"+poolstart+"<BR>"+poolend+"</td>");
+}
+
+function toggle_disabled(id) {
+	var e = document.getElementById(id);
+	if(e.disabled == true)
+		e.disabled = false;
+	else
+		e.disabled = true;
+}
+function toggle_display(id) {
+	var e = document.getElementById(id);
+	if(e.style.display == "none")
+		e.style.display = "";
+	else
+		e.style.display = "none";
+}
+//-->
+</script>
+</head>
+
+<body align="left" onload="fvt_form_init('ipv6lansetting_form');">
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<form id="ipv6lansetting_form" name="ipv6lansetting_form" method="post" action=>
+<fieldset>
+	<div class="lv1_title">Advanced Setup&nbsp;<a href="#" onclick="toggle_display('id_dhcpv6_option_tb');" style="text-decoration: none; color: #4B0082;">&gt;</a>&nbsp;IPv6 Lan Settings</div>
+</fieldset>
+<div class="div1_indent lv2_new">
+
+<div id="ipv6_show">
+
+<!-- LAN IPv6 ip -->
+	<div id="id_ipv6_lan">
+		<table><tbody>
+
+		<tr>
+			<td class="lv1_title"><div class="lv1_new rowh">Lan IPv6 Configuration :</div></td>
+			<td width="70px"></td>
+			<td width="5px"></td>
+			<td></td>
+		</tr>
+		<tr>
+			<td class="width_ipv6ta"><div>Enable DHCPv6 Server & RA</div></td>
+			<td><input type="radio" name="dhcp_enable" id="id_dhcp_Disable" value="0" class="radio" onclick="change_State_mode()">Disable</td>
+			<td>&nbsp;&nbsp;</td>
+			<td><input type="radio" name="dhcp_enable" id="id_dhcp_Enable" value="1" class="radio" onclick="change_State_mode()" checked>Enable</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td class="dhcpmode">
+				<input type="radio" name="State_mode" id="id_Stateless" value="0" class="radio" onclick="change_dhcpmode('Stateless')">Stateless
+			</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td class="dhcpmode">
+				<input type="radio" name="State_mode" id="id_Stateful" value="1" class="radio" onclick="change_dhcpmode('Stateful')" checked>Stateful
+			</td>
+		</tr>
+		<tr id='tr_show_warning' style="display:none">
+			<td></td>
+			<td colspan="3" id="td_warning"></td>
+		</tr>
+		<tr><td colspan="4"><hr class="hr2"></td></tr>
+		<tr id="show_syncmtu">
+			<td class="width_ipv6ta"><div>Lan RA MTU sync to Wan0 PPP MTU</div></td>
+			<td><input type="radio" name="syncmtu_enable" id="id_syncmtu_Disable" value="0" class="radio">Disable</td>
+			<td>&nbsp;&nbsp;</td>
+			<td><input type="radio" name="syncmtu_enable" id="id_syncmtu_Enable" value="1" class="radio" checked>Enable</td>
+		</tr>
+		<tr>
+			<td class="width_ipv6ta"><div>Lan IPv6 DNS Proxy</div></td>
+			<td><input type="radio" name="dns_proxy_enable" id="id_dns_proxy_Disable" value="0" class="radio">Disable</td>
+			<td>&nbsp;&nbsp;</td>
+			<td><input type="radio" name="dns_proxy_enable" id="id_dns_proxy_Enable" value="1" class="radio" checked>Enable</td>
+		</tr>
+		</tbody></table>
+	</div>
+
+<!--dhcpv6 option Table-->
+
+	<div><hr class="hr2"></div>
+	<div id="id_dhcpv6_option_tb">
+		<table><tbody>
+		<tr>
+			<td class="width_lanset1"><div ctrlflip="right" ctrlid="75">Option Filter :</div></td>
+		</tr>
+		</tbody></table>
+
+		<table class="TB_COLLAPSE"><tbody>
+		<tr style="text-align:center">
+			<td class='hlight' style="width:50px;">Rule</td>
+			<td class='hlight' style="width:75px;">Edit</td>
+			<td class='hlight' style="width:150px;">DHCP Passthrough</td>
+			<td class='hlight' style="width:130px;">DHCP Option 16</td>
+			<td class='hlight' style="width:130px;">DHCP Option 1</td>
+			<td class='hlight' style="width:130px;">DHCP Option 17</td>
+			<td class='hlight' style="width:130px;">IPv6 Prefix</td>
+		</tr>
+
+		<script language="javascript" type="text/javascript">
+			for(i=0; i<option_max; i++)
+			{
+				document.write("<tr style='text-align:center'>");
+				list_v6option(i);
+				document.write("</tr>");
+			}
+		</script>
+
+		</tbody></table>
+	</div>
+
+	<div class="top_cwmp2">
+	<table><tbody>
+		<tr>
+			<td></td>
+			<td class="button_center">
+				<input type="button" onclick="saveChanges()" name="applybtn" value="Apply Changes" class="width_apply">
+			</td>
+		</tr>
+		<tr id="id_wait_progress" style="display:none;position:fixed;top:0px;left:0px;width:100%;height:100%;opacity:0.3;background-color:rgb(0,0,0);">
+			<td class="button_center">
+				<img src="../images/progress1.gif" style="position:fixed;display:block;top:50%;left:50%;transform:translate(-50%,-50%);">
+			</td>
+		</tr>
+	</tbody></table>
+	</div>
+</div>
+</div>
+</form>
+
+</td></tr>
+</tbody></table>
+</div>
+
+</body>
+</html>

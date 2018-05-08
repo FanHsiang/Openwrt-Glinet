@@ -1,0 +1,893 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+<script language="javascript" type="text/javascript" src="../js/rc4.js"></script>
+
+<style type="text/css">
+tr.rowt{background-color:#E0E0E0}
+tr.rowh{background-color:#F0F0F0}
+/* DarkBlue */
+div.rowh{color:#00008B}
+div.cellt{color:DarkGray}
+/* DarkSlateGrey */
+div.cells{color:#2F4F4F}
+input.dot{margin-right: 5px}
+td.contentA{width:75px;height:25px;text-align:left;margin:0px;padding:0px}
+</style>
+
+<script language="javascript" type="text/javascript">
+var rc4Key = "27885vt8118";
+var ssidNum;
+if (fvt_meta_config('wlan_enable') == 1)
+	ssidNum = fvt_meta_config('wlan_vap_num');
+else
+	ssidNum = 0;
+
+var CurItem=URLParams("_aa");
+var auParam=URLParams("_au");// 1 add 2 edit
+var WanNameParam=URLParams("_aq");
+var WanModeParam=URLParams("_ae");
+var bindmethodParam=URLParams("_am");//i:portbase 2:macbase 3:nobind
+var VoIPParam=URLParams("_av");
+var TR069Param=URLParams("_at");
+var IGMPParam=URLParams("_ai");
+var DeafaultRouteParam=URLParams("_ar");
+
+//("wan_route_pppoe",pb,pvt,pvi,pvb,pu,pp,pa,ps,pi,pc,pd,pa,pmt,pm,au,aa,ab);
+var bingtypeParam=URLParams("_ab");//when edit have avlid value
+var bindParam=URLParams("_pb");
+var vtypeParam=URLParams("_pvt");
+var vidParam=URLParams("_pvi");
+var vpbitParam=URLParams("_pvb");
+var usernameParam=URLParams("_pu");
+var passwdParam=URLParams("_pp").replace(/%3D/g, "=");
+var accessParam=URLParams("_pac");
+var serviceParam=URLParams("_ps");
+var ipvParam=URLParams("_pi");
+var contypeParam=URLParams("_pc");
+var maxidelParam=URLParams("_pd");
+var authtypeParam=URLParams("_pa");
+var mtutypeParam=URLParams("_pmt");
+var mtuParam=URLParams("_pm");
+var natParam=URLParams("_an");
+var wanEnableParam=URLParams("_aw");
+var passthroughParam=URLParams("_ppa");
+
+var maxrule=8;
+var VlanCountPpp=0;// for later use
+var utag_flag=0;
+var min_vid=0;
+var max_vid=4094;
+
+var link_type;
+if (fvt_meta_config('k_link_type') != 'pon0') link_type=fvt_meta_config('k_link_type');
+else link_type="pon"+CurItem;
+
+function manual_open(item)
+{
+	document.getElementById("id_"+item).disabled = false;
+}
+
+function manual_close(item , sec)
+{
+	//document.getElementById("id_"+item).value=sec;
+	document.getElementById("id_"+item).disabled = true;
+}
+
+
+function check_process()
+{
+	var process="";
+	if (process=="Existed")
+		warn_wait();
+		//alert("Another client is upgrade now !");
+}
+
+function save_pwd1()
+{
+	document.wanPPPoE_form.nosave_Pwd.disabled=false;
+}
+function get_utag_flag()
+{
+	var i = 0;
+	for(i=0; i<maxrule; i++)
+	{
+		var vid_if=fvt_meta_config("dev_wan"+i+"_interface");
+		if (vid_if != '')
+		{
+			var vid = vid_if.split(".");
+			if (vid.length == '1')
+			{
+				utag_flag=1;
+			}
+		}
+	}
+}
+
+function check_tagutag()
+{
+	var wanname_split = new Array();
+	var wanname=fvt_meta_config("dev_wan"+CurItem+"_interface");
+
+	wanname_split = wanname.split(".");
+	//alert (wanname_split[1]);
+
+	if ( !wanname_split[1] )
+	{
+	//alert (wanname_split[1]);
+		//document.wanPPPoE_form.nosave_Utag[0].checked=false;
+		//document.wanPPPoE_form.nosave_Utag[1].checked=true;
+		document.wanPPPoE_form.nosave_Utag.value="1";
+		manual_close('PPPoEVlanId');
+	}
+	else
+	{
+		//document.wanPPPoE_form.nosave_Utag[0].checked=true;
+		//document.wanPPPoE_form.nosave_Utag[1].checked=false;
+		document.wanPPPoE_form.nosave_Utag.value="0";
+		manual_open('PPPoEVlanId');
+	}
+}
+
+function Init()
+{
+
+	get_utag_flag();
+	/*if (utag_flag == "1")
+	{
+		document.wanPPPoE_form.PPPoEVlanId.disabled=false;
+		document.wanPPPoE_form.PPPoEPBit.disabled=false;
+	}*/
+	var wan_ipv6_enable = fvt_meta_config("wan"+CurItem+"_ipv6_enable");
+	var wan_ipv6_assignment = fvt_meta_config("wan"+CurItem+"_ipv6_assignment");
+	//ip_assignment: 0=static, 1=dhcp, 2=pppoe
+	if ((wan_ipv6_enable =="1") && (wan_ipv6_assignment =="2"))
+	{
+		//document.wanPPPoE_form.IPV6Enable[1].checked=true;
+		document.getElementById("id_IPV6Enable").checked=true;
+		document.getElementById("id_IPV6Disable").checked=false;
+		document.getElementById("show_dhcpv6").style.display="table-row";
+	}
+	else
+	{
+		//document.wanPPPoE_form.IPV6Enable[0].checked=true;
+		document.getElementById("id_IPV6Enable").checked=false;
+		document.getElementById("id_IPV6Disable").checked=true;
+		document.getElementById("show_dhcpv6").style.display="none";
+	}
+
+	var wan_ipv4_enable = fvt_meta_config("wan"+CurItem+"_ip_enable");
+	var wan_ipv4_assignment = fvt_meta_config("wan"+CurItem+"_ip_assignment");
+	if ((wan_ipv4_enable =="1") && (wan_ipv4_assignment =="2"))
+	{
+		document.getElementById("id_IPV4Enable").checked=true;
+		document.getElementById("id_IPV4Disable").checked=false;
+	}
+	else
+	{
+		document.getElementById("id_IPV4Enable").checked=false;
+		document.getElementById("id_IPV4Disable").checked=true;
+	}
+
+	if (mtutypeParam =="1" )
+	{
+		document.wanPPPoE_form.nosave_WanPPPoEMtu[1].checked=true;
+		//document.wanPPPoE_form.PPPoEMtu.disabled=true;
+		document.getElementById("id_PPPoEMtu").disabled=false;
+	}
+	else
+	{
+		document.wanPPPoE_form.nosave_WanPPPoEMtu[0].checked=true;
+		//document.wanPPPoE_form.PPPoEMtu.disabled=false;
+		document.getElementById("id_PPPoEMtu").disabled=true;
+	}
+	if (auParam == 2) //Edit case
+	{
+		check_tagutag();
+		document.wanPPPoE_form.PPPoEMtu.value=mtuParam;
+		/*
+		if (vtypeParam== 1)
+		{
+			document.getElementById("id_PPPoEVlanId").value=vidParam;
+			document.getElementById("id_PPPoEPBit").value=vpbitParam;
+		}
+		else
+		{
+			document.getElementById("id_PPPoEVlanId").value="";
+			document.getElementById("id_PPPoEPBit").value="";
+		}
+		*/
+
+		document.getElementById("id_PPPoEVlanId").value=vidParam;
+		document.getElementById("id_PPPoEPBit").value=vpbitParam;
+		document.wanPPPoE_form.PPPoENat[natParam].checked=true;
+		document.wanPPPoE_form.PPPoEEnable[wanEnableParam].checked=true;
+//		if (wanEnableParam == true )
+//			document.getElementById("id_PPPoEEnable").checked=1;
+//		else
+//			document.getElementById("id_PPPoEEnable").checked=0;
+
+
+
+		document.getElementById("id_PPPoEUsername").value=usernameParam;
+		document.getElementById("id_PPPoEPassword").value=passwdParam;
+		//document.getElementById("id_PPPoEAC").value=accessParam;
+		document.getElementById("id_PPPoEService").value=serviceParam;
+		document.getElementById("id_PPPoEIdletime").value=maxidelParam;
+		//document.getElementById("id_PPPoEPassthroughEnable").value=passthroughParam;
+	/*	if (vtypeParam!=1 && VlanCountPpp <= 0 )
+		{
+			document.wanPPPoE_form.PPPoEVlanId.disabled=true;
+			document.wanPPPoE_form.PPPoEPBit.disabled=true;
+		}
+		else
+		{
+			document.wanPPPoE_form.PPPoEVlanId.disabled=false;
+			document.wanPPPoE_form.PPPoEPBit.disabled=false;
+		}*/
+
+		//fanny add 2012/08/31 for ipv6
+		/*if(ipvParam=="0")
+			document.wanPPPoE_form.PPPoEv4v6[0].checked=true;
+		else if(ipvParam=="1")
+			document.wanPPPoE_form.PPPoEv4v6[1].checked=true;
+		else
+			document.wanPPPoE_form.PPPoEv4v6[2].checked=true;
+		*/
+		if(contypeParam=="1")
+			document.wanPPPoE_form.PPPoEMode[0].checked=true;
+		else if(contypeParam=="0")
+			document.wanPPPoE_form.PPPoEMode[1].checked=true;
+		else
+			document.wanPPPoE_form.PPPoEMode[2].checked=true;
+		document.getElementById("id_PPPoEAuthMethod").value=authtypeParam;
+		//load_data(index);
+	}
+	change_maxtime();
+
+	var ipv6_iana_mode = fvt_meta_config("wan"+CurItem+"_ipv6_iana_mode");
+	var ipv6_iapd_mode = fvt_meta_config("wan"+CurItem+"_ipv6_iapd_mode");
+
+	if (ipv6_iana_mode=='1') document.getElementById("id_DHCPv6_IANA").checked=true;
+	else  document.getElementById("id_DHCPv6_IANA").checked=false;
+
+	if (ipv6_iapd_mode=='1') document.getElementById("id_DHCPv6_IAPD").checked=true;
+	else  document.getElementById("id_DHCPv6_IAPD").checked=false;
+}
+
+function check_servicename(a,item,msg)
+{
+
+	if (!isBlank(a))
+	{
+		for(i=0;i<a.length;i++)
+		{
+			c=a.charAt(i);
+			if((c!='_')&&(c!='-')&&(c!='.')&&(c!='@')&&(!((c>='a')&&(c<='z')))&&(!((c>='A')&&(c<='Z')))&&(!((c>='0')&&(c<='9'))))
+			{
+				warn_char("Host Name","'a' ~ 'z', 'A' ~ 'Z', '_', '-', '.'","'@'");
+				//alert(msg+" "+item+" should be characters in 'a' ~ 'z', 'A' ~ 'Z', '_', '-', '.'and '@'");
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+function check_wanPPPoE()
+{
+	var item,msg,min,max;
+	var internet_vlanid=0;
+	//var WNum=VlanCount;
+	var i;
+	//check username & password
+	if(document.getElementById("id_PPPoEUsername").value == "")
+	{
+			warn_not_empty("User Name");
+			return false;
+	}
+	if(document.getElementById("id_PPPoEPassword").value == "")
+	{
+			warn_not_empty("Password");
+			return false;
+	}
+	//check vlan id
+		if( ( (document.getElementById("id_PPPoEVlanId").value == "") ||
+			(isBlank(document.getElementById("id_PPPoEVlanId").value)) ) &&
+			!(document.wanPPPoE_form.nosave_Utag[1].checked) )
+		{
+			warn_not_empty("VLAN ID");
+			//alert("PPPoE VLAN ID can not be empty!");
+			return false;
+		}
+
+		/*if( (document.getElementById("id_PPPoEPBit").value == "") ||
+			(isBlank(document.getElementById("id_PPPoEVlanId").value)) )
+		{
+			warn_not_empty("Pbit");
+			//alert("PPPoE Pbit can not be empty!");
+			return false;
+		}*/
+
+		if( !check_integer(document.getElementById("id_PPPoEVlanId").value) &&
+			!(document.wanPPPoE_form.nosave_Utag[1].checked) )
+		{
+			item = "VLAN ID";
+			msg = "PPPoE";
+			min = min_vid;
+			max = max_vid;
+			warn_int_between(item,min,max);
+			//alert(msg+" "+item+" should be an integer between "+min+" and "+max);
+			return false;
+		}
+
+		/*if(!check_integer(document.getElementById("id_PPPoEPBit").value))
+		{
+			item = "PBit";
+			msg = "PPPoE";
+			min = "0";
+			max = "7";
+			warn_int_between(item,min,max);
+			//alert(msg+" "+item+" should be an integer between "+min+" and "+max);
+			return false;
+		}*/
+
+		if (!check_integer_range(document.getElementById("id_PPPoEVlanId").value,min_vid,max_vid) &&
+			!(document.wanPPPoE_form.nosave_Utag[1].checked) )
+		{
+			item = "VLAN ID";
+			msg = "PPPoE";
+			min = min_vid;
+			max = max_vid;
+			warn_int_between(item,min,max);
+			//alert(msg+" "+item+" should be an integer between "+min+" and "+max);
+			return false;
+		}
+
+		/*if (!check_integer_range(document.getElementById("id_PPPoEPBit").value,0,7))
+		{
+			item = "PBit";
+			msg = "PPPoE";
+			min = "0";
+			max = "7";
+			warn_int_between(item,min,max);
+			//alert(msg+" "+item+" should be an integer between "+min+" and "+max);
+			return false;
+		}*/
+		/*if (ID >= 0)
+		WNum=WNum-1;
+		for(i=1;i<=WNum;i++)
+		{
+			if (document.getElementById("id_PPPoEVlanId").value==document.getElementById("id_chkVlanId"+i).value)
+			{
+				item="<%GetString("RoutePPPoE","VlanID");%>";
+						alert(<%GetString("RoutePPPoE","AlrtItmCn");%>);
+				return false;
+			}
+			<%BrCheckVlanId("PPP");%>
+		}*/
+
+
+	if (!check_servicename(document.getElementById("id_PPPoEService").value, "PPPoE Service name"))
+		return false;
+
+	if(document.wanPPPoE_form.PPPoEMode[0].checked)
+	{
+		if( (document.getElementById("id_PPPoEIdletime").value == "") ||
+			(isBlank(document.getElementById("id_PPPoEIdletime").value)) )
+		{
+			item = "Max idle time";
+			msg = "PPPoE";
+			warn_not_empty(item);
+			//alert(msg+" "+item+" can not be empty!");
+			return false;
+		}
+
+		if(!check_integer_range(document.getElementById("id_PPPoEIdletime").value,60,3600))
+		{
+			item = "Max idle time";
+			msg = "PPPoE";
+			min = "60";
+			max = "3600";
+			warn_int_between(item,min,max);
+			//alert(msg+" "+item+" should be an integer between "+min+" and "+max);
+			return false;
+		}
+	}
+
+	if(document.wanPPPoE_form.nosave_WanPPPoEMtu[1].checked)
+	{
+		if( (document.getElementById("id_PPPoEMtu").value == "") ||
+			(isBlank(document.getElementById("id_PPPoEMtu").value)) )
+		{
+			item = "MTU";
+			warn_not_empty(item);
+			//alert("MTU can not be empty!");
+			return false;
+		}
+
+		if (!check_integer_range(document.getElementById("id_PPPoEMtu").value,1024,1492)
+			|| (document.getElementById("id_PPPoEMtu").value==""))
+		{
+			item = "MTU";
+			msg = "PPPoE";
+			min = "1024";
+			max = "1492";
+			warn_int_between(item,min,max);
+			//alert(msg+" "+item+" should be an integer between "+min+" and "+max);
+			return false;
+		}
+	}
+	return true;
+}
+
+function Back()
+{
+	window.location.href="wwwctrl.cgi?action=wan_pon_connections";
+}
+
+function setPPPoE()
+{
+	var i,bindp;
+	bindp='';
+	if (bindmethodParam=="1"|| bingtypeParam == "1")
+	{
+		/*if (ckbindport())
+		{
+			alert("bind error");
+			return false;
+		}*/
+		//setbindport();
+		//bindParam=Str_delMulti(bindp,";");
+		bindParam=bindp;
+	}
+	if (!check_wanPPPoE())
+		return false;
+	/*if (document.wanPPPoE_form.nosave_WanPPPoEMtu[0].checked)
+		document.wanPPPoE_form.PPPoEMtu.value="1492";*/
+	document.wanPPPoE_form.PPPoEMtu.disabled=false;
+	document.wanPPPoE_form.PPPoEVlanId.disabled=false;
+	document.wanPPPoE_form.PPPoEPBit.disabled=false;
+
+	qos_set();
+}
+
+function qos_set()
+{
+	fvt_form_submit('wanPPPoE_form');
+	document.wanPPPoE_form.action="wwwctrl.cgi?action=wan_pon_connections";
+	document.wanPPPoE_form.submit();
+}
+
+function fvt_form_submit(form_name) {
+	fvt_paramlist_clear();
+	if (form_name=='wanPPPoE_form' || form_name=='*') {
+		if (auParam == 1)
+		{
+			fvt_paramlist_cat_str("wan"+CurItem+"_if_name", WanNameParam);
+			fvt_paramlist_cat_str("wan"+CurItem+"_ip_assignment", WanModeParam);
+			fvt_paramlist_cat_str("wan"+CurItem+"_ipv6_assignment", WanModeParam); //ipv6
+			//fvt_paramlist_cat_str("wan"+CurItem+"_bind_type", bindmethodParam);
+			//fvt_paramlist_cat_str("wan"+CurItem+"_service_voip", VoIPParam);
+			fvt_paramlist_cat_str("wan"+CurItem+"_service_cwmp", TR069Param);
+			//fvt_paramlist_cat_str("wan"+CurItem+"_service_igmp", IGMPParam);
+			if(parseInt(DeafaultRouteParam))
+				fvt_paramlist_cat_str("system_default_route_interface", "dev_wan"+CurItem+"_interface");
+		}
+		//fvt_paramlist_cat_str("wan"+CurItem+"_pppoe_bind", bindParam);
+		//fvt_paramlist_cat_str("wan"+CurItem+"_pppoe_vlan_id", fvt_form_obj_get("wanPPPoE_form", "PPPoEVlanId"));
+		//if (fvt_form_obj_get("wanPPPoE_form", "PPPoEVlanId") == "0")
+		if ( document.wanPPPoE_form.nosave_Utag[1].checked )
+			fvt_paramlist_cat_str("dev_wan"+CurItem+"_interface", link_type);
+		else
+			fvt_paramlist_cat_str("dev_wan"+CurItem+"_interface", link_type+'.'+fvt_form_obj_get("wanPPPoE_form", "PPPoEVlanId"));
+		//fvt_paramlist_cat_str("wan"+CurItem+"_pbit", fvt_form_obj_get("wanPPPoE_form", "PPPoEPBit"));
+		fvt_paramlist_cat_str("wan"+CurItem+"_pppoe_username", fvt_form_obj_get("wanPPPoE_form", "PPPoEUsername"));
+
+
+		var password ;
+		if( fvt_form_obj_get("wanPPPoE_form", "PPPoEPassword") != passwdParam)
+		{
+			 password = rc4_encrypt("27885vt8118",fvt_form_obj_get("wanPPPoE_form", "PPPoEPassword"));
+		}
+		else
+		{
+			 password = passwdParam;
+		}
+
+		fvt_paramlist_cat_str("wan"+CurItem+"_pppoe_password", password);
+
+		//fvt_paramlist_cat_str("wan"+CurItem+"_pppoe_access", fvt_form_obj_get("wanPPPoE_form", "PPPoEAC"));
+		//fvt_paramlist_cat_str("wan"+CurItem+"_pppoe_service", fvt_form_obj_get("wanPPPoE_form", "PPPoEService"));
+		//fvt_paramlist_cat_str("wan"+CurItem+"_pppoe_ipversion", fvt_form_obj_get("wanPPPoE_form", "PPPoEv4v6"));
+		fvt_paramlist_cat_str("wan"+CurItem+"_pppoe_passthrough", "1");
+		fvt_paramlist_cat_str("wan"+CurItem+"_pppoe_connecttype", fvt_form_obj_get("wanPPPoE_form", "PPPoEMode"));
+		fvt_paramlist_cat_str("wan"+CurItem+"_pppoe_maxidletime", fvt_form_obj_get("wanPPPoE_form", "PPPoEIdletime"));
+		fvt_paramlist_cat_str("wan"+CurItem+"_pppoe_authtype", fvt_form_obj_get("wanPPPoE_form", "PPPoEAuthMethod"));
+		fvt_paramlist_cat_str("wan"+CurItem+"_pppoe_mtu_select", fvt_form_obj_get("wanPPPoE_form", "nosave_WanPPPoEMtu"));
+		fvt_paramlist_cat_str("nat"+CurItem+"_enable", fvt_form_obj_get("wanPPPoE_form", "PPPoENat"));
+		fvt_paramlist_cat_str("wan"+CurItem+"_enable", fvt_form_obj_get("wanPPPoE_form", "PPPoEEnable"));
+		fvt_paramlist_cat_str("wan"+CurItem+"_ip_enable", fvt_form_obj_get("wanPPPoE_form", "IPV4Enable")); //ipv6
+		fvt_paramlist_cat_str("wan"+CurItem+"_ipv6_enable", fvt_form_obj_get("wanPPPoE_form", "IPV6Enable")); //ipv6
+
+		if(fvt_form_obj_get("wanPPPoE_form", "nosave_WanPPPoEMtu")==0)
+			fvt_paramlist_cat_str("wan"+CurItem+"_pppoe_mtu", "1492");
+		else
+			fvt_paramlist_cat_str("wan"+CurItem+"_pppoe_mtu", fvt_form_obj_get("wanPPPoE_form", "PPPoEMtu"));
+
+		fvt_paramlist_cat_str("wan"+CurItem+"_ip_assignment", fvt_form_obj_get("wanPPPoE_form","WanModeChange"));
+		fvt_paramlist_cat_str("wan"+CurItem+"_ipv6_assignment", fvt_form_obj_get("wanPPPoE_form","WanModeChange")); //ipv6
+		var ipv6_iana, ipv6_iapd;
+		if (document.getElementById('id_DHCPv6_IANA').checked) {ipv6_iana = 1;} else {ipv6_iana = 0;}
+		if (document.getElementById('id_DHCPv6_IAPD').checked) {ipv6_iapd = 1;} else {ipv6_iapd = 0;}
+		//alert("IANA:"+ipv6_iana+", IAPD:"+ ipv6_iapd);
+		fvt_paramlist_cat_str("wan"+CurItem+"_ipv6_iana_mode", ipv6_iana); //ipv6
+		fvt_paramlist_cat_str("wan"+CurItem+"_ipv6_iapd_mode", ipv6_iapd); //ipv6
+
+	}
+	fvt_paramlist_presubmit(form_name);
+}
+
+function change_maxtime()
+{
+	if(document.getElementById("id_PPPoEMode").checked==true)
+	{
+		document.getElementById("id_PPPoEIdletime").disabled=false;
+	}
+	else
+	{
+		document.getElementById("id_PPPoEIdletime").disabled=true;
+	}
+}
+
+function show_dhcpv6_off()
+{
+	document.getElementById("show_dhcpv6").style.display="none";
+};
+function show_dhcpv6_on()
+{
+	document.getElementById("show_dhcpv6").style.display="table-row";
+};
+
+//-->
+</script>
+</head>
+
+<body onload="Init();">
+<div id="container" >
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<form id="id_wanHybrid_form" name="wanPPPoE_form" method="post">
+<input type="hidden" name="nosave_WanMode" value='PPPoE'>
+<input type="hidden" name="nosave_Pwd" value="0" disabled>
+<div class="div1_indent lv3_new">
+	<table border="0" cellpadding="0" cellspacing="0"><tr>
+			<td><div class="lv2_new rowh">[</div></td>
+			<td><div class="lv2_new rowh">Route</div></td>
+			<td><div class="lv2_new rowh">] - [</div></td>
+			<td><div class="lv2_new rowh">PPPoE</div></td>
+			<td><div class="lv2_new rowh">]</div></td>
+	</tr></table>
+
+	<div class="top_routePpoe1">
+	</div>
+	<div>
+		<div class="">
+<!-- PPPoE start -->
+			<table border="0" cellpadding="0" cellspacing="0" id="id_WANPPPoE1Enable_tbl">
+			<tr>
+				<td class="width_routePpoe1"><div class="lv2_new">WAN</div></td>
+			</tr>
+
+			<!-- <tr style="display:none"> -->
+			<tr>
+				<td></td>
+				<td width=160px><table><tr>
+				<td><div class="lv2_new">WAN Mode</div></td>
+				<td><div class="size_gt lv2_new"> > </div></td>
+				</tr></table></td>
+				<td>
+				<select name="WanModeChange" id="id_WanModeChange">
+					<option value="0">IPoE (Static IP)</option>
+					<option value="1">IPoE (DHCP)</option>
+					<option value="2" selected>PPPoE</option>
+				</select>
+				<input type="button" value='Apply' onclick="setPPPoE();">
+				</td>
+			</tr>
+<!-- wan enable-->
+			<tr>
+				<td></td>
+				<td><table><tr>
+					<td><div class="lv2_new">WAN</div></td>
+					<td><div class="size_gt lv2_new"> > </div></td>
+				</tr></table></td>
+				<td><table><tr>
+				<td class="contentA"><input type="radio" class="dot" name="PPPoEEnable" id="id_PPPoEDisable" value="0" class="radio">Disable</td>
+				<td>&nbsp;&nbsp;</td>
+				<td class="contentA"><input type="radio" class="dot" name="PPPoEEnable" id="id_PPPoEEnable" value="1" class="radio" checked>Enable</td>
+				</tr></table></td>
+			</tr>
+
+<!-- ipv4 pppoe-->
+			<tr>
+				<td></td>
+				<td><table><tr>
+					<td><div class="lv2_new">IPv4 PPPoE</div></td>
+					<td><div class="size_gt lv2_new"> > </div></td>
+				</tr></table></td>
+				<td><table><tr>
+				<td class="contentA"><input type="radio" class="dot" name="IPV4Enable" id="id_IPV4Disable" value="0" class="radio">Disable</td>
+				<td>&nbsp;&nbsp;</td>
+				<td class="contentA"><input type="radio" class="dot" name="IPV4Enable" id="id_IPV4Enable" value="1" class="radio" checked>Enable</td>
+				</tr></table></td>
+			</tr>
+
+<!-- ipv6 pppoe-->
+			<tr>
+				<td></td>
+				<td><table><tr>
+					<td><div class="lv2_new">IPv6 PPPoE</div></td>
+					<td><div class="size_gt lv2_new"> > </div></td>
+				</tr></table></td>
+				<td><table><tr>
+				<td class="contentA"><input type="radio" class="dot" name="IPV6Enable" id="id_IPV6Disable" value="0" onclick="show_dhcpv6_off()">Disable</td>
+				<td>&nbsp;&nbsp;</td>
+				<td class="contentA"><input type="radio" class="dot" name="IPV6Enable" id="id_IPV6Enable" value="1" onclick="show_dhcpv6_on()" checked>Enable</td>
+				</tr></table></td>
+			</tr>
+			<tr id="show_dhcpv6" style="display:none">
+				<td></td>
+				<td></td>
+				<td><table>
+				<tr>
+					<td><input type="checkbox" name="DHCPv6_IANA" id="id_DHCPv6_IANA" checked></td>
+					<td><div class="lv2_new">&nbsp;DHCPv6 Address Assignment (IANA)</div></td>
+				</tr>
+				<tr>
+					<td><input type="checkbox" name="DHCPv6_IAPD" id="id_DHCPv6_IAPD" checked></td>
+					<td><div class="lv2_new">&nbsp;DHCPv6 Prefix Delegation (IAPD)</div></td>
+				</tr>
+				</table></td>
+			</tr>
+
+			<tr>
+				<td></td>
+				<td><table><tr>
+					<td><div class="lv2_new">User Name</div></td>
+					<td><div class="size_gt lv2_new"> > </div></td>
+				</tr></table></td>
+				<td>
+					<input type="text" name="PPPoEUsername" id="id_PPPoEUsername" maxlength="30" value=''>
+				</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td><table><tr>
+					<td><div class="lv2_new">Password</div></td>
+					<td><div class="size_gt lv2_new"> > </div></td>
+				</tr></table></td>
+				<td>
+					<input type="password" name="PPPoEPassword" class="width_routePpoe_password" id="id_PPPoEPassword" maxlength="30" value='' onchange="save_pwd1();">
+				</td>
+			</tr>
+			<tr style="display:none">
+				<td></td>
+				<td><table><tr>
+					<td><div class="lv2_new">Access Concentrator</div></td>
+					<td><div class="size_gt lv2_new"> > </div></td>
+				</tr></table></td>
+				<td>
+					<input type="text" name="PPPoEAC" class='width_routePpoe_acName' id="id_PPPoEAC" maxlength="32" value=''>
+				</td>
+			</tr>
+			<tr style="display:none">
+				<td></td>
+				<td><table><tr>
+					<td><div class="lv2_new">Service Name</div></td>
+					<td><div class="size_gt lv2_new"> > </div></td>
+				</tr></table></td>
+				<td>
+					<input type="text" name="PPPoEService" class="width_routePpoe_srvcName" id="id_PPPoEService" maxlength="30" value=''>
+				</td>
+			</tr>
+			<tr style="display:none">
+				<td></td>
+				<td><table><tr>
+					<td><div class="lv2_new">IPv4</div></td>
+					<td><div class="lv2_new">/</div></td>
+					<td><div class="lv2_new">IPv6</div></td>
+					<td><div class="size_gt lv2_new"> > </div></td>
+				</tr></table></td>
+			</tr>
+			<tr style="display:none">
+				<td></td>
+				<td></td>
+				<td><table><tr>
+					<td><input type="radio" class='radio' name="PPPoEv4v6" value="0" checked></td>
+					<td><label for="PPPoEIP_v4"><div class="lv2_new">IPv4</div></label><td>
+				</tr></table></td>
+			</tr>
+			<tr style="display:none">
+				<td></td>
+				<td></td>
+				<td><table><tr>
+					<td><input type="radio" name="PPPoEv4v6" class='radio' value="1"></td>
+					<td><label for="PPPoEIP_v6"><div class="lv2_new">IPv6</div></label><td>
+				</tr></table></td>
+			</tr>
+			<tr style="display:none">
+				<td></td>
+				<td></td>
+				<td><table><tr>
+					<td><input type="radio" name="PPPoEv4v6" class='radio' value="2"></td>
+					<td><label for="PPPoEIP_v4v6"><div class="lv2_new">IPv4</div></label><td>
+					<td><label for="PPPoEIP_v4v6"><div class="suffix_lr lv2_new">&</div></label><td>
+					<td><label for="PPPoEIP_v4v6"><div class="lv2_new">IPv6</div></label><td>
+				</tr></table></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td><table><tr>
+					<td><div class="lv2_new">Mode</div></td>
+					<td><div class="size_gt lv2_new"> > </div></td>
+				</tr></table></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td><table><tr>
+					<td><input type="radio" class='radio' id='id_PPPoEMode' name="PPPoEMode" value="1" onchange="change_maxtime()"></td>
+					<td><label for="PPPoEMode_demand"><div class="lv2_new">Connect on demand</div></label></td>
+						<td><label for="PPPoEMode_demand"><div class='suffix_lr lv2_new'>:</div></label></td>
+					<td><div class="lv2_new">Max idle time</div></td>
+					<td><input type="text" name="PPPoEIdletime" id="id_PPPoEIdletime" class='width_routePpoe_EIdletime input_width_space' maxlength="4" value='' size="2"></td>
+					<td><div class='suffix_lr'>s</div></td>
+				</tr></table></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td><table><tr>
+					<td><input type="radio" name="PPPoEMode" class='radio' onchange="change_maxtime()" value="0" checked></td>
+					<td><label for="PPPoEMode_always"><div	class="lv2_new">Always on</div></label></td>
+				</tr></table></td>
+			</tr>
+			<tr style="display:none">
+				<td></td>
+				<td></td>
+				<td><table><tr>
+					<td><input type="radio" name="PPPoEMode" class='radio' onchange="change_maxtime()" value="manual"></td>
+					<td><label for="PPPoEMode_manual"><div	class="lv2_new">Manual</div></label></td>
+				</tr></table></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td><table><tr>
+					<td><div class="lv2_new">Options</div></td>
+					<td><div class="size_gt lv2_new"> > </div></td>
+				</tr></table></td>
+			</tr>
+			<tr height="23">
+				<td></td>
+				<td></td>
+				<td><table><tr>
+					<td><div class="lv2_new">Authentication Method</div></td>
+					<td><div class="size_colon lv2_new">:</div></td>
+					<td>
+						<select name="PPPoEAuthMethod" id="id_PPPoEAuthMethod" class="width_select150">
+							<option value="0">Auto</option>
+							<option value="1">Only PAP</option>
+							<option value="2">Only CHAP</option>
+							<option value="3">Only MS-CHAP</option>
+							<option value="4">MS-CHAPv2</option>
+						</select>
+					</td>
+				</tr></table></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td><table><tr>
+					<td class="width_routePpoe_mtu"><table><tr>
+						<td><div class="lv2_new">MTU</div></td>
+						<td><div class="lv2_new">(</div></td>
+						<td><div class="lv2_new">Bytes</div></td>
+						<td><div class="lv2_new">)</div></td>
+						<td><div class="size_colon lv2_new">:</div></td>
+					</tr></table></td>
+					<td><table><tr>
+						<td><input type="radio" name="nosave_WanPPPoEMtu" class='radio' value="0" onclick="manual_close('PPPoEMtu', '1492')" checked></td>
+						<td class="width_routePpoe_auto"><label for="PPPoEMtu_close"><div>Auto</div></label></td>
+						<td><div class="size_colon">1492</div></td>
+					</tr></table></td>
+				</tr></table></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td></td>
+				<td><table><tr>
+					<td class="width_routePpoe_mtu"></td>
+					<td><input type="radio" name="nosave_WanPPPoEMtu" value="1" class="radio" onclick="manual_open('PPPoEMtu')"></td>
+					<td><label for="PPPoEMtu_open"><div>Manual</div></label></td>
+					<td><input type="text" name="PPPoEMtu" class='input_width_space width_routePpoe_manualtxt' id="id_PPPoEMtu" maxlength="4" size="2" value=''></td>
+				</tr></table></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td><table><tr>
+					<td><div class="lv2_new">NAT</div></td>
+					<td><div class="size_gt lv2_new"> > </div></td>
+				</tr></table></td>
+				<td><table><tr>
+				<td class="contentA"><input type="radio" name="PPPoENat" id="id_PPPoENat" value="0" class="radio">Disable</td>
+				<td>&nbsp;&nbsp;</td>
+				<td class="contentA"><input type="radio" name="PPPoENat" id="id_PPPoENat" value="1" class="radio" checked>Enable</td>
+				</tr></table></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td class="width_routePpoe3">
+					<table><tr>
+						<td><div class="lv2_new">VLAN</div></td>
+						<td><div class="size_gt lv2_new"> ></div></td>
+						</tr><tr>
+					</tr></table>
+				</td>
+				<td>
+				<table><tr>
+					<td><div class="lv2_new">VLAN ID</div></td>
+					<td><div class="size_colon lv2_new">:</div></td>
+					<td><input type="radio" class="radio" name="nosave_Utag" id="id_nosave_Utag" value="0" onclick="manual_open('PPPoEVlanId')" checked></td>
+					<td><div>Tag</div></td>
+					<script language="javascript" type="text/javascript">
+						document.write("<td class='width_routePpoe_alwaysid'>");
+						document.write("<input type='text' name='PPPoEVlanId' class='width_routePpoe_alwaysidtxt' id='id_PPPoEVlanId' maxlength='4' size='4' value='' >");
+						document.write("</td>");
+						document.write("<td style='display:none'><div class='lv2_new'>PBit (Priority bit)</div></td>");
+						document.write("<td style='display:none'><div class='size_colon lv2_new'>:</div></td>");
+						document.write("<td style='display:none' class='width_routePpoe_pbit'>");
+						document.write("<input type='text' class='width_routePpoe_pbittxt'name='PPPoEPBit' id='id_PPPoEPBit' maxlength='4' size='4' value='' >");
+						document.write("</td>");
+					</script>
+					</tr>
+					<tr>
+					<td></td>
+					<td></td>
+					<td>
+						<input type="radio" class="radio" name="nosave_Utag" id="id_nosave_Utag" value="1" onclick="manual_close('PPPoEVlanId')">
+					</td>
+					<td>Untag</td>
+				</tr></table>
+				</td>
+			</tr>
+		</table>
+<!-- PPPoE end -->
+	</div>
+	<div class="top_cwmp2">
+		<table align="center" border="0" cellpadding="0" cellspacing="0">
+			<tr>
+				<td class="button_center">
+					<input type="button" value='Save' class="width_routePpoe_save" onclick="setPPPoE();">
+					<input type="button" value='Back' class="width_routePpoe_back" onClick="Back();">
+				</td>
+			</tr>
+		</table>
+	</div>
+	<div><hr class="hr2"/></div>
+</div>
+</div>
+
+</form>
+</td></tr>
+</tbody></table>
+</div>
+</body>
+</html>

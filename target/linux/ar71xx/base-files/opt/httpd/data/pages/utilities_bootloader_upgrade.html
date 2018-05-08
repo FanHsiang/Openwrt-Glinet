@@ -1,0 +1,146 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+<title>Utilities</title>
+<meta http-equiv="Content-Language" content="English">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+
+
+<script language="javascript">
+<!--
+var menuSection	='Util';
+var menuItem	='WebBootload';
+
+
+function upgade_error()
+{    
+     var test="Success";
+	if (test=="Fail")
+	{
+		alert("Firmware update error!!");
+	}
+	else if (test=="Existed")
+	{
+		alert("Please wait!!Another client is upgading firmware.");
+	}
+	
+	/**Rita add 20121203**/
+	var result="";
+	if (result=="Fail")
+	{
+		alert("ERROR!Bootloader Upgrade Fail.");
+	}
+	else if (result=="Successful")
+	{
+	       alert("SUCCESS! You have successfully upgraded.");
+	}	 
+	window.parent.topfrm.location="/cgi-bin/wwwctrl.cgi?action=top";
+}
+
+function webcheck() 
+{	
+	  if(document.webForm.upgrade_app_image.value.length == 0) 
+	  {
+	//	  alert("Please specify the upgrade file's location. Either type the file's path and file name or click browse to the file's location.");
+		  alert("Please specify upgrade file's location.Either type the file's path and file name or click browse to the file's location.");
+                  return false;
+	  } 
+	  else 
+	  {
+		if (confirm("Are you sure you want to continue with upgrading?"))	
+		{
+	  	 // 	alert("At the end of upgrading, the Gateway may not respond\n to commands for as long as 250 seconds.\n\nThis is normal. Do not power down the base station during this time.");  
+	  	 	alert("At the end of upgrading, the Gateway may not respond to commands for as long as 150 seconds.This is normal. Do not power down the base station during this time.");
+
+			 window.parent.topfrm.location="misc.html";
+		 	//document.webForm.action.value="Retrieve";
+			 document.webForm.submit();
+			 return true;
+		}
+	  }	  
+	  return false;
+}
+// jonathan 2004.04.07 End
+
+function isHex(s) 
+{
+	var j,x = 0;
+	
+	for(var i = 0; i < s.length; i++) 
+	{
+		var c = s.charAt(i);
+		j = parseInt(c,16);
+		
+		if( (j == 0) || (j == 1)|| (j == 2)|| (j == 3)|| (j == 4)|| (j == 5)|| (j == 6) ||
+		    (j == 7) || (j == 8)|| (j == 9)|| (j == 10)|| (j == 11)|| (j == 12)|| (j == 13)|| (j == 14)|| (j == 15) ) 
+		{
+			if(x==1)	return false;
+			x=1;
+		}
+	}
+	return true;
+}
+
+function isNValid(s) 
+{
+	if( isBlank(s) || isHex(s))
+		return true;
+	else
+		return false;
+}
+//-->
+</script>
+</head>
+<body leftmargin="0" topmargin="0" onload="upgade_error();" marginheight="0" marginwidth="0" bgcolor="#FFFFFF">
+
+<form method="post" enctype="multipart/form-data" name="webForm">
+    	<td valign="top" align="left"> 
+	<fieldset>
+		<div class="lv1_title">Maintenance&nbsp;&gt;&nbsp;Utilities&nbsp;&gt;&nbsp;Bootloader Upgrade</div>
+	</fieldset>	
+   <table cellpadding="0" cellspacing="3" width="600" align="center" border="0">
+       <tbody><tr> 
+       <td width="20">&nbsp;</td> 
+  		<td colspan="3">&nbsp;</td>
+  	    </tr>
+  	    <tr> 
+  	    <td width="20">&nbsp;</td> 
+  		<td colspan="2" height="100" align="center">&nbsp;</td>
+  	    </tr>
+	    <tr height="30">
+            <td width="20">&nbsp;</td>
+            <td width="60">&nbsp;</td> 
+                <td width="180">
+                    <b>BootLoader Ver</b></td>
+				<td>vX.X.X</td>
+            </tr>
+  	    <tr height="30"> 
+  	    <td width="20">&nbsp;</td> 
+  	    <td width="60">&nbsp;</td> 
+  	  	<td width="180">
+  		    <b>New Firmware </b></td>
+		<td>
+  		    <input size="30" name="upgrade_app_image" type="file">
+  		</td>
+  	    </tr>
+  	    <tr height="50"> 
+       <td colspan="4">&nbsp;</td> 
+  	    </tr>
+  	    <tr> 
+  	    <td width="20">&nbsp;</td>
+  	    <td>&nbsp;</td>
+  		<td colspan="2" align="center">
+  	   	<input style="width:180px" class="submitBtn" onclick="webcheck();" value="Bootloader Upgrade" type="button">
+  	    	</td>
+  	    </tr>
+  	</tbody></table>
+</td>
+<script language="javascript" type="text/javascript">
+	showTail();
+</script></tr></tbody></table></form>
+
+</body></html>

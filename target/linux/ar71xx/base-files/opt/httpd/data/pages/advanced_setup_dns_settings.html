@@ -1,0 +1,314 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+
+
+<script language="javascript" type="text/javascript">
+var ruleNum=0;
+var maxrule=10;
+var edit_num=99;
+function check_process()
+{    
+	var process="Success";
+	if (process=="Existed")
+		alert("Please wait!!Another client is upgading firmware.");
+}
+
+function deleteRule(val)
+{
+        document.getElementById("id_delete_item").value=val;
+		fvt_form_submit('tbl_form');
+        document.getElementById("id_DNS_tbl_form").submit();
+}
+
+function editRule(val)
+{
+	edit_num=val;
+	document.getElementById("id_edit_item").value=val;
+	document.getElementById("id_DNSDomain").value = document.getElementById("id_tbldom" + val).value;
+	var dns_server=document.getElementById("id_tblser"+val).value;
+	var dns_server_spilt=dns_server.split(".");
+	for (i=1;i<=4;i++)
+		document.getElementById("id_DNSServerName"+i).value=dns_server_spilt[i-1];
+	document.dns_setting_form.submitBtn.disabled=false;
+}
+function enableRule(index)
+{
+	fvt_paramlist_clear();
+	
+	if(document.getElementById("id_dns_en_"+index).value=="Enable")
+	{
+		fvt_paramlist_cat_str("dnsmasq_specific_wan_"+index,1);
+	}
+	else
+	{	
+		 fvt_paramlist_cat_str("dnsmasq_specific_wan_"+index,0);
+	}
+
+	fvt_paramlist_presubmit("tbl_form");
+    document.getElementById("id_DNS_tbl_form").submit();
+	
+}
+function init()
+{
+	if (ruleNum>=maxrule)
+		document.dns_setting_form.submitBtn.disabled=true;
+}
+function check_symbol(name) 
+{ 
+	if (!isBlank(name)) 
+	{ 
+ 		for(i=0;i<name.length;i++) 
+ 		{ 
+  			c=name.charAt(i); 
+  			if((c!='_')&&(c!='-')&&(c!='.')&&(!((c>='a')&&(c<='z')))&&(!((c>='A')&&(c<='Z')))&&(!((c>='0')&&(c<='9')))) 
+  				return false; 
+  		} 
+ 	} 
+	return true; 
+}
+function check_conflict() 
+{ 
+	var newDom=document.getElementById("id_DNSDomain").value;
+	/*
+	var newIP1=document.getElementById("id_DNSServerName1").value;
+	var newIP2=document.getElementById("id_DNSServerName2").value;
+	var newIP3=document.getElementById("id_DNSServerName3").value;
+	var newIP4=document.getElementById("id_DNSServerName4").value;
+	*/
+	var ruleDom,ruleIP1,ruleIP2,ruleIP3,ruleIP4;
+	for(i=0;i<ruleNum;i++)
+	{
+		if (edit_num!=i)
+		{
+			ruleDom=document.getElementById("id_tbldom"+i).value;
+			/*
+			ruleIP1=document.getElementById("id_tblser"+i+"_1").value;
+			ruleIP2=document.getElementById("id_tblser"+i+"_2").value;
+			ruleIP3=document.getElementById("id_tblser"+i+"_3").value;
+			ruleIP4=document.getElementById("id_tblser"+i+"_4").value;
+			*/
+			if (newDom==ruleDom)
+				return false; 
+			/*
+			if (newIP1==ruleIP1 && newIP2==ruleIP2 && newIP3==ruleIP3 &&newIP4==ruleIP4)
+				return false;
+			*/
+		}		
+		
+	}
+	return true; 
+}
+function setDNS()
+{
+	var item;
+	var i, j;
+	merge_ip("id_DNSServerName","id_DNSServerName1","id_DNSServerName2","id_DNSServerName3","id_DNSServerName4");
+	if (!check_symbol(document.getElementById("id_DNSDomain").value) || 
+	document.getElementById("id_DNSDomain").value.length==0)
+	{
+		item="Domain Name";
+                alert("The "  + item + " is invalid!")
+		return false;
+	}
+	else if (!check_ip(document.getElementById("id_DNSServerName").value) ||
+	document.getElementById("id_DNSServerName").value.length==0)
+	{
+		item="IP Address";
+                alert("The "  + item + " is invalid!")
+		return false;		
+	}
+
+	if (!check_conflict())
+	{
+		alert("The new rule is conflicted with current rules.")
+		return false;	
+	}
+	fvt_form_submit('dns_setting_form');
+	document.getElementById("id_dns_setting_form").submit();
+}
+
+
+function fvt_form_init(form_name) 
+{
+	if (form_name=='dns_setting_form' || form_name=='*') {
+		//fvt_form_obj_set("dns_setting_form", "nosave_DNSDomain", fvt_meta_config(''));		//text
+		//fvt_form_obj_set("dns_setting_form", "nosave_DNSServerName", fvt_meta_config(''));		//hidden
+	} else if (form_name=='tbl_form' || form_name=='*') {
+		//fvt_form_obj_set("tbl_form", "nosave_deleteEntry", fvt_meta_config(''));		//hidden
+		for(ruleNum=0; ruleNum < maxrule; ruleNum++)
+		{
+			var doname_var = fvt_meta_config("dnsmasq_specific_domain_"+ruleNum);
+			if (doname_var == '')
+			{
+				return;
+			}
+		}
+	}
+}
+function list_dns_setting()
+{
+	fvt_form_init('tbl_form');
+	for (var i=0; i<ruleNum; i++)
+	{
+		if(i%2 == 0)
+			document.write("<tr class='color_rowh'>");
+		else
+			document.write("<tr class='color_rown'>");
+		document.write("<td ctrlflip='right'><input type='hidden' id='id_tbldom"+i+"' value='"+fvt_meta_config("dnsmasq_specific_domain_"+i)+"'>"+fvt_meta_config("dnsmasq_specific_domain_"+i)+"</td>");
+		document.write("<td ctrlflip='right'><input type='hidden' id='id_tblser"+i+"' value='"+fvt_meta_config("dnsmasq_specific_dns_addr_"+i)+"'>"+fvt_meta_config("dnsmasq_specific_dns_addr_"+i)+"</td>");
+		document.write("<td><input ctrlflip='etc' type='button' name='nosave_editEntry' value='Edit' class='width_dns_edit' onclick='editRule(\""+i+"\");' >");
+        document.write("<input ctrlflip='etc' type='button' name='nosave_deleteEntry' value='Delete' class='width_dns_del' onclick='deleteRule(\""+i+"\");' ></td>");
+		if(fvt_meta_config("dnsmasq_specific_wan_"+i)==1)
+			document.write("<td><input ctrlflip='etc' id='id_dns_en_"+i+"' type='button' name='nosave_enable' value='Disable' class='width_dns_enable' onclick='enableRule(\""+i+"\");' ></td>");
+		else if(fvt_meta_config("dnsmasq_specific_wan_"+i)==0)
+			document.write("<td><input ctrlflip='etc' id='id_dns_en_"+i+"' type='button' name='nosave_enable' value='Enable' class='width_dns_enable' onclick='enableRule(\""+i+"\");' ></td>");
+		document.write("</tr>");
+	}
+}
+function fvt_form_submit(form_name) 	
+{
+	fvt_paramlist_clear();
+	if (form_name=='dns_setting_form' || form_name=='*') {
+		if (edit_num != 99)
+		{
+			fvt_paramlist_cat_str("dnsmasq_specific_domain_"+edit_num, fvt_form_obj_get("dns_setting_form", "nosave_DNSDomain"));		//text
+			fvt_paramlist_cat_str("dnsmasq_specific_dns_addr_"+edit_num, fvt_form_obj_get("dns_setting_form", "nosave_DNSServerName"));	
+			fvt_paramlist_cat_str("dnsmasq_specific_wan_"+edit_num, ( document.getElementById("id_dns_en_"+edit_num).value == "Enable"?0:1));	
+			edit_num=99;
+		}
+		else
+		{
+			fvt_paramlist_cat_str("dnsmasq_specific_domain_"+ruleNum, fvt_form_obj_get("dns_setting_form", "nosave_DNSDomain"));		//text
+			fvt_paramlist_cat_str("dnsmasq_specific_dns_addr_"+ruleNum, fvt_form_obj_get("dns_setting_form", "nosave_DNSServerName"));
+			fvt_paramlist_cat_str("dnsmasq_specific_wan_"+ruleNum, 1);	
+		}
+	} else if (form_name=='tbl_form' || form_name=='*') {
+		var del_num=document.getElementById("id_delete_item").value;
+		var j=0;
+		for (var i=0; i< maxrule; i++)
+		{
+			if (j < ruleNum)
+			{
+				if(i == del_num)
+				{
+					j++;
+					if( del_num == ruleNum-1 )
+					{
+						fvt_paramlist_cat_str("dnsmasq_specific_domain_"+i, "");		//text
+						fvt_paramlist_cat_str("dnsmasq_specific_dns_addr_"+i, "");
+						fvt_paramlist_cat_str("dnsmasq_specific_wan_"+i, "");	
+					}
+					else
+					{
+						fvt_paramlist_cat_str("dnsmasq_specific_domain_"+i, document.getElementById("id_tbldom"+j).value);		//text
+						fvt_paramlist_cat_str("dnsmasq_specific_dns_addr_"+i, document.getElementById("id_tblser"+j).value);	
+						fvt_paramlist_cat_str("dnsmasq_specific_wan_"+i,( document.getElementById("id_dns_en_"+j).value == "Enable"?0:1));	
+					}
+				}
+				else if(i==(ruleNum-1))
+				{
+					fvt_paramlist_cat_str("dnsmasq_specific_domain_"+i, "");		//text
+					fvt_paramlist_cat_str("dnsmasq_specific_dns_addr_"+i, "");	
+					fvt_paramlist_cat_str("dnsmasq_specific_wan_"+i, "");	
+				}
+				else
+				{
+					fvt_paramlist_cat_str("dnsmasq_specific_domain_"+i, document.getElementById("id_tbldom"+j).value);		//text
+					fvt_paramlist_cat_str("dnsmasq_specific_dns_addr_"+i, document.getElementById("id_tblser"+j).value);	
+					fvt_paramlist_cat_str("dnsmasq_specific_wan_"+i,( document.getElementById("id_dns_en_"+j).value == "Enable"?0:1));	
+				}
+				j++;
+			}
+			else 
+			{
+				fvt_paramlist_cat_str("dnsmasq_specific_domain_"+i, "");		//text
+				fvt_paramlist_cat_str("dnsmasq_specific_dns_addr_"+i, "");	
+				fvt_paramlist_cat_str("dnsmasq_specific_wan_"+i, "");	
+			}
+		}
+	}
+	fvt_paramlist_presubmit(form_name);
+}
+
+</script>
+</head>
+
+<body align="left" onload="fvt_form_init('tbl_form');check_process();init();">
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<form id="id_dns_setting_form" name="dns_setting_form" method="post">	
+	<fieldset>
+		<div class="lv1_title">Advanced Setup&nbsp;&gt;&nbsp;DNS Settings</div>
+	</fieldset>	
+<div class="div1_indent lv2_new">
+	<div><hr class="hr2"><div>	
+	<input name="nosave_editEntry" id="id_edit_item" value="0" type="hidden">
+	<div>
+		<table><tbody>
+			<tr>
+				<td class="width_dns1"><div ctrlflip="right" ctrlid="252">Domain Name</div></td>
+				<td><input ctrlflip="etc" type="text" name="nosave_DNSDomain" id="id_DNSDomain" class="width_text150"></td>
+			</tr>			
+			<tr><td>&nbsp;</td></tr>
+			<tr>
+				<td><div ctrlflip="right" ctrlid="32">IP Address</div></td>
+				<td ctrlflip="right">
+					<input name="nosave_DNSServerName" id="id_DNSServerName" value="" type="hidden">
+					<input id="id_DNSServerName1" class="width_ip" size="2" maxlength="3" type="text"> .
+					<input id="id_DNSServerName2" class="width_ip"  size="2" maxlength="3" type="text"> .
+					<input id="id_DNSServerName3" class="width_ip"  size="2" maxlength="3" type="text"> .
+					<input id="id_DNSServerName4" class="width_ip"  size="2" maxlength="3" type="text">
+				</td>
+			</tr>
+			<tr><td>&nbsp;</td></tr>
+			<tr><td></td>
+				<td>
+					<input ctrlflip="etc" id="add_applybtn" name="submitBtn" type="button" value="Add" class="width_button" onclick="setDNS();">
+				</td>
+			</tr>
+		</tbody></table>
+		<div> <hr class="hr2"></div>
+	</div>
+</div>
+</form>
+<form id="id_DNS_tbl_form" name="tbl_form" method="post">
+<div class="div1_indent lv2_new">	
+	<input name="nosave_deleteEntry" id="id_delete_item" value="0" type="hidden">	
+	<div class="div1_topbottom lv2_new" ctrlflip="right" ctrlid="103">Overview</div>
+	<div class="div2_indent ">
+		<table><tbody>				
+			<tr>				
+				<th class="width_dns_name"><div class="lv2_new" ctrlflip="right" ctrlid="252">Domain Name</div></th>
+				<th class="width_dns_ip"><div class="lv2_new" ctrlflip="right" ctrlid="32">IP Address</div></th>
+			</tr>
+			<tr style="height:5px;">
+				<td colspan="4">
+					<div><hr class="hr2"></div>
+				</td>
+			</tr>
+			<script language="javascript" type="text/javascript">
+				list_dns_setting();
+			</script>
+		</tbody></table>
+	</div>
+</div>
+</form>
+</td></tr>	
+</tbody></table>
+</div>
+
+<br>		
+</body>
+</html>
+
+
+
+

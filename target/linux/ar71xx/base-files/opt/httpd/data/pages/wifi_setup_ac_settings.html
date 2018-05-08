@@ -1,0 +1,3254 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link rel="stylesheet" type="text/css" href="../css/common.css" media="all">
+<script language="javascript" type="text/javascript" src="../js/menu_base.js"></script>
+<script language="javascript" type="text/javascript" src="../js/menu.js"></script>
+<script language="javascript" type="text/javascript" src="../js/common.js"></script>
+<script language="javascript" type="text/javascript" src="../js/fvt.js"></script>
+<style type="text/css">
+div.lv3_td {color: rgb(1, 1, 1); font-size: 7pt;text-align:left;}
+</style>
+<script language="javascript" type="text/javascript">
+var wifi_version="AC";
+var wifi_enable = fvt_meta_config('wlanac_enable');
+var SSIDNum = fvt_meta_config('wlanac_vap_num');
+var WIFIAutoChannelSelect = fvt_meta_config('wlanac_auto_channel');
+var WIFIHTBW = fvt_meta_config('wlanac_use40M');
+var currentChannel = fvt_meta_config('wlanac_channel');
+
+var WIFIACCountryRegion = fvt_meta_config('wlanac_regdomain');
+if (fvt_meta_config('wlanac_regdomain') == "") WIFIACCountryRegion = "11"; //Taiwan
+
+var wifi_rdg = fvt_meta_config('wlanac_RDG');
+var WIFIACWdsEnable = fvt_meta_config('wlanac_wds_enable');
+
+//var wlanac_igmp = fvt_meta_config('wlanac_igmp_enable');
+//var wlanac_vap0_igmp = fvt_meta_config('wlanac_vap0_igmp_enable');
+//var wlanac_vap1_igmp = fvt_meta_config('wlanac_vap1_igmp_enable');
+//var wlanac_vap2_igmp = fvt_meta_config('wlanac_vap2_igmp_enable');
+var now_rate;// = fvt_meta_config('wlanac_band');
+var WIFIACTxRate = new Array();
+
+var NavLang=GetNavLang();
+
+if (NavLang == "ZH")
+{
+var vNumbersofSSID = "開啟的SSID數量";
+var vBlockInterClient = "\(鎖住用戶互ping\)";
+var vHidden = "隱藏";
+var vNotHidden = "不隱藏";
+}
+else
+{
+var vNumbersofSSID = "Numbers of SSID";
+var vBlockInterClient = "\(Block ping between each client\)";
+var vHidden = "Hidden";
+var vNotHidden = "Not Hidden";
+}
+
+for(var arr_index=0 ; arr_index<SSIDNum; arr_index++)
+{
+	if (arr_index == 0)
+		WIFIACTxRate[arr_index] = fvt_meta_config('wlanac_fixrate');
+	else if (arr_index == 1)
+		WIFIACTxRate[arr_index] = fvt_meta_config('wlanac_vap0_fixrate');
+	else if (arr_index == 2)
+		WIFIACTxRate[arr_index] = fvt_meta_config('wlanac_vap1_fixrate');
+	else if (arr_index == 3)
+		WIFIACTxRate[arr_index] = fvt_meta_config('wlanac_vap2_fixrate');
+}
+
+function check_process()
+{
+	var process="Success";
+	if (process=="Existed")
+		alert("Please wait!!");
+}
+
+var test_head, test_tail;
+function getChannelRange()
+{
+	var str_country=WIFIACCountryRegion;
+	if (str_country == 1 || str_country == 11)//FCC
+	{
+		if(document.wifiacsetup_form.WIFI11acMode.selectedIndex==0 ||document.wifiacsetup_form.WIFI11acMode.selectedIndex==4)
+		{
+			test_head = 36;
+			test_tail = 165;
+		}
+		else
+		{
+			test_head = 1;
+			test_tail = 11;
+		}
+	}
+	else if (str_country == 2)// IC
+	{
+		if(document.wifiacsetup_form.WIFI11acMode.selectedIndex==0 ||document.wifiacsetup_form.WIFI11acMode.selectedIndex==4)
+		{
+			test_head = 36;
+			test_tail = 161;
+		}
+		else
+		{
+			test_head = 1;
+			test_tail = 11;
+		}
+	}
+	else //FCC
+	{
+		if(document.wifiacsetup_form.WIFI11acMode.selectedIndex==0 ||document.wifiacsetup_form.WIFI11acMode.selectedIndex==4)
+		{
+			test_head = 36;
+			test_tail = 165;
+		}
+		else
+		{
+			test_head = 1;
+			test_tail = 15;
+		}
+	}
+}
+
+function changeExtChannel()
+{
+	var obj_extchannel=document.wifiacsetup_form.WIFIHTEXTCHA;
+	var obj_curchannel=document.wifiacsetup_form.WIFIACChannel;
+	var i=0;
+	var head=parseInt(obj_curchannel.value)-4;
+	var tail=parseInt(obj_curchannel.value)+4;
+	for (i=obj_extchannel.length-1;i>=0;i--)
+		obj_extchannel.options[i]=null;
+
+	getChannelRange();
+	i=0;
+
+	if (head>=test_head)
+	{
+		obj_extchannel.options[i++]=new Option(head,"1",0,0);
+	}
+	if (tail<=test_tail)
+	{
+		obj_extchannel.options[i]=new Option(tail,"2",0,0);
+	}
+
+}
+
+function DisableACNOption()
+{
+	if ((wifi_enable=="1")||(document.wifiacsetup_form.WIFIModuleEnable.checked==true))
+	{
+		if ( wifi_version == "AC")
+		{
+			if(document.getElementById("id_WIFIHTBW"))
+				document.getElementById("id_WIFIHTBW").disabled=false;
+			document.getElementById("id_tmp_WIFIHTRDG").disabled=false;
+			if (document.getElementById("id_WIFIHTBW").selectedIndex==1)
+				document.getElementById("id_WIFIHTEXTCHA").disabled=false;
+			else
+				document.getElementById("id_WIFIHTEXTCHA").disabled=true;
+
+			var WIFIac_BW=document.wifiacsetup_form.WIFIHTBW;
+			for (var i = 0; i < WIFIac_BW.length; i++) WIFIac_BW.remove(i);
+
+			if(document.wifiacsetup_form.WIFI11acMode.selectedIndex==2) // 11a+n+ac : 20/40/80M
+			{
+				WIFIac_BW.options[0] = new Option("20Mhz",       "0");
+				WIFIac_BW.options[1] = new Option("20/40Mhz",    "1");
+				WIFIac_BW.options[2] = new Option("40Mhz",       "2");
+				WIFIac_BW.options[3] = new Option("20/40/80Mhz", "3");
+				WIFIac_BW.options[4] = new Option("80Mhz",       "4");
+			}
+			else if (document.wifiacsetup_form.WIFI11acMode.selectedIndex==1) // 11a+n : 20/40M
+			{
+				WIFIac_BW.options[0] = new Option("20Mhz",    "0");
+				WIFIac_BW.options[1] = new Option("20/40Mhz", "1");
+				WIFIac_BW.options[2] = new Option("40Mhz",    "2");
+				if (document.getElementById("id_WIFIHTBW").selectedIndex == 2)
+					document.getElementById("id_WIFIHTBW").selectedIndex = 1;
+			}
+			else // 11a : 20M
+			{
+				WIFIac_BW.options[0] = new Option("20Mhz", "0");
+				document.getElementById("id_WIFIHTBW").selectedIndex = 0;
+			}
+		}
+	}
+}
+
+function changeChnNmber_bw()
+{
+	changeChnNmber();
+	//document.getElementById("chlist_id").value = "0";
+	document.getElementById("chlist_id").selectedIndex = 0;
+}
+
+function changeChnNmber()
+{
+	var WIFIACChannel=document.wifiacsetup_form.WIFIACChannel;
+	var selechannel=fvt_meta_config('wlanac_channel');
+	for (var i = 0; i < WIFIACChannel.length; i++) WIFIACChannel.remove(i);
+
+	var ShowChArray = ["0","52","56","60","64","149","153","157","161","165"];
+
+	if(WIFIACCountryRegion==1 || WIFIACCountryRegion==11)
+								//CountryRegion 11 (TWN)	{56,60,64}
+								//CountryRegion 11 (TWN)	{149,153,157,161,165}
+	{
+		if(document.wifiacsetup_form.WIFIHTBW.selectedIndex==0) // 20M
+		{
+			var ShowChArray = ["0","52","56","60","64","149","153","157","161","165"];
+		}
+		else if (document.wifiacsetup_form.WIFIHTBW.selectedIndex==1) // 20/40M
+		{
+			var ShowChArray = ["0","52","56","60","64","149","153","157","161"];
+		}
+		else if (document.wifiacsetup_form.WIFIHTBW.selectedIndex==2) // 40M
+		{
+			var ShowChArray = ["0","52","56","60","64","149","153","157","161"];
+		}
+		else if (document.wifiacsetup_form.WIFIHTBW.selectedIndex==3) // 20/40/80M
+		{
+			var ShowChArray = ["0","52","56","60","64","149","153","157","161"];
+		}
+		else if (document.wifiacsetup_form.WIFIHTBW.selectedIndex==4) // 80M
+		{
+			var ShowChArray = ["0","52","56","60","64","149","153","157","161"];
+		}
+	}
+	else
+	{
+		if(document.wifiacsetup_form.WIFIHTBW.selectedIndex==0) // 20M
+		{
+			var ShowChArray = ["0","52","56","60","64","149","153","157","161","165"];
+		}
+		else if (document.wifiacsetup_form.WIFIHTBW.selectedIndex==1) // 20/40M
+		{
+			var ShowChArray = ["0","52","56","60","64","149","153","157","161"];
+		}
+		else if (document.wifiacsetup_form.WIFIHTBW.selectedIndex==2) // 40M
+		{
+			var ShowChArray = ["0","52","56","60","64","149","153","157","161"];
+		}
+		else if (document.wifiacsetup_form.WIFIHTBW.selectedIndex==3) // 20/40/80M
+		{
+			var ShowChArray = ["0","52","56","60","64","149","153","157","161"];
+		}
+		else if (document.wifiacsetup_form.WIFIHTBW.selectedIndex==4) // 80M
+		{
+			var ShowChArray = ["0","52","56","60","64","149","153","157","161"];
+		}
+	}
+
+
+	for (var i = 0; i < ShowChArray.length; i++)
+	{
+	// Append the element to the end of Array list
+		if (i == 0)
+			WIFIACChannel.options[i] = new Option("Auto", ShowChArray[i], 0, (selechannel==ShowChArray[i]));
+		else
+			WIFIACChannel.options[i] = new Option(ShowChArray[i], ShowChArray[i], 0, (selechannel==	ShowChArray[i]));
+		WIFIACChannel.options[i].setAttribute("id","Ch_"+ShowChArray[i]);
+	}
+}
+
+function enableExtChn()
+{
+	if ((wifi_enable=="1")||(document.wifiacsetup_form.WIFIModuleEnable.checked==true))
+	{
+		if (document.getElementById("id_WIFIHTBW").selectedIndex && document.wifiacsetup_form.WIFIACChannel.value!="0")
+			document.getElementById("id_WIFIHTEXTCHA").disabled=false;
+		else
+			document.getElementById("id_WIFIHTEXTCHA").disabled=true;
+	}
+
+	//changeTxRate('bw');
+}
+
+function check_process()
+{
+	var process="Success";
+	if (process=="Existed")
+		warn_wait();
+		//alert("Please wait!!Another client is upgading firmware.");
+}
+
+function setRDGenable(name)
+{
+	if (document.getElementById("id_tmp_"+name).checked == true)
+		document.getElementById("id_"+name).value="1";
+	else
+		document.getElementById("id_"+name).value="0";
+}
+
+function disable_WDS(val)
+{
+	//Check SSID num first
+	if (val)
+	{
+		document.getElementById("id_WIFIACWdsEnable").disabled=true;
+		document.getElementById("id_WIFIACWdsEnable").selectedIndex=0;
+	}
+	else
+		document.getElementById("id_WIFIACWdsEnable").disabled=false;
+
+	enable_WDS();
+}
+
+function writeToHidden(val)
+{
+		var master="id_WIFIACWDSList" + val;
+		var item1="id_WIFIACWDSList" + val + "_item1";
+		var item2="id_WIFIACWDSList" + val + "_item2";
+		var item3="id_WIFIACWDSList" + val + "_item3";
+		var item4="id_WIFIACWDSList" + val + "_item4";
+		var item5="id_WIFIACWDSList" + val + "_item5";
+		var item6="id_WIFIACWDSList" + val + "_item6";
+		merge_mac(master,item1,item2,item3,item4,item5,item6);
+		//merge_mac(master,item1,item2,item3);
+}
+
+function enable_Item(id,val)
+{
+	document.getElementById(id).disabled=val;
+	document.getElementById(id + "_item1").disabled=val;
+	document.getElementById(id + "_item2").disabled=val;
+	document.getElementById(id + "_item3").disabled=val;
+	document.getElementById(id + "_item4").disabled=val;
+	document.getElementById(id + "_item5").disabled=val;
+	document.getElementById(id + "_item6").disabled=val;
+}
+
+function enable_WDS()
+{
+	var val;
+	if (document.getElementById("id_WIFIACWdsEnable").value==0)
+		val=true;
+	else
+		val=false;
+
+	enable_Item("id_WIFIACWDSList1",val);
+	enable_Item("id_WIFIACWDSList2",val);
+	enable_Item("id_WIFIACWDSList3",val);
+	enable_Item("id_WIFIACWDSList4",val);
+}
+
+function checkWDS()
+{
+	var item1=document.getElementById("id_WIFIACWDSList1");
+	var item2=document.getElementById("id_WIFIACWDSList2");
+	var item3=document.getElementById("id_WIFIACWDSList3");
+	var item4=document.getElementById("id_WIFIACWDSList4");
+
+	if (document.getElementById("id_WIFIACWdsEnable").value == 1)
+	{
+		var title="WDS";
+		var i=0,j=0;
+
+		item1.value = item1.value.toUpperCase();
+		item2.value = item2.value.toUpperCase();
+		item3.value = item3.value.toUpperCase();
+		item4.value = item4.value.toUpperCase();
+
+		if (item1.value.length==0 && item2.value.length==0 && item3.value.length==0 && item4.value.length==0)
+		{
+			warn_invalid("WDS Setting");
+			//alert("WDS Setting is invalid!!");
+			return false;
+		}
+		if (!check_mac(item1.value))
+		{
+			var No=1;
+			warn_invalidMAC(title,No);
+			//alert(title + " MAC " + No + " is invalid!!");
+			return false;
+		}
+		if (!check_mac(item2.value))
+		{
+			var No=2;
+			warn_invalidMAC(title,No);
+			//alert(title + " MAC " + No + " is invalid!!");
+			return false;
+		}
+		if (!check_mac(item3.value))
+		{
+			var No=3;
+			warn_invalidMAC(title,No);
+			//alert(title + " MAC " + No + " is invalid!!");
+			return false;
+		}
+		if (!check_mac(item4.value))
+		{
+			var No=4;
+			warn_invalidMAC(title,No);
+			//alert(title + " MAC " + No + " is invalid!!");
+			return false;
+		}
+		for (i=1;i<=4;i++)
+		{
+			var mac1=document.getElementById("id_WIFIACWDSList"+ i).value;
+			if (mac1.length==0)
+				continue;
+
+			for (j=i+1;j<=4;j++)
+			{
+				var mac2=document.getElementById("id_WIFIACWDSList"+ j).value;
+				if (mac2.length==0)
+					continue;
+
+				if (mac1==mac2)
+				{
+					No = j;
+					warn_invalidMAC(title,No);
+					//alert(title + " MAC " + No + " is invalid!!");
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}
+
+function wifiac_init(val)
+{
+	if (document.wifiacsetup_form.WIFIModuleEnable.checked ==false)					//all disable
+	{
+		checkMultiSSID();
+		for (i=0; i< document.wifiacsetup_form.elements.length; i++)
+		{
+			if(document.wifiacsetup_form.elements[i].name == 'WIFISchedule')
+			{
+				continue;
+			}
+			document.wifiacsetup_form.elements[i].disabled = true;
+		}
+		document.wifiacsetup_form.WIFIModuleEnable.disabled = false;	//on/off enable
+		document.wifiacsetup_form.applybtn.disabled = false;			//apply enable
+		setScheduleenable();
+		return;
+	}
+	else //all enable first
+	{
+		for (i=0; i< document.wifiacsetup_form.elements.length; i++)
+		{
+			document.wifiacsetup_form.elements[i].disabled = false;
+		}
+	}
+	checkMultiSSID();
+	setScheduleenable();
+	if (val)
+		changeTxRate('channel');
+	document.getElementById("id_WIFI11acMode").onchange();
+}
+
+function commonItemEnable(index,val)
+{
+	document.getElementById("id_ssid" + index).disabled = val;
+	document.getElementById("id_WIFIACHideSSID" + index).disabled = val;
+	document.getElementById("id_WIFIACTxRate" + index).disabled = val;
+}
+
+function checkMultiSSID(){
+	var wifiform = document.wifiacsetup_form;
+	var wifi1_sectype=fvt_meta_config('wlanac_authtype');
+
+	var table1=document.getElementById('wifi_table1');
+	var table2=document.getElementById('wifi_table2');
+	var table3=document.getElementById('wifi_table3');
+	var table4=document.getElementById('wifi_table4');
+
+	if ((document.wifiacsetup_form.WIFIACSsidnum.value==1))
+	{
+		commonItemEnable(2,true);
+		commonItemEnable(3,true);
+		commonItemEnable(4,true);
+
+		table1.style.display="";
+		table2.style.display="none";
+		table3.style.display="none";
+		table4.style.display="none";
+	}
+	else if ((document.wifiacsetup_form.WIFIACSsidnum.value==2))
+	{
+		commonItemEnable(2,false);
+		commonItemEnable(3,true);
+		commonItemEnable(4,true);
+
+		table1.style.display="";
+		table2.style.display="";
+		table3.style.display="none";
+		table4.style.display="none";
+
+	}
+	else if ((document.wifiacsetup_form.WIFIACSsidnum.value==3))
+	{
+		commonItemEnable(2,false);
+		commonItemEnable(3,false);
+		commonItemEnable(4,false);
+
+		table1.style.display="";
+		table2.style.display="";
+		table3.style.display="";
+		table4.style.display="none";
+	}
+	else if ((document.wifiacsetup_form.WIFIACSsidnum.value==4))
+	{
+		commonItemEnable(2,false);
+		commonItemEnable(3,false);
+		commonItemEnable(4,false);
+
+		table1.style.display="";
+		table2.style.display="";
+		table3.style.display="";
+		table4.style.display="";
+	}
+
+	for(i=1; i <= document.wifiacsetup_form.WIFIACSsidnum.value; i++)
+	{
+		enable_VLAN(i);
+	}
+
+	if (wifi1_sectype == "WPA" || wifi1_sectype == "WPA2" ||
+		document.wifiacsetup_form.WIFIACSsidnum.value!=1)
+		disable_WDS(1);
+	else
+		disable_WDS(0);
+}
+
+function checkSpecSymbol(s,index)
+{
+	for(i=0;i<s.length;i++)
+	{
+		c=s.charAt(i);
+		if (index==1)
+		{
+			if((c==';')||(c=='\\'))
+			return false;
+		}
+		else
+		{
+			if(c==';')
+				return false;
+		}
+	}
+	return true;
+}
+
+function check_integer(a)
+{
+	var i;
+	var c;
+	if (a.length==0)
+	{
+		if ((a>='0')&&(a<='9'))
+			return true;
+		else
+			return false;
+	}
+	else
+	{
+		for (i=0; i<a.length; i++)
+		{
+			c=a.charAt(i);
+
+			if ((c>='0')&&(c<='9'))
+				continue;
+			else
+				return false;
+		}
+	}
+	return true;
+}
+
+function check_range(a, min, max, item)
+{
+	if (!isBlank(a))
+	{
+		if (isNaN(a)||(a<min)||(a>max)||(!check_integer(a)||(a.charAt(0) == '0')))
+		{
+			warn_int_between(item,min,max);
+			//alert(item+" should be an integer between "+min+" and "+max);
+			return false;
+		}
+	}
+	return true;
+}
+
+function wifiac_set1()
+{
+	var temp_ssid= document.getElementById("id_ssid1").value;
+
+	if (temp_ssid.length==0)
+	{
+		warn_not_empty("SSID1 SSID");
+		//alert("SSID1 SSID can not be empty!!");
+		return false;
+	}
+	else if (!checkSpecSymbol(temp_ssid,0))
+	{
+		warn_ssid_illegal("SSID1");
+		//alert("SSID1 contains illegal characters, like" + " \";\"");
+		return false;
+	}
+	else if (isChinese(temp_ssid))
+	{
+		warn_ssid_illegal2("SSID1 SSID");
+		//alert("SSID1 SSID contains illegal characters.");
+		return false;
+	}
+	if(document.getElementById("id_vlanEnable1").value==1)
+	{
+		if( (document.getElementById("id_vlan1").value == "") ||
+			(isBlank(document.getElementById("id_vlan1").value)) )
+		{
+			item = "SSID1 VLAN ID";
+			msg = "SSID1";
+			warn_not_empty(item);
+			return false;
+		}
+		if( (document.getElementById("id_pbit1").value == "") ||
+			(isBlank(document.getElementById("id_pbit1").value)) )
+		{
+			item = "SSID1 PBit";
+			msg = "SSID1";
+			warn_not_empty(item);
+			return false;
+		}
+		if(!check_integer(document.getElementById("id_vlan1").value)||!check_integer_range(document.getElementById("id_vlan1").value,0,4094))
+		{
+			item = "VLAN ID";
+			msg = "SSID1";
+			min = "0";
+			max = "4094";
+			warn_int_between(item,min,max,msg);
+			//alert(msg+" "+item+" should be an integer between "+min+" and "+max);
+			return false;
+		}
+		else if(!check_integer(document.getElementById("id_pbit1").value)||!check_integer_range(document.getElementById("id_pbit1").value,0,7))
+		{
+			item = "PBit";
+			msg = "SSID1";
+			min = "0";
+			max = "7";
+			warn_int_between(item,min,max,msg);
+			//alert(msg+" "+item+" should be an integer between "+min+" and "+max);
+			return false;
+		}
+	}
+	if (!checkWDS())
+		return false;
+
+	return true;
+}
+
+function wifiac_set2()
+{
+	var temp_ssid= document.getElementById("id_ssid2").value;
+	var ssid1 = document.getElementById("id_ssid1").value;
+	var item1="SSID 2";
+	var item2;
+
+	if (temp_ssid.length==0)
+	{
+		warn_not_empty("SSID2 SSID");
+		//alert("SSID2 SSID can not be empty!!");
+		return false;
+	}
+	else if (!checkSpecSymbol(temp_ssid,0))
+	{
+		warn_ssid_illegal("SSID2 SSID");
+		//alert("SSID2 SSID contains illegal characters, like" + " \";\"");
+		return false;
+	}
+	else if (temp_ssid==ssid1)
+	{
+		item2 = "SSID 1";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (isChinese(temp_ssid))
+	{
+		warn_ssid_illegal2("SSID2 SSID");
+		//alert("SSID2 SSID contains illegal characters.");
+		return false;
+	}
+	if(document.getElementById("id_vlanEnable2").value==1)
+	{
+		if( (document.getElementById("id_vlan2").value == "") ||
+			(isBlank(document.getElementById("id_vlan2").value)) )
+		{
+			item = "SSID2 VLAN ID";
+			msg = "SSID2";
+			warn_not_empty(item);
+			return false;
+		}
+		if( (document.getElementById("id_pbit2").value == "") ||
+			(isBlank(document.getElementById("id_pbit2").value)) )
+		{
+			item = "SSID2 PBit";
+			msg = "SSID2";
+			warn_not_empty(item);
+			return false;
+		}
+		if(!check_integer(document.getElementById("id_vlan2").value)||!check_integer_range(document.getElementById("id_vlan2").value,0,4094))
+		{
+				item = "VLAN ID";
+				msg = "SSID2";
+				min = "0";
+				max = "4094";
+				warn_int_between(item,min,max,msg);
+				//alert(msg+" "+item+" should be an integer between "+min+" and "+max);
+				return false;
+		}
+		else if(!check_integer(document.getElementById("id_pbit2").value)||!check_integer_range(document.getElementById("id_pbit2").value,0,7))
+		{
+				item = "PBit";
+				msg = "SSID2";
+				min = "0";
+				max = "7";
+				warn_int_between(item,min,max,msg);
+				//alert(msg+" "+item+" should be an integer between "+min+" and "+max);
+				return false;
+		}
+	}
+	return true;
+}
+
+function wifiac_set3()
+{
+	var temp_ssid= document.getElementById("id_ssid3").value;
+	var ssid1 = document.getElementById("id_ssid1").value;
+	var ssid2 = document.getElementById("id_ssid2").value;
+	var item1="SSID 3";
+	var item2;
+
+	if (temp_ssid.length==0)
+	{
+		warn_not_empty("SSID3 SSID");
+		//alert("SSID3 SSID can not be empty!!");
+		return false;
+	}
+	else if (!checkSpecSymbol(temp_ssid,0))
+	{
+		warn_ssid_illegal("SSID3 SSID");
+		//alert("SSID3 SSID contains illegal characters, like" + " \";\"");
+		return false;
+	}
+	else if (isChinese(temp_ssid))
+	{
+		warn_ssid_illegal2("SSID3 SSID");
+		//alert("SSID3 SSID contains illegal characters.");
+		return false;
+	}
+	else if (temp_ssid==ssid1)
+	{
+		item2 = "SSID 1";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid2)
+	{
+		item2 = "SSID 2";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	if(document.getElementById("id_vlanEnable3").value==1)
+	{
+		if( (document.getElementById("id_vlan3").value == "") ||
+			(isBlank(document.getElementById("id_vlan3").value)) )
+		{
+			item = "SSID3 VLAN ID";
+			msg = "SSID3";
+			warn_not_empty(item);
+			return false;
+		}
+		if( (document.getElementById("id_pbit3").value == "") ||
+			(isBlank(document.getElementById("id_pbit3").value)) )
+		{
+			item = "SSID3 PBit";
+			msg = "SSID3";
+			warn_not_empty(item);
+			return false;
+		}
+		if(!check_integer(document.getElementById("id_vlan3").value)||!check_integer_range(document.getElementById("id_vlan3").value,0,4094))
+		{
+			item = "VLAN ID";
+			msg = "SSID3";
+			min = "0";
+			max = "4094";
+			warn_int_between(item,min,max,msg);
+			//alert(msg+" "+item+" should be an integer between "+min+" and "+max);
+			return false;
+		}
+		else if(!check_integer(document.getElementById("id_pbit3").value)||!check_integer_range(document.getElementById("id_pbit3").value,0,7))
+		{
+			item = "PBit";
+			msg = "SSID3";
+			min = "0";
+			max = "7";
+			warn_int_between(item,min,max,msg);
+			//alert(msg+" "+item+" should be an integer between "+min+" and "+max);
+			return false;
+		}
+	}
+	return true;
+}
+
+function wifiac_set4()
+{
+	var temp_ssid= document.getElementById("id_ssid4").value;
+	var ssid1 = document.getElementById("id_ssid1").value;
+	var ssid2 = document.getElementById("id_ssid2").value;
+	var ssid3 = document.getElementById("id_ssid3").value;
+	var item1="SSID 4";
+	var item2;
+	if (temp_ssid.length==0)
+	{
+		warn_not_empty("SSID4 SSID");
+		//alert("SSID4 SSID can not be empty!!");
+		return false;
+	}
+	else if (!checkSpecSymbol(temp_ssid,0))
+	{
+		warn_ssid_illegal("SSID4 SSID");
+		//alert("SSID4 SSID contains illegal characters, like" + " \";\"");
+		return false;
+	}
+	else if (isChinese(temp_ssid))
+	{
+		warn_ssid_illegal2("SSID4 SSID");
+		//alert("SSID4 SSID contains illegal characters.");
+		return false;
+	}
+	else if (temp_ssid==ssid1)
+	{
+		item2 = "SSID 1";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid2)
+	{
+		item2 = "SSID 2";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid3)
+	{
+		item2 = "SSID 3";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	if(document.getElementById("id_vlanEnable4").value==1)
+	{
+		if( (document.getElementById("id_vlan4").value == "") ||
+			(isBlank(document.getElementById("id_vlan4").value)) )
+		{
+			item = "SSID4 VLAN ID";
+			msg = "SSID4";
+			warn_not_empty(item);
+			return false;
+		}
+		if( (document.getElementById("id_pbit4").value == "") ||
+			(isBlank(document.getElementById("id_pbit4").value)) )
+		{
+			item = "SSID4 PBit";
+			msg = "SSID4";
+			warn_not_empty(item);
+			return false;
+		}
+		if(!check_integer(document.getElementById("id_vlan4").value)||!check_integer_range(document.getElementById("id_vlan4").value,0,4094))
+		{
+			item = "VLAN ID";
+			msg = "SSID4";
+			min = "0";
+			max = "4094";
+			warn_int_between(item,min,max,msg);
+			//alert(msg+" "+item+" should be an integer between "+min+" and "+max);
+			return false;
+		}
+		else if(!check_integer(document.getElementById("id_pbit4").value)||!check_integer_range(document.getElementById("id_pbit4").value,0,7))
+		{
+			item = "PBit";
+			msg = "SSID4";
+			min = "0";
+			max = "7";
+			warn_int_between(item,min,max,msg);
+			//alert(msg+" "+item+" should be an integer between "+min+" and "+max);
+			return false;
+		}
+	}
+	return true;
+}
+
+function wifiac_set5()
+{
+	var temp_ssid= document.getElementById("id_ssid5").value;
+	var ssid1 = document.getElementById("id_ssid1").value;
+	var ssid2 = document.getElementById("id_ssid2").value;
+	var ssid3 = document.getElementById("id_ssid3").value;
+	var ssid4 = document.getElementById("id_ssid4").value;
+	var item1="SSID 5";
+	var item2;
+	if (temp_ssid.length==0)
+	{
+		warn_not_empty("SSID5 SSID");
+		//alert("SSID5 SSID can not be empty!!");
+		return false;
+	}
+	else if (!checkSpecSymbol(temp_ssid,0))
+	{
+		warn_ssid_illegal("SSID5 SSID");
+		//alert("SSID5 SSID contains illegal characters, like" + " \";\"");
+		return false;
+	}
+	else if (isChinese(temp_ssid))
+	{
+		warn_ssid_illegal2("SSID5 SSID");
+		//alert("SSID5 SSID contains illegal characters.");
+		return false;
+	}
+	else if (temp_ssid==ssid1)
+	{
+		item2 = "SSID 1";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid2)
+	{
+		item2 = "SSID 2";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid3)
+	{
+		item2 = "SSID 3";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid4)
+	{
+		item2 = "SSID 4";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	return true;
+}
+
+function wifiac_set6()
+{
+	var temp_ssid= document.getElementById("id_ssid6").value;
+	var ssid1 = document.getElementById("id_ssid1").value;
+	var ssid2 = document.getElementById("id_ssid2").value;
+	var ssid3 = document.getElementById("id_ssid3").value;
+	var ssid4 = document.getElementById("id_ssid4").value;
+	var ssid5 = document.getElementById("id_ssid5").value;
+	var item1="SSID 6";
+	var item2;
+	if (temp_ssid.length==0)
+	{
+		warn_not_empty("SSID6 SSID");
+		//alert("SSID6 SSID can not be empty!!");
+		return false;
+	}
+	else if (!checkSpecSymbol(temp_ssid,0))
+	{
+		warn_ssid_illegal("SSID6 SSID");
+		//alert("SSID6 SSID contains illegal characters, like" + " \";\"");
+		return false;
+	}
+	else if (isChinese(temp_ssid))
+	{
+		warn_ssid_illegal2("SSID6 SSID");
+		//alert("SSID6 SSID contains illegal characters.");
+		return false;
+	}
+	else if (temp_ssid==ssid1)
+	{
+		item2 = "SSID 1";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid2)
+	{
+		item2 = "SSID 2";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid3)
+	{
+		item2 = "SSID 3";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid4)
+	{
+		item2 = "SSID 4";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid5)
+	{
+		item2 = "SSID 5";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	return true;
+}
+
+function wifiac_set7()
+{
+	var temp_ssid= document.getElementById("id_ssid7").value;
+	var ssid1 = document.getElementById("id_ssid1").value;
+	var ssid2 = document.getElementById("id_ssid2").value;
+	var ssid3 = document.getElementById("id_ssid3").value;
+	var ssid4 = document.getElementById("id_ssid4").value;
+	var ssid5 = document.getElementById("id_ssid5").value;
+	var ssid6 = document.getElementById("id_ssid6").value;
+	var item1="SSID 7";
+	var item2;
+	if (temp_ssid.length==0)
+	{
+		warn_not_empty("SSID7 SSID");
+		//alert("SSID7 SSID can not be empty!!");
+		return false;
+	}
+	else if (!checkSpecSymbol(temp_ssid,0))
+	{
+		warn_ssid_illegal("SSID7 SSID");
+		//alert("SSID7 SSID contains illegal characters, like" + " \";\"");
+		return false;
+	}
+	else if (isChinese(temp_ssid))
+	{
+		warn_ssid_illegal2("SSID7 SSID");
+		//alert("SSID7 SSID contains illegal characters.");
+		return false;
+	}
+	else if (temp_ssid==ssid1)
+	{
+		item2 = "SSID 1";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid2)
+	{
+		item2 = "SSID 2";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid3)
+	{
+		item2 = "SSID 3";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid4)
+	{
+		item2 = "SSID 4";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid5)
+	{
+		item2 = "SSID 5";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid6)
+	{
+		item2 = "SSID 6";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	return true;
+}
+
+function wifiac_set8()
+{
+	var temp_ssid= document.getElementById("id_ssid8").value;
+	var ssid1 = document.getElementById("id_ssid1").value;
+	var ssid2 = document.getElementById("id_ssid2").value;
+	var ssid3 = document.getElementById("id_ssid3").value;
+	var ssid4 = document.getElementById("id_ssid4").value;
+	var ssid5 = document.getElementById("id_ssid5").value;
+	var ssid6 = document.getElementById("id_ssid6").value;
+	var ssid7 = document.getElementById("id_ssid7").value;
+	var item1="SSID 8";
+	var item2;
+	if (temp_ssid.length==0)
+	{
+		warn_not_empty("SSID8 SSID");
+		//alert("SSID8 SSID can not be empty!!");
+		return false;
+	}
+	else if (!checkSpecSymbol(temp_ssid,0))
+	{
+		warn_ssid_illegal("SSID8 SSID");
+		//alert("SSID8 SSID contains illegal characters, like" + " \";\"");
+		return false;
+	}
+	else if (isChinese(temp_ssid))
+	{
+		warn_ssid_illegal2("SSID8 SSID");
+		//alert("SSID8 SSID contains illegal characters.");
+		return false;
+	}
+	else if (temp_ssid==ssid1)
+	{
+		item2 = "SSID 1";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid2)
+	{
+		item2 = "SSID 2";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid3)
+	{
+		item2 = "SSID 3";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid4)
+	{
+		item2 = "SSID 4";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid5)
+	{
+		item2 = "SSID 5";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid6)
+	{
+		item2 = "SSID 6";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	else if (temp_ssid==ssid7)
+	{
+		item2 = "SSID 7";
+		warn_ssid_cant_same(item1+"SSID",item2);
+		//alert(item1 + " SSID can't be the same as " + item2 + ".");
+		return false;
+	}
+	return true;
+}
+
+function changeTxRate(val)
+{
+	//changeWiFiRate(1, WIFIACTxRate[0], val);
+	//if(document.wifiacsetup_form.WIFIACSsidnum.value>1)
+	//	changeWiFiRate(2,WIFIACTxRate[1],val);
+	//if(document.wifiacsetup_form.WIFIACSsidnum.value>2)
+	//	changeWiFiRate(3,WIFIACTxRate[2],val);
+	//if(document.wifiacsetup_form.WIFIACSsidnum.value>3)
+	//	changeWiFiRate(4,WIFIACTxRate[3],val);
+}
+
+function changeWiFiRate(index,WIFIACTxRate,type)
+{
+	var item_id="id_WIFIACTxRate" + index;
+	var obj_txrate=document.getElementById(item_id);
+	var obj_wifimode=document.wifiacsetup_form.WIFI11acMode;
+	var obj_wifibw=document.wifiacsetup_form.WIFIHTBW;
+	var bw = parseInt(document.getElementById('id_WIFIHTBW').value);
+
+	var wifi_htxstream=2;
+	var txrate=parseInt(WIFIACTxRate);
+
+	var i=0;
+
+	var option0=new Option("Auto","0",0,(txrate==0)? 1:0);
+	var option1=new Option("1","1",0,(txrate==1)? 1:0);
+	var option2=new Option("2","2",0,(txrate==2)? 1:0);
+	var option3=new Option("5.5","3",0,(txrate==3)? 1:0);
+	var option4=new Option("11","4",0,(txrate==4)? 1:0);
+	var option5=new Option("6","5",0,(txrate==5)? 1:0);
+	var option6=new Option("9","6",0,(txrate==6)? 1:0);
+	var option7=new Option("12","7",0,(txrate==7)? 1:0);
+	var option8=new Option("18","8",0,(txrate==8)? 1:0);
+	var option9=new Option("24","9",0,(txrate==9)? 1:0);
+	var option10=new Option("36","10",0,(txrate==10)? 1:0);
+	var option11=new Option("48","11",0,(txrate==11)? 1:0);
+	var option12=new Option("54","12",0,(txrate==12)? 1:0);
+
+	for (i=obj_txrate.length-1;i>=0;i--)
+	obj_txrate.options[i]=null;
+
+	obj_txrate.disabled=false;
+	if (wifi_version == "AC")
+	{
+		if (wifi_htxstream==1)
+		{
+			if ((bw==0 && type=='channel')||(obj_wifibw.selectedIndex==0 && type=='bw'))
+			{
+				var option13=new Option("6.5","20",0,(txrate==20)? 1:0);
+				var option14=new Option("13","21",0,(txrate==21)? 1:0);
+				var option15=new Option("19.5","22",0,(txrate==22)? 1:0);
+				var option16=new Option("26","23",0,(txrate==23)? 1:0);
+				var option17=new Option("39","24",0,(txrate==24)? 1:0);
+				var option18=new Option("52","25",0,(txrate==25)? 1:0);
+				var option19=new Option("58.5","26",0,(txrate==26)? 1:0);
+				var option20=new Option("65","27",0,(txrate==27)? 1:0);
+			}
+			if ((bw==1 && type=='channel')||(obj_wifibw.selectedIndex==1 && type=='bw'))
+			{
+				var option13=new Option("13","20",0,(txrate==20)? 1:0);
+				var option14=new Option("26","21",0,(txrate==21)? 1:0);
+				var option15=new Option("39","22",0,(txrate==22)? 1:0);
+				var option16=new Option("52","23",0,(txrate==23)? 1:0);
+				var option17=new Option("78","24",0,(txrate==24)? 1:0);
+				var option18=new Option("104","25",0,(txrate==25)? 1:0);
+				var option19=new Option("117","26",0,(txrate==26)? 1:0);
+				var option20=new Option("130","27",0,(txrate==27)? 1:0);
+			}
+		}
+		else if(wifi_htxstream==2)
+		{
+			if ((bw==0 && type=='channel')||(obj_wifibw.selectedIndex==0 && type=='bw'))
+			{
+				/*var option13=new Option(" 13 ","28",0,(txrate==28)? 1:0);
+				var option14=new Option(" 26 ","29",0,(txrate==29)? 1:0);
+				var option15=new Option(" 39 ","30",0,(txrate==30)? 1:0);
+				var option16=new Option(" 52 ","31",0,(txrate==31)? 1:0);
+				var option17=new Option(" 78 ","32",0,(txrate==32)? 1:0);
+				var option18=new Option(" 104 ","33",0,(txrate==33)? 1:0);
+				var option19=new Option(" 117 ","34",0,(txrate==34)? 1:0);
+				var option20=new Option(" 130 ","35",0,(txrate==35)? 1:0);
+				var option21=new Option(" 150 ","36",0,(txrate==36)? 1:0);*/
+				var option13=new Option("14.4","21",0,(txrate==21)? 1:0);
+				var option14=new Option("28.9","22",0,(txrate==22)? 1:0);
+				var option15=new Option("43.3","23",0,(txrate==23)? 1:0);
+				var option16=new Option("57.8","24",0,(txrate==24)? 1:0);
+				var option17=new Option("86.7","25",0,(txrate==25)? 1:0);
+				var option18=new Option("115.6","26",0,(txrate==26)? 1:0);
+				var option19=new Option("130","27",0,(txrate==27)? 1:0);
+				var option20=new Option("144.4","28",0,(txrate==28)? 1:0);
+			}
+			else if ((bw==1 && type=='channel')||(obj_wifibw.selectedIndex==1 && type=='bw'))
+			{
+				/*var option13=new Option(" 26 ","28",0,(txrate==28)? 1:0);
+				var option14=new Option(" 52 ","29",0,(txrate==29)? 1:0);
+				var option15=new Option(" 78 ","30",0,(txrate==30)? 1:0);
+				var option16=new Option(" 104 ","31",0,(txrate==31)? 1:0);
+				var option17=new Option(" 156 ","32",0,(txrate==32)? 1:0);
+				var option18=new Option(" 208 ","33",0,(txrate==33)? 1:0);
+				var option19=new Option(" 234 ","34",0,(txrate==34)? 1:0);
+				var option20=new Option(" 260 ","35",0,(txrate==35)? 1:0);
+				var option21=new Option(" 300 ","36",0,(txrate==36)? 1:0);*/
+				var option13=new Option("14.4","21",0,(txrate==21)? 1:0);
+				var option14=new Option("28.9","22",0,(txrate==22)? 1:0);
+				var option15=new Option("30","23",0,(txrate==23)? 1:0);
+				var option16=new Option("43.3","24",0,(txrate==24)? 1:0);
+				var option17=new Option("57.8","25",0,(txrate==25)? 1:0);
+				var option18=new Option("60","26",0,(txrate==26)? 1:0);
+				var option19=new Option("86.7","27",0,(txrate==27)? 1:0);
+				var option20=new Option("90","28",0,(txrate==28)? 1:0);
+				var option21=new Option("115.6","29",0,(txrate==29)? 1:0);
+				var option22=new Option("120","30",0,(txrate==30)? 1:0);
+				var option23=new Option("130","31",0,(txrate==31)? 1:0);
+				var option24=new Option("144.4","32",0,(txrate==32)? 1:0);
+				var option25=new Option("180","33",0,(txrate==33)? 1:0);
+				var option26=new Option("240","34",0,(txrate==34)? 1:0);
+				var option27=new Option("270","35",0,(txrate==35)? 1:0);
+				var option28=new Option("300","36",0,(txrate==36)? 1:0);
+			}
+			else if ((bw==2 && type=='channel')||(obj_wifibw.selectedIndex==2 && type=='bw'))
+			{
+				/*var option13=new Option(" 26 ","28",0,(txrate==28)? 1:0);
+				var option14=new Option(" 52 ","29",0,(txrate==29)? 1:0);
+				var option15=new Option(" 78 ","30",0,(txrate==30)? 1:0);
+				var option16=new Option(" 104 ","31",0,(txrate==31)? 1:0);
+				var option17=new Option(" 156 ","32",0,(txrate==32)? 1:0);
+				var option18=new Option(" 208 ","33",0,(txrate==33)? 1:0);
+				var option19=new Option(" 234 ","34",0,(txrate==34)? 1:0);
+				var option20=new Option(" 260 ","35",0,(txrate==35)? 1:0);
+				var option21=new Option(" 300 ","36",0,(txrate==36)? 1:0);*/
+				var option13=new Option("30","21",0,(txrate==21)? 1:0);
+				var option14=new Option("60","22",0,(txrate==22)? 1:0);
+				var option15=new Option("90","23",0,(txrate==23)? 1:0);
+				var option16=new Option("120","24",0,(txrate==24)? 1:0);
+				var option17=new Option("180","25",0,(txrate==25)? 1:0);
+				var option18=new Option("240","26",0,(txrate==26)? 1:0);
+				var option19=new Option("270","27",0,(txrate==27)? 1:0);
+				var option20=new Option("300","28",0,(txrate==28)? 1:0);
+			}
+		}
+	}
+
+	obj_txrate.options[obj_txrate.length]=option0;
+	if (obj_wifimode.selectedIndex==0 )
+	{
+		obj_txrate.options[obj_txrate.length]=option1;
+		obj_txrate.options[obj_txrate.length]=option2;
+		obj_txrate.options[obj_txrate.length]=option3;
+		obj_txrate.options[obj_txrate.length]=option4;
+	}
+	//if (obj_wifimode.selectedIndex==1)
+	//{
+	//	obj_txrate.options[obj_txrate.length]=option5;
+	//	obj_txrate.options[obj_txrate.length]=option6;
+	//	obj_txrate.options[obj_txrate.length]=option7;
+	//	obj_txrate.options[obj_txrate.length]=option8;
+	//	obj_txrate.options[obj_txrate.length]=option9;
+	//	obj_txrate.options[obj_txrate.length]=option10;
+	//	obj_txrate.options[obj_txrate.length]=option11;
+	//	obj_txrate.options[obj_txrate.length]=option12;
+	//}
+	//if (obj_wifimode.selectedIndex==2)
+	if (obj_wifimode.selectedIndex==1)
+	{
+		obj_txrate.options[obj_txrate.length]=option1;
+		obj_txrate.options[obj_txrate.length]=option2;
+		obj_txrate.options[obj_txrate.length]=option3;
+		obj_txrate.options[obj_txrate.length]=option4;
+		obj_txrate.options[obj_txrate.length]=option5;
+		obj_txrate.options[obj_txrate.length]=option6;
+		obj_txrate.options[obj_txrate.length]=option7;
+		obj_txrate.options[obj_txrate.length]=option8;
+		obj_txrate.options[obj_txrate.length]=option9;
+		obj_txrate.options[obj_txrate.length]=option10;
+		obj_txrate.options[obj_txrate.length]=option11;
+		obj_txrate.options[obj_txrate.length]=option12;
+
+		/*if (wifi_htxstream==2)
+			obj_txrate.options[obj_txrate.length]=option21;*/
+	}
+
+	//if (obj_wifimode.selectedIndex==3)
+	//{
+	//	obj_txrate.options[obj_txrate.length]=option13;
+	//	obj_txrate.options[obj_txrate.length]=option14;
+	//	obj_txrate.options[obj_txrate.length]=option15;
+	//	obj_txrate.options[obj_txrate.length]=option16;
+	//	obj_txrate.options[obj_txrate.length]=option17;
+	//	obj_txrate.options[obj_txrate.length]=option18;
+	//	obj_txrate.options[obj_txrate.length]=option19;
+	//	obj_txrate.options[obj_txrate.length]=option20;
+	//	if(bw==1)
+	//	{
+	//		obj_txrate.options[obj_txrate.length]=option21;
+	//		obj_txrate.options[obj_txrate.length]=option22;
+	//		obj_txrate.options[obj_txrate.length]=option23;
+	//		obj_txrate.options[obj_txrate.length]=option24;
+	//		obj_txrate.options[obj_txrate.length]=option25;
+	//		obj_txrate.options[obj_txrate.length]=option26;
+	//		obj_txrate.options[obj_txrate.length]=option27;
+	//		obj_txrate.options[obj_txrate.length]=option28;
+	//	}
+	//}
+
+	//if (obj_wifimode.selectedIndex==4 )
+	//{
+	//	obj_txrate.options[obj_txrate.length]=option1;
+	//	obj_txrate.options[obj_txrate.length]=option2;
+	//	obj_txrate.options[obj_txrate.length]=option3;
+	//	obj_txrate.options[obj_txrate.length]=option4;
+	//	obj_txrate.options[obj_txrate.length]=option5;
+	//	obj_txrate.options[obj_txrate.length]=option6;
+	//	obj_txrate.options[obj_txrate.length]=option7;
+	//	obj_txrate.options[obj_txrate.length]=option8;
+	//	obj_txrate.options[obj_txrate.length]=option9;
+	//	obj_txrate.options[obj_txrate.length]=option10;
+	//	obj_txrate.options[obj_txrate.length]=option11;
+	//	obj_txrate.options[obj_txrate.length]=option12;
+	//	obj_txrate.options[obj_txrate.length]=option13;
+	//	obj_txrate.options[obj_txrate.length]=option14;
+	//	obj_txrate.options[obj_txrate.length]=option15;
+	//	obj_txrate.options[obj_txrate.length]=option16;
+	//	obj_txrate.options[obj_txrate.length]=option17;
+	//	obj_txrate.options[obj_txrate.length]=option18;
+	//	obj_txrate.options[obj_txrate.length]=option19;
+	//	obj_txrate.options[obj_txrate.length]=option20;
+	//	if(bw==1)
+	//	{
+	//		obj_txrate.options[obj_txrate.length]=option21;
+	//		obj_txrate.options[obj_txrate.length]=option22;
+	//		obj_txrate.options[obj_txrate.length]=option23;
+	//		obj_txrate.options[obj_txrate.length]=option24;
+	//		obj_txrate.options[obj_txrate.length]=option25;
+	//		obj_txrate.options[obj_txrate.length]=option26;
+	//		obj_txrate.options[obj_txrate.length]=option27;
+	//		obj_txrate.options[obj_txrate.length]=option28;
+	//	}
+	//	/*if (wifi_htxstream==2)
+	//		obj_txrate.options[obj_txrate.length]=option21;*/
+	//}
+
+	now_rate = obj_wifimode.selectedIndex;
+}
+
+function wifiac_set()
+{
+	var sy=document.getElementById("StartYear").value;
+	var sm=document.getElementById("StartMonth").value;
+	var sd=document.getElementById("StartDay").value;
+	var sh=document.getElementById("StartHour").value;
+	var smin=document.getElementById("StartMinute").value;
+	var ss=document.getElementById("StartSecond").value;
+	var ey=document.getElementById("EndYear").value;
+	var em=document.getElementById("EndMonth").value;
+	var ed=document.getElementById("EndDay").value;
+	var eh=document.getElementById("EndHour").value;
+	var emin=document.getElementById("EndMinute").value;
+	var es=document.getElementById("EndSecond").value;
+
+	if (document.wifiacsetup_form.WIFIModuleEnable.checked == true)
+	{
+		if(document.getElementById("id_WIFISchedule").checked==true){
+			if(sy>ey){
+				alert("WIFI Schedule's End date should not be earlier than the start date!");
+				return ;
+			}else if(ey==sy && sm>em){
+				alert("WIFI Schedule's End date should not be earlier than the start date !");
+				return ;
+			}else if(ey==sy && em==sm && sd>ed){
+				alert("WIFI Schedule's End date should not be earlier than the start date!");
+				return ;
+			}else if(ey==sy && em==sm && sd==ed && sh>eh){
+				alert("WIFI Schedule's End date should not be earlier than the start date!");
+				return ;
+			}else if(ey==sy && em==sm && sd==ed && sh==eh &&smin>emin){
+				alert("WIFI Schedule's End date should not be earlier than the start date!");
+				return ;
+			}else if(ey==sy && em==sm && sd==ed && sh==eh && smin==emin && ss>es){
+				alert("WIFI Schedule's End date should not be earlier than the start date!");
+				return ;
+			}else if(ey==sy && em==sm && sd==ed && sh==eh && smin==emin && ss==es){
+				alert("WIFI Schedule cannot have the same Start date & End date!");
+				return ;
+			}
+		}
+		if(!wifiac_set1())
+			return;
+
+		if(document.wifiacsetup_form.WIFIACSsidnum.value>1)
+		{
+			if(!wifiac_set2())
+				return;
+		}
+
+		if(document.wifiacsetup_form.WIFIACSsidnum.value>2)
+		{
+			if(!wifiac_set3())
+				return;
+		}
+
+		if(document.wifiacsetup_form.WIFIACSsidnum.value>3)
+		{
+			if(!wifiac_set4())
+				return;
+		}
+
+		if(document.wifiacsetup_form.WIFIACSsidnum.value>4)
+		{
+			if(!wifiac_set5())
+				return;
+			if(!wifiac_set6())
+				return;
+			if(!wifiac_set7())
+				return;
+			if(!wifiac_set8())
+				return;
+		}
+
+		if (check_range(document.wifiacsetup_form.WIFIBeaconPeriod.value, 20, 1023, "Beacon Period")
+				//&&check_range(document.wifiacsetup_form.WIFIDtimPeriod.value, 1, 255, "DTIM Period")
+				&&check_range(document.wifiacsetup_form.WIFIACTxPower.value,1,100,"Tx Power"))
+		{
+			//alert("Now your settings take effect.");
+
+			document.getElementById('id_wait_progress').style.display="";
+			check_process();
+
+			fvt_form_submit('wifiacsetup_form');
+			document.wifiacsetup_form.submit();
+		}
+
+	}
+	else
+	{
+		//alert("Now your settings take effect.");
+		fvt_form_submit('wifiacsetup_form');
+		document.wifiacsetup_form.submit();
+	}
+}
+
+function valueMatch(s1, s2, match_return)
+{
+	if(s1 == s2)
+		return match_return;
+	else
+		return "";
+}
+
+function ChangeACChannelList()
+{
+	var band = document.getElementById('id_WIFI11acMode').value;
+	var WIFIACChannel=document.wifiacsetup_form.WIFIACChannel;
+	var selechannel=fvt_meta_config('wlanac_channel');
+
+	for(var i=WIFIACChannel.length-1;i>=0;i--)
+		WIFIACChannel.options[i]=null;
+//
+//reg_channel_5g_full_band[]
+//CountryRegion	 1 (FCC)	{36,40,44,48,52,56,60,64,100,104,108,112,116,136,140,149,153,157,161,165}
+//CountryRegion	 3 (ETSI)	{36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140}
+//CountryRegion 11 (TWN)	{56,58,60,62,64}
+//CountryRegion 13 (CN)		{36,40,44,48,52,56,60,64,149,153,157,161,165}
+//CountryRegion 14 (Global) {36,40,44,48,52,56,60,64,100,104,108,112,116,136,140,149,153,157,161,165}
+//
+//reg_channel_5g_not_dfs_band[]
+//CountryRegion	 1 (FCC)	{36,40,44,48,149,153,157,161,165}
+//CountryRegion	 3 (ETSI)	{36,40,44,48,149,153,157,161}
+//CountryRegion 11 (TWN)	{149,151,153,155,157,159,161,165}
+//CountryRegion 13 (CN)		{36,40,44,48,149,153,157,161,165}
+//CountryRegion 14 (Global) {36,40,44,48,149,153,157,161,165}
+//
+
+	//if (band == 4 || band ==12)
+	//{
+	//	//if(!selechannel || selechannel < 30)
+	//	//{
+	//	//	if(WIFIACCountryRegion==8)
+	//	//		selechannel = 34;
+	//	//	else
+	//	//		selechannel = 36;
+	//	//}
+	//
+	//	var option0=new Option("Auto","0",0,(selechannel==0));
+	//	//var option56=new Option("56","56",0,(selechannel==56));
+	//	var option155=new Option("155","155",0,(selechannel==155));
+	//	var option157=new Option("157","157",0,(selechannel==157));
+	//	var option159=new Option("159","159",0,(selechannel==159));
+	//	var option161=new Option("161","161",0,(selechannel==161));
+	//	var option165=new Option("165","165",0,(selechannel==165));
+	//}
+	//else
+	//{
+		//if(!selechannel || selechannel > 30)
+		//	selechannel = 1;
+	if(WIFIACCountryRegion==1 || WIFIACCountryRegion==11)
+								//CountryRegion 11 (TWN)	{56,60,64}
+								//CountryRegion 11 (TWN)	{149,153,157,161,165}
+	{
+		var ChArray = ["0","52","54","56","58","60","64","149","153","157","161","165"];
+		//var option0=new Option("Auto","0",0,(selechannel==0));
+		//var option55=new Option("55","55",0,(selechannel==55));
+	}
+	else if (WIFIACCountryRegion==3)  //CountryRegion  3 (ETSI)	  {36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140}
+									  //CountryRegion  3 (ETSI)	  {36,40,44,48,149,153,157,161}
+	{
+		var ChArray = ["0","36","40","44","48","52","56","60","64","100","104","108","112","116","120","124","128","132","136","140","149","153","157","161"];
+
+		//var option0=new Option("Auto","0",0,(selechannel==0));
+		//var option36=new Option("36","36",0,(selechannel==36));
+		//var option40=new Option("40","40",0,(selechannel==40));
+	}
+	else if (WIFIACCountryRegion==13)  //CountryRegion 13 (CN)	   {36,40,44,48,52,56,60,64,149,153,157,161,165}
+	{
+		var ChArray = ["0","36","40","44","48","52","56","60","64","149","153","157","161","165"];
+		//var option0=new Option("Auto","0",0,(selechannel==0));
+		//var option161=new Option("161","161",0,(selechannel==161));
+		//var option165=new Option("165","165",0,(selechannel==165));
+	}
+	else  //CountryRegion 14 (Global) {36,40,44,48,52,56,60,64,100,104,108,112,116,136,140,149,153,157,161,165}
+	{
+		var ChArray = ["0","36","40","44","48","52","56","60","64","100","104","108","112","116","136","140","149","153","157","161","165"];
+		//var option0=new Option("Auto","0",0,(selechannel==0));
+		//var option36=new Option("36","36",0,(selechannel==36));
+		//var option40=new Option("40","40",0,(selechannel==40));
+	}
+
+	// Loop through the array
+	for (var i = 0; i < ChArray.length; ++i)
+	{
+		// Append the element to the end of Array list
+		if (i == 0)
+			WIFIACChannel.options[i] = new Option("Auto", ChArray[i], 0, (selechannel==ChArray[i]));
+		else
+			WIFIACChannel.options[i] = new Option(ChArray[i], ChArray[i], 0, (selechannel==ChArray[i]));
+		WIFIACChannel.options[i].setAttribute("id","Ch_"+ChArray[i]);
+	}
+
+//	if(WIFIACCountryRegion==11) //CountryRegion 11 (TWN)	{56,58,60,62,64}
+//								//CountryRegion 11 (TWN)	{149,151,153,155,157,159,161,165}
+//	{
+//		//if (band == 4 || band ==12)
+//		//{
+//		//	WIFIACChannel.options[WIFIACChannel.length]=option0;
+//		//	WIFIACChannel.options[WIFIACChannel.length]=option157;
+//		//	WIFIACChannel.options[WIFIACChannel.length]=option157;
+//		//	WIFIACChannel.options[WIFIACChannel.length]=option161;
+//		//	WIFIACChannel.options[WIFIACChannel.length]=option165;
+//		//}
+//		//else
+//		//{		var option165=new Option("165","165",0,(selechannel==165));
+//
+//		// Loop through the array
+//		for (var i = 0; i < ChArray.length; ++i)
+//		{
+//			// Append the element to the end of Array list
+//			WIFIACChannel.options[i] = new Option(ChArray[i], ChArray[i], 0, (selechannel==ChArray[i]));
+//			WIFIACChannel.options[i].setAttribute("id","Ch_"+ChArray[i]);
+//		}
+//
+//			//WIFIACChannel.options[0]=option0;
+//			//WIFIACChannel.options[1]=option56;
+//			//WIFIACChannel.options[1].setAttribute("id","Ch_56");
+//			//WIFIACChannel.options[2]=option58;
+//			//WIFIACChannel.options[2].setAttribute("id","Ch_58");
+//			//WIFIACChannel.options[3]=option60;
+//			//WIFIACChannel.options[3].setAttribute("id","Ch_60");
+//			//WIFIACChannel.options[4]=option62;
+//			//WIFIACChannel.options[4].setAttribute("id","Ch_62");
+//			//WIFIACChannel.options[5]=option64;
+//			//WIFIACChannel.options[5].setAttribute("id","Ch_64");
+//			//WIFIACChannel.options[6]=option149;
+//			//WIFIACChannel.options[6].setAttribute("id","Ch_149");
+//			//WIFIACChannel.options[7]=option151;
+//			//WIFIACChannel.options[7].setAttribute("id","Ch_151");
+//			//WIFIACChannel.options[8]=option153;
+//			//WIFIACChannel.options[8].setAttribute("id","Ch_153");
+//			//WIFIACChannel.options[9]=option155;
+//			//WIFIACChannel.options[9].setAttribute("id","Ch_155");
+//			//WIFIACChannel.options[10]=option157;
+//			//WIFIACChannel.options[10].setAttribute("id","Ch_157");
+//			//WIFIACChannel.options[11]=option159;
+//			//WIFIACChannel.options[11].setAttribute("id","Ch_159");
+//			//WIFIACChannel.options[12]=option161;
+//			//WIFIACChannel.options[12].setAttribute("id","Ch_162");
+//			//WIFIACChannel.options[13]=option165;
+//			//WIFIACChannel.options[13].setAttribute("id","Ch_165");
+//		//}
+//	}
+//	else if (WIFIACCountryRegion==3)  //CountryRegion  3 (ETSI)	  {36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140}
+//									  //CountryRegion  3 (ETSI)	  {36,40,44,48,149,153,157,161}
+//	{
+//			WIFIACChannel.options[WIFIACChannel.length]=option0;
+//			WIFIACChannel.options[WIFIACChannel.length]=option36;
+//			WIFIACChannel.options[WIFIACChannel.length]=option157;
+//			WIFIACChannel.options[WIFIACChannel.length]=option161;
+//	}
+//	else if (WIFIACCountryRegion==13)  //CountryRegion 13 (CN)	   {36,40,44,48,52,56,60,64,149,153,157,161,165}
+//	{
+//			WIFIACChannel.options[WIFIACChannel.length]=option0;
+//			WIFIACChannel.options[WIFIACChannel.length]=option165;
+//	}
+//	else  //CountryRegion 14 (Global) {36,40,44,48,52,56,60,64,100,104,108,112,116,136,140,149,153,157,161,165}
+//	{
+//			WIFIACChannel.options[WIFIACChannel.length]=option0;
+//			WIFIACChannel.options[WIFIACChannel.length]=option36;
+//			WIFIACChannel.options[WIFIACChannel.length]=option161;
+//			WIFIACChannel.options[WIFIACChannel.length]=option165;
+//	}
+}
+
+function ChannelList()
+{
+	var i;
+	var selectChannel = fvt_meta_config('wlanac_channel');
+
+	var band = fvt_meta_config('wlanac_band');
+
+	if(WIFIACCountryRegion==1 || WIFIACCountryRegion==11)
+								//CountryRegion 11 (TWN)	{56,58,60,62,64}
+								//CountryRegion 11 (TWN)	{149,151,153,155,157,159,161,165}
+	{
+		var ChArray = ["0","52","54","56","58","60","64","149","153","157","161","165"];
+	}
+	else if (WIFIACCountryRegion==3)  //CountryRegion  3 (ETSI)	  {36,40,44,48,52,56,60,64,100,104,108,112,116,120,124,128,132,136,140}
+									  //CountryRegion  3 (ETSI)	  {36,40,44,48,149,153,157,161}
+	{
+		var ChArray = ["0","36","40","44","48","52","56","60","64","100","104","108","112","116","120","124","128","132","136","140","149","153","157","161"];
+	}
+	else if (WIFIACCountryRegion==13)  //CountryRegion 13 (CN)	   {36,40,44,48,52,56,60,64,149,153,157,161,165}
+	{
+		var ChArray = ["0","36","40","44","48","52","56","60","64","149","153","157","161","165"];
+	}
+	else  //CountryRegion 14 (Global) {36,40,44,48,52,56,60,64,100,104,108,112,116,136,140,149,153,157,161,165}
+	{
+		var ChArray = ["0","36","40","44","48","52","56","60","64","100","104","108","112","116","136","140","149","153","157","161","165"];
+	}
+
+	for (var i = 0; i < ChArray.length; ++i)
+	{
+		if (i == 0)
+			document.write("<option "+valueMatch(selectChannel, ChArray[i] ,'selected')+" value='"+ChArray[i]+"' id='Ch_"+ChArray[i]+"'>Auto</option>");
+		else
+			document.write("<option "+valueMatch(selectChannel, ChArray[i] ,'selected')+" value='"+ChArray[i]+"' id='Ch_"+ChArray[i]+"'>"+ChArray[i]+"</option>");
+	}
+}
+
+function GetTxRate(s_index)
+{
+	now_rate = document.wifiacsetup_form.WIFI11acMode.selectedIndex;
+	document.write("<option value=\"0\" "+valueMatch(WIFIACTxRate[s_index-1], '0', 'selected')+">Auto</option>");
+	if((now_rate != 2)||(now_rate != 4))
+	{
+		document.write("<option value=\"1\" "+valueMatch(WIFIACTxRate[s_index-1], '1', 'selected')+">1 </option>");
+		document.write("<option value=\"2\" "+valueMatch(WIFIACTxRate[s_index-1], '2', 'selected')+">2 </option>");
+		document.write("<option value=\"3\" "+valueMatch(WIFIACTxRate[s_index-1], '3', 'selected')+">5.5 </option>");
+		document.write("<option value=\"4\" "+valueMatch(WIFIACTxRate[s_index-1], '4', 'selected')+">11 </option>");
+	}
+
+	if(now_rate != 0)
+	{
+		document.write("<option value=\"5\" "+valueMatch(WIFIACTxRate[s_index-1], '5', 'selected')+">6 </option>");
+		document.write("<option value=\"6\" "+valueMatch(WIFIACTxRate[s_index-1], '6', 'selected')+">9 </option>");
+		document.write("<option value=\"7\" "+valueMatch(WIFIACTxRate[s_index-1], '7', 'selected')+">12 </option>");
+		document.write("<option value=\"8\" "+valueMatch(WIFIACTxRate[s_index-1], '8', 'selected')+">18 </option>");
+		document.write("<option value=\"9\" "+valueMatch(WIFIACTxRate[s_index-1], '9', 'selected')+">24 </option>");
+		document.write("<option value=\"10\" "+valueMatch(WIFIACTxRate[s_index-1], '10', 'selected')+">36 </option>");
+		document.write("<option value=\"11\" "+valueMatch(WIFIACTxRate[s_index-1], '11', 'selected')+">48 </option>");
+		document.write("<option value=\"12\" "+valueMatch(WIFIACTxRate[s_index-1], '12', 'selected')+">54 </option>");
+	}
+
+}
+
+function GetACModeOption()
+{
+	var head, tail;
+	var band = fvt_meta_config('wlanac_band');
+
+	if(WIFIACCountryRegion == 1 || WIFIACCountryRegion == 11)
+	{
+		if(band == 4 || band ==12)
+		{
+			head = 5;
+			tail = 165;
+		}
+		else
+		{
+			head = 1;
+			tail = 165;
+		}
+	}
+	else if(WIFIACCountryRegion == 2)
+	{
+		if(band == 4 || band ==12)
+		{
+			head = 36;
+			tail = 48;
+		}
+		else
+		{
+			head = 1;
+			tail = 14;
+		}
+	}
+	else
+	{
+		if(band == 4 || band ==12)
+		{
+			head = 5;
+			tail = 165;
+		}
+		else
+		{
+			head = 1;
+			tail = 165;
+		}
+	}
+	document.write("<tr><td>&nbsp;</td>");
+	document.write("<td><table><tr>");
+	document.write("	<td><div class=\"lv2_new\" ctrlflip='etc' ctrlid=\"122\">Bandwidth</div></td>");
+	document.write("	<td><div class='lv2_new size_colon'></div></td>");
+	document.write("</tr></table></td>");
+	//document.write("<td><select ar='1' ctrlflip='etc' class=\"width_select80\" name='WIFIHTBW' id='id_WIFIHTBW' onchange=\"enableExtChn();changeTxRate('bw');\" onclick=\"enableExtChn();changeTxRate('bw');\">");
+	document.write("<td><select class='width_select80' name='WIFIHTBW' id='id_WIFIHTBW' onchange='changeChnNmber_bw();'>");
+	document.write("<option value='0' dir='rtl' id='En_20M'      >20Mhz</option>");
+	document.write("<option value='1' dir='rtl' id='En_20_40M'   >20/40Mhz</option>");
+	document.write("<option value='2' dir='rtl' id='En_40M'      >40Mhz</option>");
+	document.write("<option value='3' dir='rtl' id='En_20_40_80M'>20/40/80Mhz</option>");
+	document.write("<option value='4' dir='rtl' id='En_80M'      >80Mhz</option>");
+	//list_bandwidth();
+
+	document.write("</select></td></tr>");
+
+	document.write("<tr style='display:none'><td>&nbsp;</td>");
+	document.write("<td><table><tr>");
+	document.write("	<td><div class='lv2_new' ctrlflip='etc' ctrlid='134'>Extension Channel</div></td>");
+	document.write("	<td><div class='lv2_new size_colon'></div></td>");
+	document.write("</tr></table></td>");
+	document.write("<td><select ctrlflip='etc' onchange=\"changeTxRate('channel');\" class=\"width_select80\" name=\"WIFIHTEXTCHA\" id=\"id_WIFIHTEXTCHA\" "+valueMatch(WIFIHTBW, '0', 'disabled')+" >");
+	if((currentChannel-0 - 4) >= head)
+	{
+		document.write("<option value=\"1\">"+(currentChannel-0 - 4)+"</option>");
+	}
+	if ((currentChannel-0 + 4) <= tail)
+	{
+		document.write("<option value=\"2\">"+(currentChannel-0 + 4)+"</option>");
+	}
+	document.write("</select></td></tr>");
+
+	document.write("<tr style='display:none'><td>&nbsp;</td>");
+	document.write("<td><table><tr>");
+	document.write("	<td><div class='lv2_new' ctrlflip='etc' ctrlid=\"135\">Reverse Direction Grant</div></td>");
+	document.write("	<td><div class='lv2_new size_colon'></div></td>");
+	document.write("</tr></table></td>");
+	document.write("<td ctrlflip='etc'><input type=\"checkbox\" class=\"checkbox\" id=\"id_tmp_WIFIHTRDG\" onClick=\"setRDGenable('WIFIHTRDG');\" "+valueMatch(wifi_rdg, '1', 'checked')+">");
+	document.write("</td>");
+	document.write("<input ctrlflip='etc' type='hidden' id='id_WIFIHTRDG' name='WIFIHTRDG' value='"+wifi_rdg+"'>");
+	document.write("</tr>");
+}
+
+function setScheduleenable()
+{
+	if (document.getElementById("id_WIFISchedule").checked == true){
+		document.wifiacsetup_form.StartYear.disabled = false;
+		document.wifiacsetup_form.StartMonth.disabled = false;
+		document.wifiacsetup_form.StartDay.disabled = false;
+		document.wifiacsetup_form.StartHour.disabled = false;
+		document.wifiacsetup_form.StartMinute.disabled = false;
+		document.wifiacsetup_form.StartSecond.disabled = false;
+		document.wifiacsetup_form.EndYear.disabled = false;
+		document.wifiacsetup_form.EndMonth.disabled = false;
+		document.wifiacsetup_form.EndDay.disabled = false;
+		document.wifiacsetup_form.EndHour.disabled = false;
+		document.wifiacsetup_form.EndMinute.disabled = false;
+		document.wifiacsetup_form.EndSecond.disabled = false;
+		document.wifiacsetup_form.WIFIScheduleDaily.disabled = false;
+		setScheduleDaily();
+	}
+	else{
+		document.wifiacsetup_form.StartYear.disabled = true;
+		document.wifiacsetup_form.StartMonth.disabled = true;
+		document.wifiacsetup_form.StartDay.disabled = true;
+		document.wifiacsetup_form.StartHour.disabled = true;
+		document.wifiacsetup_form.StartMinute.disabled = true;
+		document.wifiacsetup_form.StartSecond.disabled = true;
+		document.wifiacsetup_form.EndYear.disabled = true;
+		document.wifiacsetup_form.EndMonth.disabled = true;
+		document.wifiacsetup_form.EndDay.disabled = true;
+		document.wifiacsetup_form.EndHour.disabled = true;
+		document.wifiacsetup_form.EndMinute.disabled = true;
+		document.wifiacsetup_form.EndSecond.disabled = true;
+		document.wifiacsetup_form.WIFIScheduleDaily.disabled = true;
+	}
+}
+
+function setScheduleDaily()
+{
+	if (document.getElementById("id_WIFIScheduleDaily").checked == true){
+		document.wifiacsetup_form.StartYear.disabled = true;
+		document.wifiacsetup_form.StartMonth.disabled = true;
+		document.wifiacsetup_form.StartDay.disabled = true;
+		document.wifiacsetup_form.EndYear.disabled = true;
+		document.wifiacsetup_form.EndMonth.disabled = true;
+		document.wifiacsetup_form.EndDay.disabled = true;
+	}
+	else{
+		document.wifiacsetup_form.StartYear.disabled = false;
+		document.wifiacsetup_form.StartMonth.disabled = false;
+		document.wifiacsetup_form.StartDay.disabled = false;
+		document.wifiacsetup_form.EndYear.disabled = false;
+		document.wifiacsetup_form.EndMonth.disabled = false;
+		document.wifiacsetup_form.EndDay.disabled = false;
+	}
+}
+
+function list_user_limit()
+{
+	var maxuser=31;
+
+	document.write("<option value=\"0\">Not limit</option>");
+	for(var i=1; i<=maxuser; i++){
+		document.write("<option value='"+i+"'>"+i+"</option>");
+	}
+}
+
+function list_year(){
+	var date = new Date();
+	var year = date.getFullYear();
+	for(var i=0;i<30;i++){
+		document.write("<option value='"+year+"'>"+year+"</option>");
+		year++;
+	}
+}
+
+function list_month(){
+		document.write("<option value='01'>Jan</option>");
+		document.write("<option value='02'>Feb</option>");
+		document.write("<option value='03'>Mar</option>");
+		document.write("<option value='04'>Apr</option>");
+		document.write("<option value='05'>May</option>");
+		document.write("<option value='06'>Jun</option>");
+		document.write("<option value='07'>Jul</option>");
+		document.write("<option value='08'>Aug</option>");
+		document.write("<option value='09'>Sep</option>");
+		document.write("<option value='10'>Oct</option>");
+		document.write("<option value='11'>Nov</option>");
+		document.write("<option value='12'>Dec</option>");
+}
+
+function list_day()
+{
+	for(var i=1;i<=31;i++){
+		if(i<10)
+			document.write("<option value='0"+i+"'>0"+i+"</option>");
+		else
+			document.write("<option value='"+i+"'>"+i+"</option>");
+	}
+}
+
+function list_hour()
+{
+	for(var i=0;i<24;i++){
+		if(i<10)
+			document.write("<option value='0"+i+"'>0"+i+"</option>");
+		else
+			document.write("<option value='"+i+"'>"+i+"</option>");
+	}
+}
+
+function list_min_sec()
+{
+	for(var i=0;i<60;i++){
+		if(i<10)
+			document.write("<option value='0"+i+"'>0"+i+"</option>");
+		else
+			document.write("<option value='"+i+"'>"+i+"</option>");
+	}
+}
+
+function changeday()
+{
+	var obj_sday=document.wifiacsetup_form.StartDay;
+	var syy=document.getElementById("StartYear").value;
+	var smm=document.getElementById("StartMonth").value;
+	var sdd = new Date(syy,smm,0).getDate();
+	if(sdd=="28"){
+		obj_sday.options[28].disabled = true;
+		obj_sday.options[29].disabled = true;
+		obj_sday.options[30].disabled = true;
+	}else if(sdd=="29"){
+		obj_sday.options[28].disabled = false;
+		obj_sday.options[29].disabled = true;
+		obj_sday.options[30].disabled = true;
+	}else if(sdd=="30"){
+		obj_sday.options[28].disabled = false;
+		obj_sday.options[29].disabled = false;
+		obj_sday.options[30].disabled = true;
+	}else {
+		obj_sday.options[28].disabled = false;
+		obj_sday.options[29].disabled = false;
+		obj_sday.options[30].disabled = false;
+	}
+
+	var obj_eday=document.wifiacsetup_form.EndDay;
+	var eyy=document.getElementById("EndYear").value;
+	var emm=document.getElementById("EndMonth").value;
+	var edd = new Date(eyy,emm,0).getDate();
+	if(edd=="28"){
+		obj_eday.options[28].disabled = true;
+		obj_eday.options[29].disabled = true;
+		obj_eday.options[30].disabled = true;
+	}else if(edd=="29"){
+		obj_eday.options[28].disabled = false;
+		obj_eday.options[29].disabled = true;
+		obj_eday.options[30].disabled = true;
+	}else if(edd=="30"){
+		obj_eday.options[28].disabled = false;
+		obj_eday.options[29].disabled = false;
+		obj_eday.options[30].disabled = true;
+	}else {
+		obj_eday.options[28].disabled = false;
+		obj_eday.options[29].disabled = false;
+		obj_eday.options[30].disabled = false;
+	}
+
+}
+
+function paddingLeft(str,lenght){
+	if(str.length >= lenght)
+	return str;
+	else
+	return paddingLeft("0" +str,lenght);
+}
+
+function enable_VLAN(index)
+{
+	var enable = parseInt(document.getElementById("id_vlanEnable"+index).value,10);
+	var id_vlan="id_vlan"+index;
+	var id_pbit="id_pbit"+index;
+
+	if(enable)
+	{
+		document.getElementById(id_vlan).disabled = false;
+		document.getElementById(id_pbit).disabled = false;
+	}
+	else
+	{
+		document.getElementById(id_vlan).disabled = true;
+		document.getElementById(id_pbit).disabled = true;
+	}
+
+}
+
+function fvt_form_init(form_name)
+{
+
+	if (form_name=='wifiacsetup_form' || form_name=='*') {
+		fvt_form_obj_set("wifiacsetup_form", "WIFIModuleEnable", fvt_meta_config('wlanac_enable'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIInterClientEnable", fvt_meta_config('wlanac_block_relay'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIUAPSD", fvt_meta_config('wlanac_apsd'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACSsidnum", fvt_meta_config('wlanac_vap_num'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACTxPower", fvt_meta_config('wlanac_tx_power'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFI11acMode", fvt_meta_config('wlanac_band'));
+
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACChannel", fvt_meta_config('wlanac_channel'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIBeaconPeriod", fvt_meta_config('wlanac_bcnint'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIDisTXPWLMT", fvt_meta_config('wlanac_disable_txpwrlmt'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIDisTXPWLMT_2PH", fvt_meta_config('wlanac_disable_txpwrlmt2path'));
+		//fvt_form_obj_set("wifiacsetup_form", "WIFIDtimPeriod", fvt_meta_config('wlanac_dtimperiod'));
+
+		if(fvt_meta_config('wlanac_use40M')=="0") // 20M
+			fvt_form_obj_set("wifiacsetup_form", "WIFIHTBW", "0");
+		else if(fvt_meta_config('wlanac_use40M')=="1") // 20/40M,40M
+			{
+			if(fvt_meta_config('wlanac_coexist')=='1')
+				fvt_form_obj_set("wifiacsetup_form", "WIFIHTBW", "1"); // 20/40M
+			else
+				fvt_form_obj_set("wifiacsetup_form", "WIFIHTBW", "2"); // 40M
+			}
+		else if(fvt_meta_config('wlanac_use40M')=="2") // 20/40/80M,80M
+			{
+			if(fvt_meta_config('wlanac_coexist')=='1')
+				fvt_form_obj_set("wifiacsetup_form", "WIFIHTBW", "3"); // 20/40/80M
+			else
+				fvt_form_obj_set("wifiacsetup_form", "WIFIHTBW", "4"); // 80M
+			}
+
+		if (fvt_meta_config('wlanac_airtime_fairness')==1)
+			{document.getElementById("id_AirtimeFairness").checked = true;}
+		else
+			{document.getElementById("id_AirtimeFairness").checked = false;}
+
+		//fvt_form_obj_set("wifiacsetup_form", "WIFIHTEXTCHA", fvt_meta_config('wlanac_2ndchoffset'));
+		//fvt_form_obj_set("wifiacsetup_form", "WIFIHTRDG", fvt_meta_config('wlanac_RDG'));
+		//fvt_form_obj_set("wifiacsetup_form", "WIFISchedule", fvt_meta_config('wlanac_schedule'));
+		if ( parseInt(fvt_meta_config('wlanac_schedule'),10)==1)
+			{document.getElementById("id_WIFISchedule").checked = true;}
+		else
+			{document.getElementById("id_WIFISchedule").checked = false;}
+
+		if ( parseInt(fvt_meta_config('wlanac_schedule_daily'),10)==1)
+			{document.getElementById("id_WIFIScheduleDaily").checked = true;}
+		else
+			{document.getElementById("id_WIFIScheduleDaily").checked = false;}
+
+		fvt_form_obj_set("wifiacsetup_form", "StartYear", fvt_meta_config('wlanac_schedule_syear'));
+		fvt_form_obj_set("wifiacsetup_form", "StartMonth",paddingLeft( fvt_meta_config('wlanac_schedule_smonth'),2));
+		fvt_form_obj_set("wifiacsetup_form", "StartDay", paddingLeft( fvt_meta_config('wlanac_schedule_sday'),2));
+		fvt_form_obj_set("wifiacsetup_form", "StartHour",paddingLeft( fvt_meta_config('wlanac_schedule_shour'),2));
+		fvt_form_obj_set("wifiacsetup_form", "StartMinute", paddingLeft( fvt_meta_config('wlanac_schedule_sminute'),2));
+		fvt_form_obj_set("wifiacsetup_form", "StartSecond", paddingLeft( fvt_meta_config('wlanac_schedule_ssecond'),2));
+		fvt_form_obj_set("wifiacsetup_form", "EndYear", fvt_meta_config('wlanac_schedule_eyear'));
+		fvt_form_obj_set("wifiacsetup_form", "EndMonth",paddingLeft( fvt_meta_config('wlanac_schedule_emonth'),2));
+		fvt_form_obj_set("wifiacsetup_form", "EndDay", paddingLeft( fvt_meta_config('wlanac_schedule_eday'),2));
+		fvt_form_obj_set("wifiacsetup_form", "EndHour", paddingLeft( fvt_meta_config('wlanac_schedule_ehour'),2));
+		fvt_form_obj_set("wifiacsetup_form", "EndMinute", paddingLeft( fvt_meta_config('wlanac_schedule_eminute'),2));
+		fvt_form_obj_set("wifiacsetup_form", "EndSecond", paddingLeft( fvt_meta_config('wlanac_schedule_esecond'),2));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACSsid1", fvt_meta_config('wlanac_ssid'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACHideSSID1", fvt_meta_config('wlanac_hiddenAP'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACTxRate1", fvt_meta_config('wlanac_fixrate'));
+		fvt_form_obj_set("wifiacsetup_form", "maxuser1", fvt_meta_config('wlanac_stanum'));
+		fvt_form_obj_set("wifiacsetup_form", "nosave_WIFIIGMPEnable1", fvt_meta_config('wlanac_igmp_enable'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACWdsEnable", fvt_meta_config('wlanac_wds_enable'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACWDSList1", fvt_meta_config('wlanac_wds_item1'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACWDSList2", fvt_meta_config('wlanac_wds_item2'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACWDSList3", fvt_meta_config('wlanac_wds_item3'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACWDSList4", fvt_meta_config('wlanac_wds_item4'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACSsid2", fvt_meta_config('wlanac_vap0_ssid'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACHideSSID2", fvt_meta_config('wlanac_vap0_hiddenAP'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACTxRate2", fvt_meta_config('wlanac_vap0_fixrate'));
+		fvt_form_obj_set("wifiacsetup_form", "maxuser2", fvt_meta_config('wlanac_vap0_stanum'));
+		fvt_form_obj_set("wifiacsetup_form", "nosave_WIFIIGMPEnable2", fvt_meta_config('wlanac_vap0_igmp_enable'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACSsid3", fvt_meta_config('wlanac_vap1_ssid'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACHideSSID3", fvt_meta_config('wlanac_vap1_hiddenAP'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACTxRate3", fvt_meta_config('wlanac_vap1_fixrate'));
+		fvt_form_obj_set("wifiacsetup_form", "maxuser3", fvt_meta_config('wlanac_vap1_stanum'));
+		fvt_form_obj_set("wifiacsetup_form", "nosave_WIFIIGMPEnable3", fvt_meta_config('wlanac_vap1_igmp_enable'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACSsid4", fvt_meta_config('wlanac_vap2_ssid'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACHideSSID4", fvt_meta_config('wlanac_vap2_hiddenAP'));
+		fvt_form_obj_set("wifiacsetup_form", "WIFIACTxRate4", fvt_meta_config('wlanac_vap2_fixrate'));
+		fvt_form_obj_set("wifiacsetup_form", "maxuser4", fvt_meta_config('wlanac_vap2_stanum'));
+		fvt_form_obj_set("wifiacsetup_form", "nosave_WIFIIGMPEnable4", fvt_meta_config('wlanac_vap2_igmp_enable'));
+
+		fvt_form_obj_set("wifiacsetup_form", "vlanEnable1", fvt_meta_config('wlanac_vlan_enable'));
+		fvt_form_obj_set("wifiacsetup_form", "vlan1", fvt_meta_config('wlanac_vlan_vid'));
+		fvt_form_obj_set("wifiacsetup_form", "pbit1", fvt_meta_config('wlanac_vlan_pbit'));
+
+		fvt_form_obj_set("wifiacsetup_form", "vlanEnable2", fvt_meta_config('wlanac_vap0_vlan_enable'));
+		fvt_form_obj_set("wifiacsetup_form", "vlan2", fvt_meta_config('wlanac_vap0_vlan_vid'));
+		fvt_form_obj_set("wifiacsetup_form", "pbit2", fvt_meta_config('wlanac_vap0_vlan_pbit'));
+
+		fvt_form_obj_set("wifiacsetup_form", "vlanEnable3", fvt_meta_config('wlanac_vap1_vlan_enable'));
+		fvt_form_obj_set("wifiacsetup_form", "vlan3", fvt_meta_config('wlanac_vap1_vlan_vid'));
+		fvt_form_obj_set("wifiacsetup_form", "pbit3", fvt_meta_config('wlanac_vap1_vlan_pbit'));
+
+		fvt_form_obj_set("wifiacsetup_form", "vlanEnable4", fvt_meta_config('wlanac_vap2_vlan_enable'));
+		fvt_form_obj_set("wifiacsetup_form", "vlan4", fvt_meta_config('wlanac_vap2_vlan_vid'));
+		fvt_form_obj_set("wifiacsetup_form", "pbit4", fvt_meta_config('wlanac_vap2_vlan_pbit'));
+
+	}
+}
+
+function fvt_form_submit(form_name) {
+	fvt_paramlist_clear();
+	if (form_name=='wifiacsetup_form' || form_name=='*') {
+		fvt_paramlist_cat_str('wlanac_enable', (fvt_form_obj_get("wifiacsetup_form", "WIFIModuleEnable")=="on")?"1":"0");
+		fvt_paramlist_cat_str('wlanac_block_relay', fvt_form_obj_get("wifiacsetup_form", "WIFIInterClientEnable"));
+		fvt_paramlist_cat_str('wlanac_vap0_block_relay', fvt_form_obj_get("wifiacsetup_form", "WIFIInterClientEnable"));
+		fvt_paramlist_cat_str('wlanac_vap1_block_relay', fvt_form_obj_get("wifiacsetup_form", "WIFIInterClientEnable"));
+		fvt_paramlist_cat_str('wlanac_vap2_block_relay', fvt_form_obj_get("wifiacsetup_form", "WIFIInterClientEnable"));
+		fvt_paramlist_cat_str('wlanac_vap3_block_relay', fvt_form_obj_get("wifiacsetup_form", "WIFIInterClientEnable"));
+		fvt_paramlist_cat_str('wlanac_mbssidblock', fvt_form_obj_get("wifiacsetup_form", "WIFIInterClientEnable"));
+		fvt_paramlist_cat_str('wlanac_apsd', fvt_form_obj_get("wifiacsetup_form", "WIFIUAPSD"));
+		fvt_paramlist_cat_str('wlanac_vap_num', fvt_form_obj_get("wifiacsetup_form", "WIFIACSsidnum"));
+		fvt_paramlist_cat_str('wlanac_disable_txpwrlmt', fvt_form_obj_get("wifiacsetup_form", "WIFIDisTXPWLMT"));
+		fvt_paramlist_cat_str('wlanac_disable_txpwrlmt2path', fvt_form_obj_get("wifiacsetup_form", "WIFIDisTXPWLMT_2PH"));
+
+		var ssid_num = fvt_form_obj_get("wifiacsetup_form", "WIFIACSsidnum");
+		if(ssid_num ==1)
+		{
+			fvt_paramlist_cat_str('wlanac_vap0_enable','1');
+			fvt_paramlist_cat_str('wlanac_vap1_enable','0');
+			fvt_paramlist_cat_str('wlanac_vap2_enable','0');
+			fvt_paramlist_cat_str('wlanac_vap3_enable','0');
+		}
+		else if(ssid_num==2)
+		{
+			fvt_paramlist_cat_str('wlanac_vap0_enable','1');
+			fvt_paramlist_cat_str('wlanac_vap1_enable','1');
+			fvt_paramlist_cat_str('wlanac_vap2_enable','0');
+			fvt_paramlist_cat_str('wlanac_vap3_enable','0');
+		}
+		else if(ssid_num==3)
+		{
+			fvt_paramlist_cat_str('wlanac_vap0_enable','1');
+			fvt_paramlist_cat_str('wlanac_vap1_enable','1');
+			fvt_paramlist_cat_str('wlanac_vap2_enable','1');
+			fvt_paramlist_cat_str('wlanac_vap3_enable','0');
+		}
+		else if(ssid_num==4)
+		{
+			fvt_paramlist_cat_str('wlanac_vap0_enable','1');
+			fvt_paramlist_cat_str('wlanac_vap1_enable','1');
+			fvt_paramlist_cat_str('wlanac_vap2_enable','1');
+			fvt_paramlist_cat_str('wlanac_vap3_enable','1');
+		}
+
+		fvt_paramlist_cat_str('wlanac_tx_power', fvt_form_obj_get("wifiacsetup_form", "WIFIACTxPower"));
+		fvt_paramlist_cat_str('wlanac_band', fvt_form_obj_get("wifiacsetup_form", "WIFI11acMode"));
+
+		//if(fvt_form_obj_get("wifiacsetup_form", "WIFI11acMode")=="8"){
+		//	fvt_paramlist_cat_str('wlanac_deny_legacy', '3');		//802.11n only, wlanac_deny_legacy=3
+		//}
+		//else{
+			fvt_paramlist_cat_str('wlanac_deny_legacy', '0');
+		//}
+
+		if(fvt_form_obj_get("wifiacsetup_form", "WIFIACChannel")!="0"){
+			fvt_paramlist_cat_str('wlanac_auto_channel', '0');
+		}
+		else{
+			fvt_paramlist_cat_str('wlanac_auto_channel', '1');
+		}
+		fvt_paramlist_cat_str('wlanac_channel', fvt_form_obj_get("wifiacsetup_form", "WIFIACChannel"));
+		fvt_paramlist_cat_str('wlanac_bcnint', fvt_form_obj_get("wifiacsetup_form", "WIFIBeaconPeriod"));
+		//fvt_paramlist_cat_str('wlanac_dtimperiod', fvt_form_obj_get("wifiacsetup_form", "WIFIDtimPeriod"));
+
+		var bw_value = fvt_form_obj_get("wifiacsetup_form", "WIFIHTBW");
+		if(bw_value=="0") //20Mhz
+		{
+			fvt_paramlist_cat_str('wlanac_use40M', 0);
+			fvt_paramlist_cat_str('wlanac_shortGI20M', 1);
+			fvt_paramlist_cat_str('wlanac_shortGI40M', 0);
+			fvt_paramlist_cat_str('wlanac_shortGI80M', 0);
+			fvt_paramlist_cat_str('wlanac_coexist', 0);
+		}
+		else if(bw_value=="1") // 20/40Mhz
+		{
+			fvt_paramlist_cat_str('wlanac_use40M', 1);
+			fvt_paramlist_cat_str('wlanac_shortGI20M', 1);
+			fvt_paramlist_cat_str('wlanac_shortGI40M', 1);
+			fvt_paramlist_cat_str('wlanac_shortGI80M', 0);
+			fvt_paramlist_cat_str('wlanac_coexist', 1);
+		}
+		else if(bw_value=="2") // 40Mhz
+		{
+			fvt_paramlist_cat_str('wlanac_use40M', 1);
+			fvt_paramlist_cat_str('wlanac_shortGI20M', 0);
+			fvt_paramlist_cat_str('wlanac_shortGI40M', 1);
+			fvt_paramlist_cat_str('wlanac_shortGI80M', 0);
+			fvt_paramlist_cat_str('wlanac_coexist', 0);
+		}
+		else if(bw_value=="3") // 20/40/80Mhz
+		{
+			fvt_paramlist_cat_str('wlanac_use40M', 2);
+			fvt_paramlist_cat_str('wlanac_shortGI20M', 1);
+			fvt_paramlist_cat_str('wlanac_shortGI40M', 1);
+			fvt_paramlist_cat_str('wlanac_shortGI80M', 1);
+			fvt_paramlist_cat_str('wlanac_coexist', 1);
+		}
+		else if(bw_value=="4") // 80Mhz
+		{
+			fvt_paramlist_cat_str('wlanac_use40M', 2);
+			fvt_paramlist_cat_str('wlanac_shortGI20M', 0);
+			fvt_paramlist_cat_str('wlanac_shortGI40M', 0);
+			fvt_paramlist_cat_str('wlanac_shortGI80M', 1);
+			fvt_paramlist_cat_str('wlanac_coexist', 0);
+		}
+
+		if (fvt_form_obj_get("wifiacsetup_form", "WIFIHTEXTCHA") == "1")
+			fvt_paramlist_cat_str('wlanac_2ndchoffset', 1);
+		else
+			fvt_paramlist_cat_str('wlanac_2ndchoffset', 2);
+		fvt_paramlist_cat_str('wlanac_RDG', "1");
+		//fvt_paramlist_cat_str('wlanac_schedule', fvt_form_obj_get("wifiacsetup_form", "WIFISchedule"));
+
+		if (document.getElementById("id_AirtimeFairness").checked == true)
+			{fvt_paramlist_cat_str('wlanac_airtime_fairness', "1");}
+		else
+			{fvt_paramlist_cat_str('wlanac_airtime_fairness', "0");}
+
+		if (document.getElementById("id_WIFISchedule").checked == true)
+			{fvt_paramlist_cat_str('wlanac_schedule', "1");}
+		else
+			{fvt_paramlist_cat_str('wlanac_schedule', "0");}
+
+		if (document.getElementById("id_WIFIScheduleDaily").checked == true)
+			{fvt_paramlist_cat_str('wlanac_schedule_daily', "1");}
+		else
+			{fvt_paramlist_cat_str('wlanac_schedule_daily', "0");}
+
+		fvt_paramlist_cat_str('wlanac_schedule_syear', parseInt( fvt_form_obj_get("wifiacsetup_form", "StartYear"),10) );
+		fvt_paramlist_cat_str('wlanac_schedule_smonth',parseInt( fvt_form_obj_get("wifiacsetup_form", "StartMonth"),10));
+		fvt_paramlist_cat_str('wlanac_schedule_sday',parseInt( fvt_form_obj_get("wifiacsetup_form", "StartDay"),10));
+		fvt_paramlist_cat_str('wlanac_schedule_shour',parseInt( fvt_form_obj_get("wifiacsetup_form", "StartHour"),10));
+		fvt_paramlist_cat_str('wlanac_schedule_sminute',parseInt( fvt_form_obj_get("wifiacsetup_form", "StartMinute"),10));
+		fvt_paramlist_cat_str('wlanac_schedule_ssecond',parseInt( fvt_form_obj_get("wifiacsetup_form", "StartSecond"),10));
+		fvt_paramlist_cat_str('wlanac_schedule_eyear',parseInt( fvt_form_obj_get("wifiacsetup_form", "EndYear"),10));
+		fvt_paramlist_cat_str('wlanac_schedule_emonth',parseInt( fvt_form_obj_get("wifiacsetup_form", "EndMonth"),10));
+		fvt_paramlist_cat_str('wlanac_schedule_eday',parseInt( fvt_form_obj_get("wifiacsetup_form", "EndDay"),10));
+		fvt_paramlist_cat_str('wlanac_schedule_ehour',parseInt( fvt_form_obj_get("wifiacsetup_form", "EndHour"),10));
+		fvt_paramlist_cat_str('wlanac_schedule_eminute',parseInt( fvt_form_obj_get("wifiacsetup_form", "EndMinute"),10));
+		fvt_paramlist_cat_str('wlanac_schedule_esecond', parseInt( fvt_form_obj_get("wifiacsetup_form", "EndSecond"),10));
+
+		fvt_paramlist_cat_str('wlanac_ssid', fvt_form_obj_get("wifiacsetup_form", "WIFIACSsid1"));
+		fvt_paramlist_cat_str('wlanac_hiddenAP', fvt_form_obj_get("wifiacsetup_form", "WIFIACHideSSID1"));
+		if(fvt_form_obj_get("wifiacsetup_form", "WIFIACTxRate1")==0)
+		{
+			fvt_paramlist_cat_str('wlanac_fixrate', fvt_form_obj_get("wifiacsetup_form", "WIFIACTxRate1"));
+			fvt_paramlist_cat_str('wlanac_autorate', "1");
+		}else
+		{
+			fvt_paramlist_cat_str('wlanac_fixrate', fvt_form_obj_get("wifiacsetup_form", "WIFIACTxRate1"));
+			fvt_paramlist_cat_str('wlanac_autorate', "0");
+		}
+		fvt_paramlist_cat_str('wlanac_stanum', fvt_form_obj_get("wifiacsetup_form", "maxuser1"));
+		//fvt_paramlist_cat_str('wlanac_igmp_enable', fvt_form_obj_get("wifiacsetup_form", "nosave_WIFIIGMPEnable1"));
+		fvt_paramlist_cat_str('wlanac_wds_enable', fvt_form_obj_get("wifiacsetup_form", "WIFIACWdsEnable"));
+		fvt_paramlist_cat_str('wlanac_wds_item1', fvt_form_obj_get("wifiacsetup_form", "WIFIACWDSList1"));
+		fvt_paramlist_cat_str('wlanac_wds_item2', fvt_form_obj_get("wifiacsetup_form", "WIFIACWDSList2"));
+		fvt_paramlist_cat_str('wlanac_wds_item3', fvt_form_obj_get("wifiacsetup_form", "WIFIACWDSList3"));
+		fvt_paramlist_cat_str('wlanac_wds_item4', fvt_form_obj_get("wifiacsetup_form", "WIFIACWDSList4"));
+		fvt_paramlist_cat_str('wlanac_vap0_ssid', fvt_form_obj_get("wifiacsetup_form", "WIFIACSsid2"));
+		fvt_paramlist_cat_str('wlanac_vap0_hiddenAP', fvt_form_obj_get("wifiacsetup_form", "WIFIACHideSSID2"));
+		if(fvt_form_obj_get("wifiacsetup_form", "WIFIACTxRate2")==0)
+		{
+			fvt_paramlist_cat_str('wlanac_vap0_fixrate', fvt_form_obj_get("wifiacsetup_form", "WIFIACTxRate2"));
+			fvt_paramlist_cat_str('wlanac_vap0_autorate', "1");
+		}else
+		{
+			fvt_paramlist_cat_str('wlanac_vap0_fixrate', fvt_form_obj_get("wifiacsetup_form", "WIFIACTxRate2"));
+			fvt_paramlist_cat_str('wlanac_vap0_autorate', "0");
+		}
+		fvt_paramlist_cat_str('wlanac_vap0_stanum', fvt_form_obj_get("wifiacsetup_form", "maxuser2"));
+		//fvt_paramlist_cat_str('wlanac_vap0_igmp_enable', fvt_form_obj_get("wifiacsetup_form", "nosave_WIFIIGMPEnable2"));
+		fvt_paramlist_cat_str('wlanac_vap1_ssid', fvt_form_obj_get("wifiacsetup_form", "WIFIACSsid3"));
+		fvt_paramlist_cat_str('wlanac_vap1_hiddenAP', fvt_form_obj_get("wifiacsetup_form", "WIFIACHideSSID3"));
+		if(fvt_form_obj_get("wifiacsetup_form", "WIFIACTxRate3")==0)
+		{
+			fvt_paramlist_cat_str('wlanac_vap1_fixrate', fvt_form_obj_get("wifiacsetup_form", "WIFIACTxRate3"));
+			fvt_paramlist_cat_str('wlanac_vap1_autorate', "1");
+		}else
+		{
+			fvt_paramlist_cat_str('wlanac_vap1_fixrate', fvt_form_obj_get("wifiacsetup_form", "WIFIACTxRate3"));
+			fvt_paramlist_cat_str('wlanac_vap1_autorate', "0");
+		}
+		fvt_paramlist_cat_str('wlanac_vap1_stanum', fvt_form_obj_get("wifiacsetup_form", "maxuser3"));
+		//fvt_paramlist_cat_str('wlanac_vap1_igmp_enable', fvt_form_obj_get("wifiacsetup_form", "nosave_WIFIIGMPEnable3"));
+		fvt_paramlist_cat_str('wlanac_vap2_ssid', fvt_form_obj_get("wifiacsetup_form", "WIFIACSsid4"));
+		fvt_paramlist_cat_str('wlanac_vap2_hiddenAP', fvt_form_obj_get("wifiacsetup_form", "WIFIACHideSSID4"));
+		if(fvt_form_obj_get("wifiacsetup_form", "WIFIACTxRate4")==0)
+		{
+			fvt_paramlist_cat_str('wlanac_vap2_fixrate', fvt_form_obj_get("wifiacsetup_form", "WIFIACTxRate4"));
+			fvt_paramlist_cat_str('wlanac_vap2_autorate', "1");
+		}else
+		{
+			fvt_paramlist_cat_str('wlanac_vap2_fixrate', fvt_form_obj_get("wifiacsetup_form", "WIFIACTxRate4"));
+			fvt_paramlist_cat_str('wlanac_vap2_autorate', "0");
+		}
+		fvt_paramlist_cat_str('wlanac_vap2_stanum', fvt_form_obj_get("wifiacsetup_form", "maxuser4"));
+		//fvt_paramlist_cat_str('wlanac_vap2_igmp_enable', fvt_form_obj_get("wifiacsetup_form", "nosave_WIFIIGMPEnable4"));
+
+		if(fvt_form_obj_get("wifiacsetup_form", "vlanEnable1")==0)
+			fvt_paramlist_cat_str('wlanac_vlan_enable', fvt_form_obj_get("wifiacsetup_form", "vlanEnable1"));
+		else{
+			fvt_paramlist_cat_str('wlanac_vlan_enable', fvt_form_obj_get("wifiacsetup_form", "vlanEnable1"));
+			fvt_paramlist_cat_str('wlanac_vlan_vid', fvt_form_obj_get("wifiacsetup_form", "vlan1"));
+			fvt_paramlist_cat_str('wlanac_vlan_pbit', fvt_form_obj_get("wifiacsetup_form", "pbit1"));
+		}
+
+		if(fvt_form_obj_get("wifiacsetup_form", "vlanEnable2")==0)
+			fvt_paramlist_cat_str('wlanac_vap0_vlan_enable', fvt_form_obj_get("wifiacsetup_form", "vlanEnable2"));
+		else{
+			fvt_paramlist_cat_str('wlanac_vap0_vlan_enable', fvt_form_obj_get("wifiacsetup_form", "vlanEnable2"));
+			fvt_paramlist_cat_str('wlanac_vap0_vlan_vid', fvt_form_obj_get("wifiacsetup_form", "vlan2"));
+			fvt_paramlist_cat_str('wlanac_vap0_vlan_pbit', fvt_form_obj_get("wifiacsetup_form", "pbit2"));
+		}
+
+		if(fvt_form_obj_get("wifiacsetup_form", "vlanEnable3")==0)
+			fvt_paramlist_cat_str('wlanac_vap1_vlan_enable', fvt_form_obj_get("wifiacsetup_form", "vlanEnable3"));
+		else{
+			fvt_paramlist_cat_str('wlanac_vap1_vlan_enable', fvt_form_obj_get("wifiacsetup_form", "vlanEnable3"));
+			fvt_paramlist_cat_str('wlanac_vap1_vlan_vid', fvt_form_obj_get("wifiacsetup_form", "vlan3"));
+			fvt_paramlist_cat_str('wlanac_vap1_vlan_pbit', fvt_form_obj_get("wifiacsetup_form", "pbit3"));
+		}
+
+		if(fvt_form_obj_get("wifiacsetup_form", "vlanEnable4")==0)
+			fvt_paramlist_cat_str('wlanac_vap2_vlan_enable', fvt_form_obj_get("wifiacsetup_form", "vlanEnable4"));
+		else{
+			fvt_paramlist_cat_str('wlanac_vap2_vlan_enable', fvt_form_obj_get("wifiacsetup_form", "vlanEnable4"));
+			fvt_paramlist_cat_str('wlanac_vap2_vlan_vid', fvt_form_obj_get("wifiacsetup_form", "vlan4"));
+			fvt_paramlist_cat_str('wlanac_vap2_vlan_pbit', fvt_form_obj_get("wifiacsetup_form", "pbit4"));
+		}
+	}
+	fvt_paramlist_presubmit(form_name);
+}
+
+function list_bandwidth()
+{
+	var WIFIac_BW=document.wifiacsetup_form.WIFIHTBW;
+	for (var i = 0; i < WIFIac_BW.length; i++) WIFIac_BW.remove(i);
+
+	var radio_mode=fvt_meta_config('wlanac_band');
+	var cur_band;
+	var meta_band=parseInt(fvt_meta_config('wlanac_use40M'));
+	var coexist=parseInt(fvt_meta_config('wlanac_coexist'));
+	if (meta_band=="0") cur_band = 0
+	else if (meta_band=="1" && coexist == "1") cur_band = 1
+	else if (meta_band=="1" && coexist == "0") cur_band = 2
+	else if (meta_band=="2" && coexist == "1") cur_band = 3
+	else if (meta_band=="2" && coexist == "0") cur_band = 4
+	//document.getElementById('id_WIFIHTBW').selectedIndex=cur_band;
+	//document.getElementById('id_WIFIHTBW').value=cur_band;
+	if(WIFIACCountryRegion==1 || WIFIACCountryRegion==11)
+	{
+		if(radio_mode=="76") // a+n+ac
+		{
+			WIFIac_BW.options[0] = new Option("20Mhz",       "0",0,(cur_band==0)? 1:0);
+			WIFIac_BW.options[1] = new Option("20/40Mhz",    "1",0,(cur_band==1)? 1:0);
+			WIFIac_BW.options[2] = new Option("40Mhz",       "2",0,(cur_band==2)? 1:0);
+			WIFIac_BW.options[3] = new Option("20/40/80Mhz", "3",0,(cur_band==3)? 1:0);
+			WIFIac_BW.options[4] = new Option("80Mhz",       "4",0,(cur_band==4)? 1:0);
+		}
+		else if (radio_mode=="12") // a+n
+		{
+			WIFIac_BW.options[0] = new Option("20Mhz",    "0",0,(cur_band==0)? 1:0);
+			WIFIac_BW.options[1] = new Option("20/40Mhz", "1",0,(cur_band==1)? 1:0);
+			WIFIac_BW.options[2] = new Option("40Mhz",    "2",0,(cur_band==2)? 1:0);
+		}
+		else // a
+		{
+			WIFIac_BW.options[0] = new Option("20Mhz", "0",0,(cur_band==0)? 1:0);
+			//WIFIac_BW.options[0].setAttribute("id","En_20M");
+		}
+	}
+	else
+	{
+		if(radio_mode=="76") // a+n+ac
+		{
+			WIFIac_BW.options[0] = new Option("20Mhz",       "0",0,(cur_band==0)? 1:0);
+			WIFIac_BW.options[1] = new Option("20/40Mhz",    "1",0,(cur_band==1)? 1:0);
+			WIFIac_BW.options[2] = new Option("40Mhz",       "2",0,(cur_band==2)? 1:0);
+			WIFIac_BW.options[3] = new Option("20/40/80Mhz", "3",0,(cur_band==3)? 1:0);
+			WIFIac_BW.options[4] = new Option("80Mhz",       "4",0,(cur_band==4)? 1:0);
+		}
+		else if (radio_mode=="12") // a+n
+		{
+			WIFIac_BW.options[0] = new Option("20Mhz",    "0",0,(cur_band==0)? 1:0);
+			WIFIac_BW.options[1] = new Option("20/40Mhz", "1",0,(cur_band==1)? 1:0);
+			WIFIac_BW.options[2] = new Option("40Mhz",    "2",0,(cur_band==2)? 1:0);
+		}
+		else // a
+		{
+			WIFIac_BW.options[0] = new Option("20Mhz", "0",0,(cur_band==0)? 1:0);
+			//WIFIac_BW.options[0].setAttribute("id","En_20M");
+		}
+	}
+
+	if (cur_band == 0)
+		document.wifiacsetup_form.WIFIHTBW.selectedIndex=0;
+	else if (cur_band == 1)
+		document.wifiacsetup_form.WIFIHTBW.selectedIndex=1;
+	else if (cur_band == 2)
+		document.wifiacsetup_form.WIFIHTBW.selectedIndex=2;
+	else if (cur_band == 3)
+		document.wifiacsetup_form.WIFIHTBW.selectedIndex=3;
+	else if (cur_band == 4)
+		document.wifiacsetup_form.WIFIHTBW.selectedIndex=4;
+}
+function Show_hide_tr()
+{
+	toggle_tr_visibility('id_tr_distxpwrlmt');
+	toggle_tr_visibility('id_tr_distxpwrlmt_2ph');
+}
+function toggle_tr_visibility(id)
+{
+	var e = document.getElementById(id);
+	if(e.style.display == 'none')
+		e.style.display = "table-row";
+	else
+		e.style.display = "none";
+}
+</script>
+</head>
+
+<!-- <body align="left" onload="fvt_form_init('wifiacsetup_form'); wifiac_init(1);enableExtChn();DisableACNOption();setScheduleenable();changeday();changeChnNmber();"> -->
+<body align="left" onload="fvt_form_init('wifiacsetup_form'); wifiac_init(1);setScheduleenable();changeday();list_bandwidth();changeChnNmber();">
+
+<div id="container">
+<table align="center" width="90%"><tbody>
+<tr><td valign="top">
+<form id="wifiacsetup_form" name="wifiacsetup_form" method="post">
+	<fieldset>
+		<div class="lv1_title">
+		Wi-Fi Setup&nbsp;<a href="#" onclick="Show_hide_tr();" style="text-decoration: none; color:#4B0082">&gt;</a>&nbsp;11ac Wi-Fi Settings
+		</div>
+	</fieldset>
+<div class="div1_indent lv2_new">
+	<div><hr class="hr2"></div>
+	<table>
+	<tbody>
+		<tr>
+			<td class="width_wifiset_comm" ctrlflip="right">
+				<table><tr>
+					<td><div class="lv1_new" ctrlid="32">Common</div></td>
+					<td><div class="lv1_new size_colon">:</div></td>
+				</tr></table>
+			</td>
+			<td class="width_wifiset2"></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><table><tr>
+				<td><div ctrlflip="etc" ctrlid="124">11ac Wi-Fi Enable</div></td>
+				<td><div class='size_colon'>></div></td>
+			</tr></table></td>
+			<script language="javascript" type="text/javascript">
+				document.write("<td ctrlflip=\"etc\"><input name=\"WIFIModuleEnable\" type=\"checkbox\" class=\"checkbox\" onchange=\"wifiac_init(1);\" "+valueMatch(wifi_enable, '1', 'checked')+"></td>");
+			</script>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="108">
+				<script language="javascript" type="text/javascript">
+				document.write( vNumbersofSSID );
+				</script>
+			</div></td>
+			<td>
+			<select ctrlflip="etc" class="width_select80" name="WIFIACSsidnum" onchange="wifiac_init(1);">
+				<option value="1">1</option>
+				<option value="2">2</option>
+				<option value="3">3</option>
+				<option value="4">4</option>
+				<!--<option value="8">8</option>-->
+			</select>
+			</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="109">Tx Power</div></td>
+			<td>
+			<select ar='1' ctrlflip="etc" id="id_WIFIACTxPower" name="WIFIACTxPower" class="width_select80">
+				<option value="100">Level 1(High)</option>
+				<option value="70">Level 2</option>
+				<option value="50">Level 3</option>
+				<option value="35">Level 4(Low)</option>
+			</select>
+			</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="107">u-APSD mode</div></td>
+			<td>
+				<select ar='1' ctrlflip="etc" name="WIFIUAPSD" onchange="" class="width_select80">
+					<option value="0">Disable</option>
+					<option value="1">Enable</option>
+				</select>
+			</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="111">Radio Mode</div></td>
+			<td>
+			<select ar='1' ctrlflip="etc" id="id_WIFI11acMode" name="WIFI11acMode" onchange="ChangeACChannelList();DisableACNOption();changeTxRate('bw');changeExtChannel();changeChnNmber();" class="width_select80">
+				<option value="4">802.11a</option>
+				<!--<option value="8">802.11n</option>-->
+				<option value="12">802.11a+n</option>
+				<!--<option value="64">802.11ac</option>-->
+				<!--<option value="72">802.11n+ac</option>-->
+				<option value="76">802.11a+n+ac</option>
+				<!--<option value="12">802.11a/n</option>-->
+			</select>
+			</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="113">Channel</div></td>
+			<td>
+			<select ctrlflip="etc" id="chlist_id" name="WIFIACChannel" onchange="changeExtChannel();" class="width_select80">
+				<script language="javascript" type="text/javascript">
+					ChannelList();
+				</script>
+			</select>
+			</td>
+			<script language="javascript" type="text/javascript">
+				if( fvt_meta_config('wlanac_channel') == '0')
+				{
+					document.write("<td><div class=\"suffix_lr\" ctrlflip=\"right\" ctrlid=\"117\">(Current Channel:");
+					document.write(fvt_meta_config('kv_channelac_num1'));
+					document.write(")</div></td>");
+				}
+			</script>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="114">Beacon Period</div></td>
+			<td><input ctrlflip="etc" name="WIFIBeaconPeriod" class="width_text80"></input></td>
+			<td><div class="suffix_lr" ctrlflip="right" ctrlid="115">ms</div></td>
+		</tr>
+		<tr style="display:none">
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="116">DTIM Period</div></td>
+			<td><input ctrlflip="etc" name="WIFIDtimPeriod" class="width_text80"></input></td>
+			<td><div class="suffix_lr" ctrlflip="right" ctrlid="117">Beacon&nbsp;Units</div></td>
+		</tr>
+		<script language="javascript" type="text/javascript">
+			GetACModeOption();
+		</script>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="107">Block Inter-Client</div></td>
+			<td>
+				<select ar='1' ctrlflip="etc" name="WIFIInterClientEnable" onchange="" class="width_select80">
+					<option value="0">Disable</option>
+					<option value="1">Enable</option>
+				</select>
+			</td>
+			<td><div class="suffix_lr" ctrlflip="right" ctrlid="117">
+				<script language="javascript" type="text/javascript">
+				document.write( vBlockInterClient );
+				</script>
+			</div></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="114">Airtime Fairness</div></td>
+			<td><input type="checkbox" ctrlflip="etc" name="AirtimeFairness" id="id_AirtimeFairness" class="checkbox"/></td>
+			<td></td>
+			<td></td>
+		</tr>
+		<tr id="id_tr_distxpwrlmt" style="display:none">
+			<td>&nbsp;</td>
+			<td>Disable TXPower Limit</td>
+			<td>
+				<select ar='1' ctrlflip="etc" name="WIFIDisTXPWLMT" onchange="" class="width_select80">
+					<option value="0">Disable</option>
+					<option value="1">Enable</option>
+				</select>
+			</td>
+			<td></td>
+		</tr>
+		<tr id="id_tr_distxpwrlmt_2ph" style="display:none">
+			<td>&nbsp;</td>
+			<td><div class="lv3_td">Disable TXPower Limit 2 Path</div></td>
+			<td>
+				<select ar='1' ctrlflip="etc" name="WIFIDisTXPWLMT_2PH" onchange="" class="width_select80">
+					<option value="0">Disable</option>
+					<option value="1">Enable</option>
+				</select>
+			</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="114">Wi-Fi Schedule</div></td>
+			<td><input type="checkbox" ctrlflip="etc" name="WIFISchedule" id="id_WIFISchedule" class="checkbox" onClick="setScheduleenable();"/></td>
+			<td><div ctrlflip="right" ctrlid="114">Daily Mode</div></td>
+			<td><input type="checkbox" ctrlflip="etc" name="WIFIScheduleDaily" id="id_WIFIScheduleDaily" class="checkbox" onClick="setScheduleDaily();"/></td>
+		</tr>
+	</tbody>
+	</table>
+		<table>
+			<tr>
+				<td width="100">&nbsp;</td>
+				<td width="80">&nbsp;</td>
+				<td width="60" align="center"><div ctrlflip="etc" ctrlid="305">Year</div></td>
+				<td width="60" align="center"><div ctrlflip="etc" ctrlid="305">Month</div></td>
+				<td width="60" align="center"><div ctrlflip="etc" ctrlid="306">Day</div></td>
+				<td width="60" align="center"><div ctrlflip="etc" ctrlid="308">Hour</div></td>
+				<td width="60" align="center"><div ctrlflip="etc" ctrlid="309">Minute</div></td>
+				<td style="display:none" width="60" align="center"><div ctrlflip="etc" ctrlid="305">Second</div></td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td><div ctrlflip="right" ctrlid="320">Start date</div></td>
+				<td align="center">
+					<select ctrlflip="etc" disabled="disabled" size="1" name="StartYear" id="StartYear" onchange="changeday()" class="width_select_time">
+						<script>
+							list_year();
+						</script>
+					</select>
+				</td>
+				<td align="center">
+					<select ctrlflip="etc" disabled="disabled" size="1" name="StartMonth" id="StartMonth" onchange="changeday()" class="width_select_time">
+						<script>
+							list_month();
+						</script>
+					</select>
+				</td>
+				<td align="center">
+					<select ctrlflip="etc" disabled="disabled" size="1" name="StartDay" id="StartDay" onchange="" class="width_select_time">
+						<script>
+							list_day();
+						</script>
+					</select>
+				</td>
+				<td align="center">
+					<select ctrlflip="etc" disabled="disabled" size="1" name="StartHour" id="StartHour"onchange="" class="width_select_time">
+						<script>
+							list_hour();
+						</script>
+					</select>
+				</td>
+				<td align="center">
+					<select disabled="disabled" size="1" name="StartMinute" id="StartMinute" onchange="" class="width_select_time">
+						<script>
+							list_min_sec();
+						</script>
+					</select>
+				</td>
+				<td style="display:none" align="center">
+					<select disabled="disabled" size="1" name="StartSecond" id="StartSecond" onchange="" class="width_select_time">
+						<script>
+							list_min_sec();
+						</script>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td>&nbsp;</td>
+				<td><div ctrlflip="right" ctrlid="321">End date</div></td>
+				<td align="center">
+					<select disabled="disabled" size="1" name="EndYear" id="EndYear" onchange="changeday()" class="width_select_time">
+						<script>
+							list_year();
+						</script>
+					</select>
+				</td>
+				<td align="center">
+					<select disabled="disabled" size="1" name="EndMonth" id="EndMonth" onchange="changeday()" class="width_select_time">
+						<script>
+							list_month();
+						</script>
+					</select>
+				</td>
+				<td align="center">
+					<select disabled="disabled" size="1" name="EndDay" id="EndDay" onchange="" class="width_select_time">
+						<script>
+						list_day();
+						</script>
+					</select>
+				</td>
+				<td align="center">
+					<select ctrlflip="etc" disabled="disabled" size="1" name="EndHour" id="EndHour" onchange="" class="width_select_time">
+						<script>
+							list_hour();
+						</script>
+					</select>
+				</td>
+				<td align="center">
+					<select disabled="disabled" size="1" name="EndMinute" id="EndMinute" onchange="" class="width_select_time">
+						<script>
+							list_min_sec();
+						</script>
+					</select>
+				</td>
+				<td style="display:none" align="center">
+					<select disabled="disabled" size="1" name="EndSecond" id="EndSecond" onchange="" class="width_select_time">
+						<script>
+							list_min_sec();
+						</script>
+					</select>
+				</td>
+			</tr>
+		</table>
+<!-- multip ssid 1~8 -->
+<div id="wifi_table1" class="lv2_new" style="display:block">
+	<div><hr class="hr2"></div>
+	<table><tbody>
+		<tr>
+			<td class="width_wifiset_comm" ctrlflip="right">
+				<table><tr>
+					<td><table dir='ltr'><tr>
+						<td><div class="lv1_new" ctrlid="119">SSID</div></td>
+						<td><div class="lv1_new size_colon">1</div></td>
+					</tr></table></td>
+					<td><div class="lv1_new size_colon">:</div></td>
+				</tr></table>
+			</td>
+			<td class="width_wifiset2"></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="119">SSID</div></td>
+				<td ctrlflip="etc"><input class="width_text150" id="id_ssid1" name="WIFIACSsid1" type="text" maxlength="32"></input></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="120">
+				<script language="javascript" type="text/javascript">
+					document.write(vHidden+" SSID");
+				</script>
+			</div></td>
+			<td ctrlflip="etc">
+			<select ar='1' name="WIFIACHideSSID1" class="width_select80">
+				<option value="1">
+				<script language="javascript" type="text/javascript">
+				document.write( vHidden );
+				</script>
+				</option>
+				<option value="0">
+				<script language="javascript" type="text/javascript">
+				document.write( vNotHidden );
+				</script>
+				</option>
+			</select>
+			</td>
+		</tr>
+		<tr style="display:none"> <!-- Hidden-->
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="121">Data Rate</div></td>
+			<td>
+				<table><tr>
+				<td>
+					<select ar='1' ctrlflip="etc" name="WIFIACTxRate1" id="id_WIFIACTxRate1" class="width_select80">
+						<script language="javascript" type="text/javascript">
+							GetTxRate("1");
+						</script>
+					</select>
+				</td>
+				<td><div class="lv2_th suffix_lr" ctrlflip="right" ctrlid="123">Mbps</div></td>
+				</tr></table>
+			</td>
+		</tr>
+
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="111">Max User</div></td>
+			<td>
+			<select ar='1' ctrlflip="etc" id="id_max_user1" name="maxuser1">
+				<script>
+					list_user_limit();
+				</script>
+			</select>
+			</td>
+		</tr>
+
+		<tr style="display:none">
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="125">WDS</div></td>
+			<td ctrlflip="etc">
+			<select ar='1' class="width_select80" name="WIFIACWdsEnable" id="id_WIFIACWdsEnable" onclick="enable_WDS();" onchange="enable_WDS();">
+				<option value="0">Disable</option>
+				<option value="1">Enable</option>
+			</select></td>
+		</tr>
+		<tr style="display:none">
+			<td>&nbsp;</td>
+			<td><table><tr>
+				<td><div ctrlflip="etc" ctrlid="118">Other WDS Station</div></td>
+				<td><div class='size_colon'>:</div></td>
+			</tr></table></td>
+			<td ctrlflip="right" dir='ltr'><input id="id_WIFIACWDSList1" name="WIFIACWDSList1" type="hidden">
+				<script language="javascript" type="text/javascript">
+					var WDS_item1 = fvt_meta_config('wlanac_wds_item1');
+					if (WDS_item1 != '')
+						var WDS_item1_spilt = WDS_item1.split(":");
+					else
+					{
+						var WDS_item1_spilt = new Array();
+						WDS_item1_spilt[0] = '';
+						WDS_item1_spilt[1] = '';
+						WDS_item1_spilt[2] = '';
+						WDS_item1_spilt[3] = '';
+						WDS_item1_spilt[4] = '';
+						WDS_item1_spilt[5] = '';
+					}
+					document.write("<input id=\"id_WIFIACWDSList1_item1\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item1_spilt[0]+"' onkeyup='writeToHidden(1)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList1_item2\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item1_spilt[1]+"' onkeyup='writeToHidden(1)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList1_item3\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item1_spilt[2]+"' onkeyup='writeToHidden(1)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList1_item4\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item1_spilt[3]+"' onkeyup='writeToHidden(1)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList1_item5\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item1_spilt[4]+"' onkeyup='writeToHidden(1)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList1_item6\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item1_spilt[5]+"' onkeyup='writeToHidden(1)' type=\"text\">");
+				</script>
+			</td>
+		</tr>
+		<tr style="display:none">
+			<td>&nbsp;</td>
+			<td><div>&nbsp;</div></td>
+			<td ctrlflip="right" dir='ltr'><input id="id_WIFIACWDSList2" name="WIFIACWDSList2" type="hidden">
+				<script language="javascript" type="text/javascript">
+					var WDS_item2 = fvt_meta_config('wlanac_wds_item2');
+					if (WDS_item2 != '')
+						var WDS_item2_spilt = WDS_item2.split(":");
+					else
+					{
+						var WDS_item2_spilt = new Array();
+						WDS_item2_spilt[0] = '';
+						WDS_item2_spilt[1] = '';
+						WDS_item2_spilt[2] = '';
+						WDS_item2_spilt[3] = '';
+						WDS_item2_spilt[4] = '';
+						WDS_item2_spilt[5] = '';
+					}
+					document.write("<input id=\"id_WIFIACWDSList2_item1\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item2_spilt[0]+"' onkeyup='writeToHidden(2)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList2_item2\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item2_spilt[1]+"' onkeyup='writeToHidden(2)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList2_item3\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item2_spilt[2]+"' onkeyup='writeToHidden(2)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList2_item4\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item2_spilt[3]+"' onkeyup='writeToHidden(2)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList2_item5\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item2_spilt[4]+"' onkeyup='writeToHidden(2)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList2_item6\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item2_spilt[5]+"' onkeyup='writeToHidden(2)' type=\"text\">");
+					</script>
+			</td>
+		</tr>
+		<tr style="display:none">
+			<td>&nbsp;</td>
+			<td><div >&nbsp;</div></td>
+			<td ctrlflip="right" dir='ltr'><input id="id_WIFIACWDSList3" name="WIFIACWDSList3" type="hidden">
+				<script language="javascript" type="text/javascript">
+					var WDS_item3 = fvt_meta_config('wlanac_wds_item3');
+					if (WDS_item3 != '')
+						var WDS_item3_spilt = WDS_item3.split(":");
+					else
+					{
+						var WDS_item3_spilt = new Array();
+						WDS_item3_spilt[0] = '';
+						WDS_item3_spilt[1] = '';
+						WDS_item3_spilt[2] = '';
+						WDS_item3_spilt[3] = '';
+						WDS_item3_spilt[4] = '';
+						WDS_item3_spilt[5] = '';
+					}
+					document.write("<input id=\"id_WIFIACWDSList3_item1\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item3_spilt[0]+"' onkeyup='writeToHidden(3)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList3_item2\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item3_spilt[1]+"' onkeyup='writeToHidden(3)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList3_item3\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item3_spilt[2]+"' onkeyup='writeToHidden(3)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList3_item4\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item3_spilt[3]+"' onkeyup='writeToHidden(3)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList3_item5\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item3_spilt[4]+"' onkeyup='writeToHidden(3)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList3_item6\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item3_spilt[5]+"' onkeyup='writeToHidden(3)' type=\"text\">");
+					</script>
+			</td>
+		</tr>
+		<tr style="display:none">
+			<td>&nbsp;</td>
+			<td><div>&nbsp;</div></td>
+			<td ctrlflip="right" dir='ltr'><input id="id_WIFIACWDSList4" name="WIFIACWDSList4" type="hidden">
+				<script language="javascript" type="text/javascript">
+					var WDS_item4 = fvt_meta_config('wlanac_wds_item4');
+					if (WDS_item4 != '')
+						var WDS_item4_spilt = WDS_item4.split(":");
+					else
+					{
+						var WDS_item4_spilt = new Array();
+						WDS_item4_spilt[0] = '';
+						WDS_item4_spilt[1] = '';
+						WDS_item4_spilt[2] = '';
+						WDS_item4_spilt[3] = '';
+						WDS_item4_spilt[4] = '';
+						WDS_item4_spilt[5] = '';
+					}
+					document.write("<input id=\"id_WIFIACWDSList4_item1\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item4_spilt[0]+"' onkeyup='writeToHidden(4)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList4_item2\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item4_spilt[1]+"' onkeyup='writeToHidden(4)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList4_item3\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item4_spilt[2]+"' onkeyup='writeToHidden(4)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList4_item4\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item4_spilt[3]+"' onkeyup='writeToHidden(4)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList4_item5\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item4_spilt[4]+"' onkeyup='writeToHidden(4)' type=\"text\"> : ");
+					document.write("<input id=\"id_WIFIACWDSList4_item6\" class=\"width_mac\" size=\"2\" maxlength=\"2\" value='"+WDS_item4_spilt[5]+"' onkeyup='writeToHidden(4)' type=\"text\">");
+				</script>
+			</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="125">VLAN Enable</div></td>
+			<td ctrlflip="etc">
+			<select ar='1' class="width_select80" name="vlanEnable1" id="id_vlanEnable1" onclick="enable_VLAN(1);" onchange="enable_WDS();">
+				<option value="0">Disable</option>
+				<option value="1">Enable</option>
+			</select></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="119">VLAN</div></td>
+			<td ctrlflip="etc"><input class="width_select80" id="id_vlan1" name="vlan1" type="text"></input></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="119">Pbit</div></td>
+			<td ctrlflip="etc"><input class="width_select80" id="id_pbit1" name="pbit1" type="text"></input></td>
+		</tr>
+	</tbody></table>
+</div>
+<!--wifi2 -->
+<div id="wifi_table2" class="lv2_new" style="display:none">
+  <div><hr class="hr2"></div>
+	<table><tbody>
+		<tr>
+			<td class="width_wifiset_comm" ctrlflip="right">
+				<table><tr>
+					<td><table dir='ltr'><tr>
+						<td><div class="lv1_new" ctrlid="119">SSID</div></td>
+						<td><div class="lv1_new size_colon">2</div></td>
+					</tr></table></td>
+					<td><div class="lv1_new size_colon">:</div></td>
+				</tr></table>
+			</td>
+			<td class="width_wifiset2"></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="119">SSID</div></td>
+			<td ctrlflip="etc"><input class="width_text150" id="id_ssid2" name="WIFIACSsid2" type="text" maxlength="32"></input></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="120">
+				<script language="javascript" type="text/javascript">
+					document.write(vHidden+" SSID");
+				</script>
+			</div></td>
+			<td ctrlflip="etc">
+			<select ar='1' name="WIFIACHideSSID2" id="id_WIFIACHideSSID2" class="width_select80">
+				<option value="1">
+				<script language="javascript" type="text/javascript">
+				document.write( vHidden );
+				</script>
+				</option>
+				<option value="0">
+				<script language="javascript" type="text/javascript">
+				document.write( vNotHidden );
+				</script>
+				</option>
+			</select>
+			</td>
+		</tr>
+		<tr style="display:none"> <!-- Hidden-->
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="121">Data Rate</div></td>
+			<td>
+				<table><tr>
+				<td>
+					<select ar='1' ctrlflip="etc" name="WIFIACTxRate2" id="id_WIFIACTxRate2" class="width_select80">
+						<script language="javascript" type="text/javascript">
+							GetTxRate("2");
+						</script>
+					</select>
+				</td>
+				<td><div class="lv2_th suffix_lr" ctrlflip="right" ctrlid="123">Mbps</div></td>
+			</tr></table>
+			</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="111">Max User</div></td>
+			<td>
+			<select ar='1' ctrlflip="etc" id="id_max_user2" name="maxuser2">
+				<script>
+					list_user_limit();
+				</script>
+			</select>
+			</td>
+		</tr>
+
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="125">VLAN Enable</div></td>
+			<td ctrlflip="etc">
+			<select ar='1' class="width_select80" name="vlanEnable2" id="id_vlanEnable2" onclick="enable_VLAN(2);" onchange="enable_WDS();">
+				<option value="0">Disable</option>
+				<option value="1">Enable</option>
+			</select></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="119">VLAN</div></td>
+			<td ctrlflip="etc"><input class="width_select80" id="id_vlan2" name="vlan2" type="text"></input></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="119">Pbit</div></td>
+			<td ctrlflip="etc"><input class="width_select80" id="id_pbit2" name="pbit2" type="text"></input></td>
+		</tr>
+	</tbody></table>
+</div>
+<!--wifi3	-->
+<div id="wifi_table3" class="lv2_new" style="display:none">
+	<div><hr class="hr2"></div>
+	<table><tbody>
+		<tr>
+			<td class="width_wifiset_comm" ctrlflip="right">
+				<table><tr>
+					<td><table dir='ltr'><tr>
+						<td><div class="lv1_new" ctrlid="119">SSID</div></td>
+						<td><div class="lv1_new size_colon">3</div></td>
+					</tr></table></td>
+					<td><div class="lv1_new size_colon">:</div></td>
+				</tr></table>
+			</td>
+			<td class="width_wifiset2"></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="119">SSID</div></td>
+			<td ctrlflip="etc"><input class="width_text150" id="id_ssid3" name="WIFIACSsid3" type="text" maxlength="32"></input></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="120">
+				<script language="javascript" type="text/javascript">
+					document.write(vHidden+" SSID");
+				</script>
+			</div></td>
+			<td ctrlflip="etc">
+			<select ar='1' name="WIFIACHideSSID3" id="id_WIFIACHideSSID3" class="width_select80">
+				<option value="1">
+				<script language="javascript" type="text/javascript">
+				document.write( vHidden );
+				</script>
+				</option>
+				<option value="0">
+				<script language="javascript" type="text/javascript">
+				document.write( vNotHidden );
+				</script>
+				</option>
+			</select>
+			</td>
+		</tr>
+		<tr style="display:none"> <!-- Hidden-->
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="121">Data Rate</div></td>
+			<td>
+				<table><tr>
+				<td><select ar='1' ctrlflip="etc" name="WIFIACTxRate3" id="id_WIFIACTxRate3" class="width_select80">
+						<script language="javascript" type="text/javascript">
+							GetTxRate("3");
+						</script>
+					</select>
+				</td>
+				<td><div class="lv2_th suffix_lr" ctrlflip="right" ctrlid="123">Mbps</div></td>
+			</tr></table>
+			</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="111">Max User</div></td>
+			<td>
+			<select ar='1' ctrlflip="etc" id="id_max_user3" name="maxuser3">
+				<script>
+					list_user_limit();
+				</script>
+			</select>
+			</td>
+		</tr>
+
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="125">VLAN Enable</div></td>
+			<td ctrlflip="etc">
+			<select ar='1' class="width_select80" name="vlanEnable3" id="id_vlanEnable3" onclick="enable_VLAN(3);" onchange="enable_WDS();">
+				<option value="0">Disable</option>
+				<option value="1">Enable</option>
+			</select></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="119">VLAN</div></td>
+			<td ctrlflip="etc"><input class="width_select80" id="id_vlan3" name="vlan3" type="text"></input></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="119">Pbit</div></td>
+			<td ctrlflip="etc"><input class="width_select80" id="id_pbit3" name="pbit3" type="text"></input></td>
+		</tr>
+	</tbody></table>
+</div>
+<!-- wifi4	-->
+<div id="wifi_table4" class="lv2_new" style="display:none">
+	<div><hr class="hr2"></div>
+	<table><tbody>
+		<tr>
+			<td class="width_wifiset_comm" ctrlflip="right">
+			<table><tr>
+					<td><table dir='ltr'><tr>
+						<td><div class="lv1_new" ctrlid="119">SSID</div></td>
+						<td><div class="lv1_new size_colon">4</div></td>
+					</tr></table></td>
+					<td><div class="lv1_new size_colon">:</div></td>
+				</tr></table>
+			</td>
+			<td class="width_wifiset2"></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="119">SSID</div></td>
+			<td ctrlflip="etc"><input class="width_text150" id="id_ssid4" name="WIFIACSsid4" type="text" maxlength="32"></input></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="120">
+				<script language="javascript" type="text/javascript">
+					document.write(vHidden+" SSID");
+				</script>
+			</div></td>
+			<td ctrlflip="etc">
+			<select ar='1' name="WIFIACHideSSID4" id="id_WIFIACHideSSID4" class="width_select80">
+				<option value="1">
+				<script language="javascript" type="text/javascript">
+				document.write( vHidden );
+				</script>
+				</option>
+				<option value="0">
+				<script language="javascript" type="text/javascript">
+				document.write( vNotHidden );
+				</script>
+				</option>
+			</select>
+			</td>
+		</tr>
+		<tr style="display:none"> <!-- Hidden-->
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="121">Data Rate</div></td>
+			<td>
+				<table><tr>
+					<td><select ar='1' ctrlflip="etc" name="WIFIACTxRate4" id="id_WIFIACTxRate4" class="width_select80">
+						<script language="javascript" type="text/javascript">
+							GetTxRate("4");
+							</script>
+						</select>
+					</td>
+				<td><div class="lv2_th suffix_lr" ctrlflip="right" ctrlid="123">Mbps</div></td>
+			</tr></table>
+			</td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="111">Max User</div></td>
+			<td>
+			<select ar='1' ctrlflip="etc" id="id_max_user4" name="maxuser4">
+				<script>
+					list_user_limit();
+				</script>
+			</select>
+		</tr>
+
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="125">VLAN Enable</div></td>
+			<td ctrlflip="etc">
+			<select ar='1' class="width_select80" name="vlanEnable4" id="id_vlanEnable4" onclick="enable_VLAN(4);" onchange="enable_WDS();">
+				<option value="0">Disable</option>
+				<option value="1">Enable</option>
+			</select></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="119">VLAN</div></td>
+			<td ctrlflip="etc"><input class="width_select80" id="id_vlan4" name="vlan4" type="text"></input></td>
+		</tr>
+		<tr>
+			<td>&nbsp;</td>
+			<td><div ctrlflip="right" ctrlid="119">Pbit</div></td>
+			<td ctrlflip="etc"><input class="width_select80" id="id_pbit4" name="pbit4" type="text"></input></td>
+		</tr>
+	</tbody></table>
+</div>
+
+</div>
+
+	<div class="top_wifisetapply">
+		<table><tbody>
+			<tr>
+				<td class="button_center">
+					<input type="submit" onclick="wifiac_set()" name="applybtn" value="Apply Changes" class="width_apply">
+				</td>
+			</tr>
+			<tr id="id_wait_progress" style="display:none">
+				<td class="button_center">
+					<img src="../images/wait.gif">
+				</td>
+			</tr>
+		</tbody></table>
+	</div>
+
+</form>
+</td></tr>
+</tbody></table>
+</div>
+
+<br>
+</body>
+</html>
+
+

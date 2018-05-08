@@ -1,0 +1,336 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+<title>Phone</title>
+<meta http-equiv="Content-Language" content="English">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="pragma" content="no-cache">
+<link rel="stylesheet" type="text/css" href="SIP_server_files/style.css" media="screen">
+<script language="javascript" type="text/javascript" src="SIP_server_files/menu_base.html"></script>
+<script language="javascript" type="text/javascript" src="SIP_server_files/menu.html"></script>
+<script language="javascript" type="text/javascript" src="SIP_server_files/common.html"></script>
+
+<script language="javascript" type="text/javascript">
+var menuSection	='Telephony';
+var menuItem	='SIP Server';
+var xmlDoc =loadXml("VoIP.xml");//Rita add 20120313
+var value;//fanny add 20120430
+
+
+function checkSpecSymbol(s)
+{
+	var c;
+	for(i=0;i<s.length;i++)
+	{
+		c=s.charAt(i);
+  		if((c >= 'A' && c <= 'Z')||(c >= 'a' && c <= 'z')||(c >= '0' && c <= '9')||(c=='.')||(c=='-')||(c=='_'))
+        		continue;
+		else
+			return false;
+ 	}
+ 	return true;
+}
+
+function clear_field()
+{
+	//document.getElementById("id_sip_form").reset();
+	document.getElementById("id_SIPRegServ").value="";
+document.getElementById("id_SIPRegPort").value="";
+document.getElementById("id_SIPOutProxy").value="";
+document.getElementById("id_SIPOutPort").value="";
+
+	document.getElementById("id_SIPRegExpires").value="";
+	document.getElementById("id_PryDns").value="";
+	document.getElementById("id_SecDns").value="";
+	document.getElementById("id_HostAddr").value="";
+	//document.getElementById("id_SIPAgentPort").value="";
+	//document.getElementById("id_SIPTransport").value="0";
+}
+
+function active_accounts()
+{
+	document.getElementById("id_ActiveAccounts").disabled=false;
+	document.getElementById("id_ActiveAccounts").value=1;
+	apply();
+}
+
+function checkSettingSuccess()
+{
+        var result="NO";
+        check_transport(); //Rita add 20120315
+        if (result=="YES")
+                alert("Someone is talking now, please click 'Activate VoIP Account' button later.");
+}
+
+
+function apply(val)
+{
+	var item,min,max;
+
+	  if ((!checkSpecSymbol(document.getElementById("id_SIPRegServ").value))||(document.getElementById("id_SIPRegServ").value.length==0))
+	{
+        	item="Registrar Server";
+        	alert(item + " is invalid!!");
+		return;
+	}
+	if(!check_port(document.getElementById("id_SIPRegPort").value) || document.getElementById("id_SIPRegPort").value.length==0)
+	{
+		item="Registrar Server Port";
+          min = 1;
+          max = 65535;
+          alert(item+" should be an integer between "+min+" and "+max);
+		return;	
+	}
+	if ((!checkSpecSymbol(document.getElementById("id_SIPOutProxy").value))||(document.getElementById("id_SIPOutProxy").value.length==0))
+	{
+        	item="Outbound Proxy";
+        	alert(item + " is invalid!!");
+		return;
+	}
+	if(!check_port(document.getElementById("id_SIPOutPort").value) || document.getElementById("id_SIPOutPort").value.length==0)
+	{
+		item="Outbound Proxy Port";
+          min = 1;
+          max = 65535;
+          alert(item+" should be an integer between "+min+" and "+max);
+          return;
+	}
+
+	if (document.getElementById("id_SIPRegExpires").value.length==0 ||
+		 !check_integer_range(document.getElementById("id_SIPRegExpires").value, 600, 86400))
+	{
+                item="Register Expires";
+                min = 600;
+                max = 86400;
+                alert(item+" should be an integer between "+min+" and "+max);
+                return false;
+        }
+	if(document.getElementById("id_PryDns").value.length >0)
+	{
+		if(!check_ip_format(document.getElementById("id_PryDns").value))
+		{
+			return false;
+		}
+	}
+		if(document.getElementById("id_SecDns").value.length >0)
+	{
+		if(!check_ip_format(document.getElementById("id_SecDns").value))
+		{
+			return false;
+		}
+	}
+	/*
+	if(document.getElementById("id_HostAddr").value.length >0)
+	{
+		if(!check_ip_format(document.getElementById("id_HostAddr").value))
+		{
+			return false;
+		}
+	}
+	*/
+	if (val)
+	{
+            //alert("Now your setting will be saved.");
+            document.sip_form.nosave_apply.disabled=false;
+        }
+        else
+            document.sip_form.nosave_both.disabled=false;
+	document.sip_form.submit();
+}
+
+//Rita add 20120315
+function check_transport()
+{
+	//var x=xmlDoc.getElementsByTagName("VoiceProfile");
+	//var y=x[0].getElementsByTagName("RegistrarServerTransport")[0].text;
+	value=getNodeValue("VoiceProfile","RegistrarServerTransport",0);
+	//(y=='TCP')
+	if(value=='TCP')
+		document.getElementById("id_SIPTransport").selectedIndex=1;
+       else
+	   	document.getElementById("id_SIPTransport").selectedIndex=0;
+}
+
+function check_ip_format(ip)
+{
+	var n;
+	
+	if (!isBlank(ip))
+	{
+		n = ip.split('.');
+		if (n.length == 4)
+		{
+			if (n[0]==127)
+				{alert("127 is invalid"); return false;}
+			else 
+				if((isNaN(n[0]))||(n[0]<0)||(n[0]>=224)||isBlank(n[0]))
+				{alert("Not Correct Dns IP Address"); return false;}
+
+			if((isNaN(n[1]))||(n[1]<0)||(n[1]>255)||isBlank(n[1])) 
+				{alert("Not Correct Dns IP Address"); return false;}
+			if((isNaN(n[2]))||(n[2]<0)||(n[2]>255)||isBlank(n[2]))
+				{alert("Not Correct Dns IP Address"); return false;}
+			if((isNaN(n[3]))||(n[3]<0)||(n[3]>255)||isBlank(n[3])) 
+				{alert("Not Correct Dns IP Address"); return false;}
+		}
+		else
+		{
+			alert("Not Correct Dns IP Address");
+			return false;
+		}
+	}
+	return true;
+}
+
+</script>
+</head>
+<body leftmargin="0" topmargin="0" onload="checkSettingSuccess();" marginheight="0" marginwidth="0" bgcolor="#FFFFFF">
+<form id="id_sip_form" name="sip_form" method="post">
+<input name="nosave_apply" value="1" disabled="disabled" type="hidden">
+<input name="nosave_both" value="1" disabled="disabled" type="hidden">
+<script language="javascript" type="text/javascript">
+				showMenu0(menuSection,menuItem);
+</script><table cellpadding="0" cellspacing="0" border="0"><tbody><tr><td height="100%" valign="top" width="185"><table cellpadding="0" cellspacing="0" width="185" align="left" border="0"><tbody><tr id="id_status_item11"><td colspan="3" class="section" onclick='setMenuFlag("status",1,9);' onmouseover='changeCursor("status",9);' height="20" width="170" background="SIP_server_files/blu_bar.gif">&nbsp;&nbsp;&nbsp;<img id="id_status_item10" src="SIP_server_files/up.gif" height="12" width="12">&nbsp;<font color="#FFFFFF">Status</font></td></tr><tr id="id_status_item1" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/status.html"><font color="#000000">System Usage</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_status_item2" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/wan_status.html"><font color="#000000">WAN PON Status</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_status_item3" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_gpon.html"><font color="#000000">PON Link Status</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_status_item4" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_device.html"><font color="#000000">Device Table</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_status_item5" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_dhcp.html"><font color="#000000">DHCP Lease</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_status_item6" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_wifi.html"><font color="#000000">WiFi Association</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_status_item7" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/statistics.html"><font color="#000000">WAN/(W)LAN Statistics</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_status_item8" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/igmp_membership.html"><font color="#000000">IGMP Membership</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_status_item9" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/igmp_statistic.html"><font color="#000000">IGMP Statistic</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_net_item5"><td colspan="3" class="section" onclick='setMenuFlag("net",1,3);' onmouseover='changeCursor("net",3);' height="20" width="170" background="SIP_server_files/blu_bar.gif">&nbsp;&nbsp;&nbsp;<img id="id_net_item4" src="SIP_server_files/up.gif" height="12" width="12">&nbsp;<font color="#FFFFFF">Network</font></td></tr><tr id="id_net_item1" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/usb_setting.html"><font color="#000000">USB</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_net_item2" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/lan_mn.html"><font color="#000000">LAN Settings</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_net_item3" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/wan_hybrid.html"><font color="#000000">WAN PON Connections</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_wifi_item5"><td colspan="3" class="section" onclick='setMenuFlag("wifi",1,3);' onmouseover='changeCursor("wifi",3);' height="20" width="170" background="SIP_server_files/blu_bar.gif">&nbsp;&nbsp;&nbsp;<img id="id_wifi_item4" src="SIP_server_files/up.gif" height="12" width="12">&nbsp;<font color="#FFFFFF">WiFi Setup</font></td></tr><tr id="id_wifi_item1" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/wifi_setting.html"><font color="#000000">WiFi Settings</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_wifi_item2" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/wifi_security.html"><font color="#000000">WiFi Security</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_wifi_item3" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/wifi_mac.html"><font color="#000000">WiFi Access</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_firewall_item8"><td colspan="3" class="section" onclick='setMenuFlag("firewall",1,6);' onmouseover='changeCursor("firewall",6);' height="20" width="170" background="SIP_server_files/blu_bar.gif">&nbsp;&nbsp;&nbsp;<img id="id_firewall_item7" src="SIP_server_files/up.gif" height="12" width="12">&nbsp;<font color="#FFFFFF">Firewall Setup</font></td></tr><tr id="id_firewall_item1" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/natfw_portforwarding.html"><font color="#000000">Port Forwarding</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_firewall_item2" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/natfw_dmz.html"><font color="#000000">Demilitarized Zone</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_firewall_item3" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/natfw_upnp.html"><font color="#000000">UPnP</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_firewall_item4" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/bridge_filter.html"><font color="#000000">Layer 2 Filter</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_firewall_item5" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/natfw_filter.html"><font color="#000000">Layer 3 Filter</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_firewall_item6" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/natfw_vpnpassthrough.html"><font color="#000000">NAT Passthrough</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_adv_item6"><td colspan="3" class="section" onclick='setMenuFlag("adv",1,4);' onmouseover='changeCursor("adv",4);' height="20" width="170" background="SIP_server_files/blu_bar.gif">&nbsp;&nbsp;&nbsp;<img id="id_adv_item5" src="SIP_server_files/up.gif" height="12" width="12">&nbsp;<font color="#FFFFFF">Advanced Setup</font></td></tr><tr id="id_adv_item1" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/advanced_route.html"><font color="#000000">Route Settings</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_adv_item2" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/static_dns.html"><font color="#000000">DNS Settings</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_adv_item3" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_syslog.html"><font color="#000000">System Log</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_adv_item4" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/igmp_setting.html"><font color="#000000">IGMP Proxy/Snooping</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_phone_item6"><td colspan="3" class="section" onclick='setMenuFlag("phone",1,4);' onmouseover='changeCursor("phone",4);' height="20" width="170" background="SIP_server_files/blu_bar.gif">&nbsp;&nbsp;&nbsp;<img id="id_phone_item5" src="SIP_server_files/up.gif" height="12" width="12">&nbsp;<font color="#FFFFFF">Telephony</font></td></tr><tr id="id_phone_item1" height="20"><td width="5" bgcolor="#CCCCCC">&nbsp;</td><td class="leftLink" width="155" bgcolor="#CCCCCC"><a href="http://192.168.2.1/phone_account.html"><font color="#000000">Account Setup</font></a></td><td width="10" align="right" bgcolor="#CCCCCC">&nbsp;</td></tr><tr id="id_phone_item2" height="20"><td width="5" bgcolor="#CCCCCC">&nbsp;</td><td class="leftLink" width="155" bgcolor="#CCCCCC"><a href="http://192.168.2.1/phone_service.html"><font color="#000000">Service Settings</font></a></td><td width="10" align="right" bgcolor="#CCCCCC">&nbsp;</td></tr><tr id="id_phone_item3" height="20"><td width="5" bgcolor="#ADAE9D">&nbsp;</td><td class="leftLink" width="155" bgcolor="#ADAE9D"><a href="http://192.168.2.1/phone_server_set.html"><font color="#000000"><span class="selected_css">SIP Server Settings</span></font></a></td><td width="10" align="right" bgcolor="#ADAE9D">&gt;&gt;</td></tr><tr id="id_phone_item4" height="20"><td width="5" bgcolor="#CCCCCC">&nbsp;</td><td class="leftLink" width="155" bgcolor="#CCCCCC"><a href="http://192.168.2.1/util_upgradeDialPlan.html"><font color="#000000">Upgrade Dial Plan</font></a></td><td width="10" align="right" bgcolor="#CCCCCC">&nbsp;</td></tr><tr id="id_util_item11"><td colspan="3" class="section" onclick='setMenuFlag("util",1,9);' onmouseover='changeCursor("util",9);' height="20" width="170" background="SIP_server_files/blu_bar.gif">&nbsp;&nbsp;&nbsp;<img id="id_util_item10" src="SIP_server_files/down.gif" height="12" width="12">&nbsp;<font color="#FFFFFF">Utilities</font></td></tr><tr id="id_util_item1" style="display:none" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_cfgstore.html"><font color="#000000">Configuration Backup</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_util_item2" style="display:none" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_cfgrestore.html"><font color="#000000">Configuration Restore</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_util_item3" style="display:none" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_webfirmware.html"><font color="#000000">Firmware Upgrade</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_util_item4" style="display:none" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/bootloader.html"><font color="#000000">Bootloader Upgrade</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_util_item5" style="display:none" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_system.html"><font color="#000000">System Settings</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_util_item6" style="display:none" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_remotemanagement.html"><font color="#000000">CWMP Management</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_util_item7" style="display:none" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_ping.html"><font color="#000000">Connection Test</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_util_item8" style="display:none" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_factory.html"><font color="#000000">Restore Factory Defaults</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr><tr id="id_util_item9" style="display:none" height="20"><td width="5" bgcolor="#FFFFFF">&nbsp;</td><td class="leftLink" width="155" bgcolor="#FFFFFF"><a href="http://192.168.2.1/util_reboot.html"><font color="#000000">Reboot Gateway</font></a></td><td width="10" align="right" bgcolor="#FFFFFF">&nbsp;</td></tr></tbody></table></td><td height="100%" valign="top" width="1" bgcolor="#CCCCCC"><img src="SIP_server_files/shim.gif" height="1" width="1"></td>
+<td valign="top" align="left"> 
+
+	<div class="direction">
+		<br>&nbsp;&nbsp;&nbsp;Telephony&nbsp;&gt;&nbsp;SIP Server &amp; General Settings&nbsp;SIP<!---s: - SIP Server-General Settings- SIP--><!--Fanny edit 2011/02/24 GetString Telephony-->
+	</div>
+	<table style="padding-top:2em;padding-left:7em" cellpadding="0" cellspacing="0" border="0">
+	
+	    <tbody><tr>
+			<td colspan="2"><b><u>Server Settings</u></b><!--s_title:Server Settings-->
+			</td>
+		</tr>
+					
+	<!-- RegistrarServer -->
+		<tr>
+			<td style="padding-top:1.5em;"><b>Registrar Server</b>
+		       </td><td style="padding-left:7.5em;padding-top:1.5em;">
+                     <script language="javascript" type="text/javascript">
+//                     	var x=xmlDoc.getElementsByTagName("VoiceProfile");
+//						document.write("<input type='text' size='32' maxlength='64' name='nosave_SIPRegServ' id='id_SIPRegServ' class='text' value='"+x[0].getElementsByTagName("RegistrarServer")[0].text+"'>");
+						value=getNodeValue("VoiceProfile","RegistrarServer",0);
+						document.write("<input type='text' size='32' maxlength='64' name='nosave_SIPRegServ' id='id_SIPRegServ' class='text' value='"+value+"'>");
+            		</script><input size="32" maxlength="64" name="nosave_SIPRegServ" id="id_SIPRegServ" class="text" type="text">
+			</td>
+		</tr>
+		
+	<!-- RegistrarServer Port -->	
+		<tr>
+			<td style="padding-top:1.5em;"><b>Registrar Server Port</b>
+		    </td><td style="padding-left:7.5em;padding-top:1.5em;">
+                     <script language="javascript" type="text/javascript">
+//                     	var x=xmlDoc.getElementsByTagName("VoiceProfile");	
+//                         	document.write("<input type='text' size='8' maxlength='5' name='nosave_SIPRegPort' id='id_SIPRegPort' value='"+x[0].getElementsByTagName("RegistrarServerPort")[0].childNodes[0].nodeValue+"'>");
+                         	value=getNodeValue("VoiceProfile","RegistrarServerPort",0);
+                         	document.write("<input type='text' size='8' maxlength='5' name='nosave_SIPRegPort' id='id_SIPRegPort' value='"+value+"'>");
+            		</script><input size="8" maxlength="5" name="nosave_SIPRegPort" id="id_SIPRegPort" value="5060" type="text">
+			</td>
+		</tr>
+					
+	<!-- OutboundProxy -->
+		<tr>
+			<td style="padding-top:1.5em;"><b>Outbound Proxy</b>
+		       </td><td style="padding-left:7.5em;padding-top:1.5em;">
+                     <script language="javascript" type="text/javascript">
+                     	//var x=xmlDoc.getElementsByTagName("VoiceProfile");
+                       //  	document.write("<input type='text' size='32' maxlength='64' name='nosave_SIPOutProxy' id='id_SIPOutProxy' class='text' value='"+x[0].getElementsByTagName("OutboundProxy")[0].text+"'>");
+                         	value=getNodeValue("VoiceProfile","OutboundProxy",0);
+                         	document.write("<input type='text' size='32' maxlength='64' name='nosave_SIPOutProxy' id='id_SIPOutProxy' class='text' value='"+value+"'>");
+            		</script><input size="32" maxlength="64" name="nosave_SIPOutProxy" id="id_SIPOutProxy" class="text" type="text">
+			</td>
+		</tr>
+	
+	<!-- OutboundProxy Port-->
+		<tr>
+			<td style="padding-top:1.5em;"><b>Outbound Proxy Port</b>
+		       </td><td style="padding-left:7.5em;padding-top:1.5em;">
+                     <script language="javascript" type="text/javascript">
+//                     	var x=xmlDoc.getElementsByTagName("VoiceProfile");
+//                         	document.write("<input type='text' size='5' maxlength='5' name='nosave_SIPOutPort' id='id_SIPOutPort' value='"+x[0].getElementsByTagName("OutboundProxyPort")[0].childNodes[0].nodeValue+"'>");
+                         	value=getNodeValue("VoiceProfile","OutboundProxyPort",0);
+                         	document.write("<input type='text' size='5' maxlength='5' name='nosave_SIPOutPort' id='id_SIPOutPort' value='"+value+"'>");
+            		</script><input size="5" maxlength="5" name="nosave_SIPOutPort" id="id_SIPOutPort" value="5060" type="text">
+			</td>
+		</tr>
+	<!-- Dns Server -->		
+		<tr>
+			<td style="padding-top:1.5em;"><b>Primary Dns</b>
+		       </td><td style="padding-left:7.5em;padding-top:1.5em;">
+                     <script language="javascript" type="text/javascript">
+                         	value=getNodeValue("VoiceProfile","PrimaryDns",0);
+                         	document.write("<input type='text' size='32' maxlength='64' name='nosave_PryDns' id='id_PryDns' class='text' value='"+value+"'>");
+            		</script><input size="32" maxlength="64" name="nosave_PryDns" id="id_PryDns" class="text" type="text">
+			</td>
+		</tr>
+		<tr>
+			<td style="padding-top:1.5em;"><b>Secondary Dns</b>
+		       </td><td style="padding-left:7.5em;padding-top:1.5em;">
+                     <script language="javascript" type="text/javascript">
+                         	value=getNodeValue("VoiceProfile","SecondaryDns",0);
+                         	document.write("<input type='text' size='32' maxlength='64' name='nosave_SecDns' id='id_SecDns' class='text' value='"+value+"'>");
+            		</script><input size="32" maxlength="64" name="nosave_SecDns" id="id_SecDns" class="text" type="text">
+			</td>
+		</tr>		
+		<tr>
+			<td style="padding-top:1.5em;"><b>Host Address</b>
+				</td><td style="padding-left:7.5em;padding-top:1.5em;">
+					<script language="javascript" type="text/javascript">
+						value=getNodeValue("VoiceProfile", "HostAddress", 0);
+                         	document.write("<input type='text' size='32' maxlength='64' name='nosave_HostAddr' id='id_HostAddr' class='text' value='"+value+"'>");
+					</script><input size="32" maxlength="64" name="nosave_HostAddr" id="id_HostAddr" class="text" type="text">
+				</td>
+			
+		</tr>	
+	    <tr></tr>
+	    <tr>
+			<td colspan="2" style="padding-top:1.5em;"><b><u>General Settings</u></b><!--s_title:General Settings-->
+			</td>
+		</tr>
+
+	<!-- RegisterExpires -->
+		<tr>
+			<td style="padding-top:1.5em;"><b>Register Expires</b>
+		       </td><td style="padding-left:7.5em;padding-top:1.5em;">
+                     <script language="javascript" type="text/javascript">
+//                     	var x=xmlDoc.getElementsByTagName("VoiceProfile");
+//                         	document.write("<input  type='text' size='8' maxlength='5' name='nosave_SIPRegExpires' id='id_SIPRegExpires' value='"+x[0].getElementsByTagName("RegisterExpires")[0].childNodes[0].nodeValue+"'>");
+                         	value=getNodeValue("VoiceProfile","RegisterExpires",0);
+                        	document.write("<input  type='text' size='8' maxlength='5' name='nosave_SIPRegExpires' id='id_SIPRegExpires' value='"+value+"'>");
+            		</script><input size="8" maxlength="5" name="nosave_SIPRegExpires" id="id_SIPRegExpires" value="3600" type="text">
+
+			</td>
+		</tr>
+		
+	<!-- Transport -->
+		<tr>
+			<td style="padding-top:1.5em;"><b>Transport</b>
+		    </td><td style="padding-left:7.5em;padding-top:1.5em;">
+				<select name="nosave_SIPTransport" id="id_SIPTransport">
+					<option selected="selected" value="0" id="tpt">UDP</option>
+					<option value="1" id="tpt">TCP</option>
+				</select>
+			</td>		
+		</tr>
+	</tbody></table>
+	
+	<div style="padding-top:1.5em;padding-left:7em;width:50em">
+
+		<p class="warringtext">Warning: Changing the settings on this page 
+will only take affect after "activate VoIP Accounts" button has been 
+clicked. The VoIP Account activation can take up to 2 minutes. All 
+ongoing calls will be terminated.</p>
+
+		<div style="padding-top:0.5em;padding-left:11.5em;">
+  	   	<input class="submitBtn" value="Save" onclick="apply(1)" type="button">&nbsp;<!--Save--><!--Fanny edit 2011/01/25 add  GetAccessMode -->
+  	   	<input class="submitBtn" value="Activate VoIP Account" onclick="apply(0);" type="button">&nbsp;<!--Activate VoIP Accounts--><!--Fanny edit 2011/01/25 add  GetAccessMode -->
+  	   	<input class="submitBtn" value="Clear" onclick="clear_field();" type="button"><!--Clear-->
+		</div>
+	</div>		
+
+</td>
+<script language="javascript" type="text/javascript">
+	showTail();
+</script></tr></tbody></table></form>
+
+</body></html>

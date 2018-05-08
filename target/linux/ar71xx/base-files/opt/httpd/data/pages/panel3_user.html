@@ -1,0 +1,63 @@
+﻿	<link rel="StyleSheet" href="../css/dtree.css" type="text/css" />
+	<script type="text/javascript" src="../js/dtree.js"></script>
+
+<body bgcolor="#ffffff">
+<table bgcolor="#ffffff">
+	<tr>
+		<tD valign="top" width="400">
+
+
+			<script type="text/javascript">
+				<!--
+
+				d = new dTree('d');
+
+				d.add(0,-1,'I-040GW');
+
+				d.add(11,0,'Quick Setup','/cgi-bin/wwwctrl.cgi?action=quick_setup');
+
+				d.add(1,0,'Status');
+				d.add(2,1,'System Usage','/cgi-bin/wwwctrl.cgi?action=sysinfo');
+				
+				d.add(3,0,'Connection Setup');
+				d.add(4,3,'Connect Setup','/cgi-bin/wwwctrl.cgi?action=connect_setup');
+				
+				d.add(5,0,'Firewall');
+				d.add(6,5,'MAC Filter','/cgi-bin/wwwctrl.cgi?action=l2_filter');
+				d.add(7,5,'Port Forwarding','/cgi-bin/wwwctrl.cgi?action=portforward');
+				
+				d.add(8,0,'Maintenance');
+				d.add(9,8,'WLAN Association List','/cgi-bin/wwwctrl.cgi?action=wifi_association');
+				d.add(10,8,'Password','/cgi-bin/wwwctrl.cgi?action=password');
+
+				document.write(d);
+
+				//-->
+			</script>
+
+
+
+
+
+		<tD>
+		<td valign="top">
+
+
+			<table id="user" style="display:none">
+				<tr>
+					<td>User Name</td><td><input id="myName" type="text"></tD>
+				</tr>
+				<tR><tD>Account</tD><td><input type="text"></tD></tR>
+				<tR><tD>Password</td><td><input type="text">password must be at least 4 characters long</tD></tR>
+				<tR><tD>Phone</td><td><input type="text"></tD></tR>
+				<tr><tD>Email</td><td><input type="text"></tD></tR>
+				<tr><td>Department</td><td><input type="text"></tD></tR>
+				<TR><Td><button>Save </button></tD><tD><button>Cancel</button></tD></tR>
+			</table>
+
+
+
+		</tD>
+	</tR>
+</table>
+</body>

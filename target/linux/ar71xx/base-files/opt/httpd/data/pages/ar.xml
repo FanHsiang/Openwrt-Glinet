@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<menu len="43">
+		<item id="1" en="Logout">يتم تقديم هذه </item>
+		<item id="2" en="Status">يتم تقديم هذه </item>
+		<item id="3" en="Network">يتم تقديم هذه </item>
+		<item id="4" en="WiFi Setup">يتم تقديم هذه </item>
+		<item id="5" en="Firwall Setup">يتم تقديم هذه </item>
+		<item id="6" en="Advanced Setup">يتم تقديم هذه </item>
+		<item id="7" en="Utilities">يتم تقديم هذه </item>
+		<item id="8" en="The Service is provided by Bayanat AI Oula(a subsidiary of Etihad Etisalat)"> خدمات من قبل بيانات الأولى (شركة تابعة لإتحاد إتصالات)</item>
+		<item id="9" en="System Usage">يتم تقديم هذه  </item>
+		<item id="10" en="WAN PON Status">يتم تقديم هذه </item>
+		<item id="11" en="System Usage">يتم تقديم هذه  </item>
+		<item id="12" en="WAN PON Status">يتم تقديم هذه </item>
+		<item id="13" en="Device Table">يتم تقديم هذه </item>
+		<item id="14" en="DHCP Lease">يتم تقديم هذه </item>
+		<item id="15" en="WiFi Association">يتم تقديم هذه  </item>
+		<item id="16" en="WAN(W)LAN">يتم تقديم هذه </item>
+		<item id="17" en="ARP">يتم تقديم هذه </item>
+		<item id="18" en="LAN Settings">يتم تقديم هذه </item>
+		<item id="19" en="WAN PON Connections">يتم تقديم هذه </item>
+		<item id="20" en="WiFi Settings">يتم تقديم هذه </item>
+		<item id="21" en="WiFi Security">يتم تقديم هذه </item>
+		<item id="22" en="WiFi Access">يتم تقديم هذه </item>
+		<item id="23" en="Port Forwarding">يتم تقديم هذه </item>
+		<item id="24" en="Demilitarized Zone">يتم تقديم هذه </item>
+		<item id="25" en="UPnP">يتم تقديم هذه </item>
+		<item id="26" en="Layer 2 Filter">يتم تقديم هذه </item>
+		<item id="27" en="Layer 3 Filter">يتم تقديم هذه </item>
+		<item id="28" en="NAT Passthrough">يتم تقديم هذه </item>
+		<item id="29" en="ALG">يتم تقديم هذه </item>
+		<item id="30" en="Route Settings">يتم تقديم هذه </item>
+		<item id="31" en="DNS Settings">يتم تقديم هذه </item>
+		<item id="32" en="Dynamic DNS">يتم تقديم هذه </item>
+		<item id="33" en="System Log">يتم تقديم هذه </item>
+		<item id="34" en="Configuration Backup">يتم تقديم هذه </item>
+		<item id="35" en="Configuration Restore">يتم تقديم هذه </item>
+		<item id="36" en="Firmware Upgrade">يتم تقديم هذه </item>
+		<item id="37" en="System Settings">يتم تقديم هذه </item>
+		<item id="38" en="Connection Test">يتم تقديم هذه </item>
+		<item id="39" en="Restore Factory Defaults">يتم تقديم هذه </item>
+		<item id="40" en="Reboot Gateway">يتم تقديم هذه </item>
+		<item id="41" en="CWMP Management">يتم تقديم هذه </item>
+		<item id="42" en="Status">يتم تقديم هذه </item>
+		<item id="43" en="Status">يتم تقديم هذه </item>
+		<item id="44" en="Status">يتم تقديم هذه </item>
+		<item id="45" en="Status">يتم تقديم هذه </item>		
+	</menu>
+	<status_usage len="42">
+		<item id="1" en="Status System Usage">يتم تقديم هذه </item>
+		<item id="2" en="Version Info">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="3" en="Model Name">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="4" en="Firmware Version">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="5" en="Release Date">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="6" en="System Usage">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="7" en="System Up Time">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="8" en="System Loading Average">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="9" en="Total Memory">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="10" en="Used Memory">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="11" en="Free Memory">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="12" en="Network - WAN Status">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="13" en="WAN MAC">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="14" en="Network - LAN Status">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="15" en="LAN IP Address">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="16" en="LAN NetMask">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="17" en="LAN MAC">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="18" en="DHCP Enable">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="19" en="WLAN MAC">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="20" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="21" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="22" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="23" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="24" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="25" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="26" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="27" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="28" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="29" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="30" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="31" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="32" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="33" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="34" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="35" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="36" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="37" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="38" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="39" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="40" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="41" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="42" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>	
+	</status_usage>
+	<status_wanpon len="42">
+		<item id="1" en="Status System Usage">يتم تقديم هذه </item>
+		<item id="2" en="Version Info">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="3" en="Model Name">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="4" en="Firmware Version">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="5" en="Release Date">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="6" en="System Usage">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="7" en="System Up Time">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="8" en="System Loading Average">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="9" en="Total Memory">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="10" en="Used Memory">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="11" en="Free Memory">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="12" en="Network - WAN Status">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="13" en="WAN MAC">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="14" en="Network - LAN Status">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="15" en="LAN IP Address">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="16" en="LAN NetMask">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="17" en="LAN MAC">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="18" en="DHCP Enable">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="19" en="WLAN MAC">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="20" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="21" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="22" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="23" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="24" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="25" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="26" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="27" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="28" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="29" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="30" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="31" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="32" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="33" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="34" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="35" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="36" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="37" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="38" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="39" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="40" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="41" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>
+		<item id="42" en="">يتم تقديم هذه الخدمات من قبل بيانات</item>	
+	</status_wanpon>
+</root>
