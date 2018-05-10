@@ -1,3 +1,0 @@
-#!/bin/sh
-
-busybox tftp -l 123.txt -p 200.200.200.206
