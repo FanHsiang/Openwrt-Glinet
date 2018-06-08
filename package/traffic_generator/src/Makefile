@@ -11,7 +11,8 @@ OBJ = \
 	src/hiredis/read.o \
 	src/hiredis/async.o \
 	src/my_init.o \
-	src/main.o
+#	src/main.o
+	src/sendpackage.o
 
 %.o: src/%.c
 	$(CC) -c -o $@ $< $(CFLAGS)
