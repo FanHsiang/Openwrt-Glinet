@@ -32,3 +32,8 @@ struct ListNode {
 struct ListNode* addTwoNumbers(struct ListNode* l1, struct ListNode* l2) {
  printf("test");    
 }
+
+int main(){
+	printf("test");
+	return 0;
+}
