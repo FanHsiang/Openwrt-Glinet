@@ -77,7 +77,7 @@ main(int argc, const char* argv[]) {
     eth = frame;
 
     //source mac, dst mac
-    set_eth(eth, "aa:ff:ff:ff:ff:aa", "ff:ff:ff:ff:ff:ff", ETHERTYPE_IP);
+    set_eth(eth, "aa:bb:ff:ff:ff:aa", "ff:ff:ff:ff:ff:ff", ETHERTYPE_IP);
 
     //check 8021Q
     switch (vlan_flag){
